@@ -1,0 +1,118 @@
+@model QRCodeAttendance.Models.DTOs.StudentDashboardDto
+@{
+    ViewData["Title"] = "Scan Attendance";
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+    
+    <style>
+        :root {
+            --student-accent: #0ea5e9;
+            --student-bg: #f0f9ff;
+        }
+
+        body {
+            background-color: var(--student-bg);
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+
+        .scanner-card {
+            background: white;
+            border-radius: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+            border: none;
+        }
+
+        /* This is where the camera video will show */
+        #reader {
+            width: 100%;
+            background: #000;
+            border-radius: 20px;
+        }
+
+        /* Style the library's internal buttons to match your theme */
+        #reader button {
+            background-color: var(--student-accent) !important;
+            color: white !important;
+            border: none !important;
+            padding: 10px 20px !important;
+            border-radius: 50px !important;
+            font-weight: bold !important;
+            margin: 10px !important;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="scanner-card p-4 text-center">
+                <div class="mb-4">
+                    <i class="fa fa-qrcode text-primary fa-3x mb-3"></i>
+                    <h2 class="fw-bold">Scan QR Code</h2>
+                    <p class="text-muted">Align the QR code within the frame to mark your attendance</p>
+                </div>
+
+                @* THE CAMERA VIEWPORT *@
+                <div id="reader" class="mb-4"></div>
+
+                <div id="result"></div>
+
+                <a asp-action="StudentDashboard" class="btn btn-outline-secondary rounded-pill px-4">
+                    <i class="fa fa-arrow-left me-2"></i>Back to Dashboard
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+@* Hidden form to send data back to your Controller *@
+<form id="attendanceForm" asp-action="ProcessScan" asp-controller="Attendance" method="post">
+    <input type="hidden" id="qrCodeData" name="qrCode" />
+</form>
+
+@* Load the QR Library *@
+<script src="https://unpkg.com/html5-qrcode"></script>
+
+<script>
+    function onScanSuccess(decodedText, decodedResult) {
+        // Stop the scanner
+        html5QrcodeScanner.clear();
+        
+        // Show a quick visual feedback
+        document.getElementById('result').innerHTML = `
+            <div class="alert alert-success rounded-pill">Code Detected! processing...</div>
+        `;
+
+        // Put the code into the hidden form and submit
+        document.getElementById('qrCodeData').value = decodedText;
+        document.getElementById('attendanceForm').submit();
+    }
+
+    function onScanFailure(error) {
+        // We ignore failures as they happen constantly until a code is found
+    }
+
+    let html5QrcodeScanner = new Html5QrcodeScanner(
+        "reader", 
+        { 
+            fps: 10, 
+            qrbox: { width: 250, height: 250 },
+            aspectRatio: 1.0 
+        }, 
+        false);
+
+    html5QrcodeScanner.render(onScanSuccess, onScanFailure);
+</script>
+
+</body>
+</html>

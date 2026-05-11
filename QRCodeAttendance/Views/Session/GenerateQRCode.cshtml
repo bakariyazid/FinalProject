@@ -1,0 +1,158 @@
+@model QRCodeAttendance.Models.DTOs.Session.SessionDto
+
+@{
+    ViewData["Title"] = "Live Session Tracking";
+    
+    string levelTheme = Model.Level.ToString() switch {
+        "OneHundred" => "theme-100",
+        "TwoHundred" => "theme-200",
+        _ => "theme-100"
+    };
+
+    string localExpiry = Model.QRCodeExpiry.ToLocalTime().ToString("O");
+    string localSessionEnd = Model.SessionEndTime.ToLocalTime().ToString("O");
+}
+
+<div class="page-header mb-4">
+        <div>
+            <h1 class="display-4 fw-800 mb-0">Live Session</h1>
+            <p class="text-white-50 small">
+                @Model.CourseName 
+                <span class="level-badge ms-2">@Model.Level</span>
+                <span class="text-white-50 fw-light ms-2" style="font-size: 0.9rem;">#@Model.CourseCode</span>
+            </p>
+        </div>
+    </div>
+
+<div class="container py-5 animate__animated animate__fadeIn @levelTheme">
+    <div class="qr-hero-card">
+        <div id="session-warning-alert" class="alert alert-danger animate__animated animate__pulse animate__infinite d-none mb-4">
+            <i class="fas fa-exclamation-triangle me-2"></i> 
+            ATTENDANCE ENDING SOON: QR expires in <span id="alert-countdown">5:00</span>!
+        </div>
+
+        <div class="live-indicator">
+            <div class="pulse-dot animate__animated animate__pulse animate__infinite"></div> 
+            LIVE SESSION
+        </div>
+
+        <h2 class="display-4 fw-800 mb-5">Point your camera here</h2>
+
+        <div class="qr-wrapper animate__animated animate__zoomIn">
+            <div id="big-qrcode"></div>
+        </div>
+
+        <div class="row g-4 mt-5">
+            <div class="col-md-6">
+                <div class="stat-pill">
+                    <p class="text-white-50 small fw-bold mb-2">CURRENT ATTENDEES</p>
+                    <h1 class="display-3 fw-900 text-success mb-0" id="attendance-count">0</h1>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="stat-pill">
+                    <p class="text-white-50 small fw-bold mb-2">QR ROTATION IN</p>
+                    <div id="live-timer" class="timer-text">00:00</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script>
+    // 1. Setup Global State
+    let currentExpiry = new Date('@localExpiry').getTime();
+    const sessionEndTime = new Date('@localSessionEnd').getTime();
+    const token = "@Model.QRCodeToken";
+    let qrObj = null;
+
+    // 2. Initialize QR Code
+    function initQR() {
+        const container = document.getElementById("big-qrcode");
+        if (!token || token.trim() === "") {
+            container.innerHTML = "<p class='text-danger'>Error: No Token found.</p>";
+            return;
+        }
+        
+        qrObj = new QRCode(container, {
+            text: token,
+            width: 320,
+            height: 320,
+            colorDark : "#0f172a",
+            colorLight : "#ffffff",
+            correctLevel : QRCode.CorrectLevel.H
+        });
+    }
+
+    // 3. Countdown Logic
+    function startCountdown() {
+        const timerDisplay = document.getElementById("live-timer");
+        const alertBox = document.getElementById("session-warning-alert");
+        const alertCountdown = document.getElementById("alert-countdown");
+
+        const interval = setInterval(async () => {
+            const now = new Date().getTime();
+            
+            // Hard Cutoff: 10 minutes before class ends
+            const hardCutoffTime = sessionEndTime - (10 * 60 * 1000);
+            const warningStartTime = sessionEndTime - (15 * 60 * 1000);
+
+            // Show warning if within the last 5 minutes of QR availability
+            if (now >= warningStartTime && now < hardCutoffTime) {
+                alertBox.classList.remove("d-none");
+                const timeLeft = hardCutoffTime - now;
+                const am = Math.floor(timeLeft / 60000);
+                const as = Math.floor((timeLeft % 60000) / 1000);
+                alertCountdown.innerText = `${am}:${as < 10 ? '0' : ''}${as}`;
+            }
+
+            // Close Attendance
+            if (now >= hardCutoffTime) {
+                clearInterval(interval);
+                timerDisplay.innerText = "CLOSED";
+                document.getElementById("big-qrcode").style.opacity = "0.1";
+                alertBox.innerHTML = "<i class='fas fa-lock me-2'></i> ATTENDANCE CLOSED.";
+                alertBox.classList.remove("d-none");
+                return;
+            }
+
+            // Standard Rotation Countdown
+            const diff = currentExpiry - now;
+
+            if (diff <= 0) {
+                timerDisplay.innerText = "ROTATING...";
+                await refreshToken();
+                return; 
+            }
+
+            const m = Math.floor(diff / 60000);
+            const s = Math.floor((diff % 60000) / 1000);
+            timerDisplay.innerText = `${m}:${s < 10 ? '0' : ''}${s}`;
+        }, 1000);
+    }
+
+    // 4. Refresh Token via AJAX
+    async function refreshToken() {
+        try {
+            const response = await fetch('/Session/GenerateQRCode?sessionId=@Model.Id', { 
+                method: 'POST',
+                headers: { 'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value }
+            });
+            const result = await response.json();
+
+            if (result.status === 1 || result.status === true) { 
+                qrObj.clear();
+                qrObj.makeCode(result.data.qrCodeToken);
+                // Update expiry for next cycle
+                currentExpiry = new Date(result.data.qrCodeExpiry).getTime();
+            }
+        } catch (err) {
+            console.error("Rotation Error:", err);
+        }
+    }
+
+    // Initialize
+    initQR();
+    startCountdown();
+</script>

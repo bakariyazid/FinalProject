@@ -1,0 +1,246 @@
+@model QRCodeAttendance.Models.DTOs.StudentDashboardDto
+@{
+    ViewData["Title"] = "Student Portal";
+    
+    double attendanceRate = Model.TotalSessionsAvailable > 0 
+        ? (double)Model.TotalSessionsAttended / Model.TotalSessionsAvailable * 100 
+        : 0;
+    
+    string studentDept = Model.Department.ToString().Replace("_", " ");
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+    
+    <style>
+        :root {
+            --student-accent: #0ea5e9; 
+            --student-bg: #f8fafc;
+            --card-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.05);
+        }
+
+        body {
+            background-color: var(--student-bg);
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            color: #1e293b;
+        }
+
+        .student-nav {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(15px);
+            padding: 0.75rem 2rem;
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .welcome-banner {
+            background: linear-gradient(135deg, #0f172a 0%, #334155 100%);
+            border-radius: 32px;
+            padding: 3rem;
+            color: white;
+            margin-top: 2rem;
+            box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.25);
+        }
+
+        .circular-progress {
+            width: 150px; height: 150px;
+            border-radius: 50%;
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            margin: 0 auto;
+        }
+
+        .data-card {
+            background: white;
+            border-radius: 24px;
+            border: 1px solid rgba(0,0,0,0.04);
+            box-shadow: var(--card-shadow);
+            transition: all 0.3s ease;
+        }
+
+        .pulse-red {
+            width: 10px; height: 10px;
+            background: #ef4444;
+            border-radius: 50%;
+            animation: pulse-red-ani 2s infinite;
+        }
+
+        @@keyframes pulse-red-ani {
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+            70% { transform: scale(1.1); box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+        }
+
+        .btn-scan {
+            background: var(--student-accent);
+            color: white;
+            padding: 10px 24px;
+            border-radius: 14px;
+            font-weight: 700;
+            text-decoration: none;
+        }
+
+        .refresh-indicator {
+            position: fixed; bottom: 20px; right: 20px;
+            font-size: 0.7rem; color: #94a3b8;
+            background: white; padding: 5px 12px;
+            border-radius: 20px; border: 1px solid #e2e8f0;
+            z-index: 999;
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="student-nav">
+        <div class="container d-flex justify-content-between align-items-center">
+            <div class="d-flex align-items-center gap-2">
+                <div class="bg-primary text-white p-2 rounded-3 shadow-sm"><i class="fa fa-qrcode"></i></div>
+                <span class="fw-bold fs-4">AttendancePro</span>
+            </div>
+            <div class="d-flex align-items-center gap-3">
+                <div class="text-end d-none d-md-block">
+                    <p class="mb-0 fw-bold small">@Model.UserName</p>
+                    <span class="text-muted" style="font-size: 0.75rem;">@studentDept</span>
+                </div>
+                <div class="vr mx-2 d-none d-md-block"></div>
+                <form asp-controller="User" asp-action="Logout" method="post">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="btn btn-outline-danger btn-sm rounded-pill px-4 fw-bold">Logout</button>
+                </form>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container pb-5">
+        <div class="welcome-banner animate__animated animate__fadeIn">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <div class="badge bg-primary mb-3 px-3 py-2 rounded-pill">@studentDept</div>
+                    <h1 class="display-5 fw-bold">Hello, @Model.UserName</h1>
+                    <p class="fs-5 opacity-75">Level @Model.Level • @Model.MatricNumber</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-4 mt-2">
+            <div class="col-md-8">
+                <h4 class="fw-bold mb-4">Active Sessions</h4>
+                <div id="sessions-list">
+                    @if (Model.ActiveSessions != null && Model.ActiveSessions.Any())
+                    {
+                        @foreach (var session in Model.ActiveSessions)
+                        {
+                            bool hasScanned = Model.RecentAttendances.Any(a => a.SessionId == session.Id);
+                            <div class="data-card p-4 mb-3 animate__animated animate__fadeInUp">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div class="d-flex align-items-center gap-3">
+                                        @if(!hasScanned){ <div class="pulse-red"></div> }
+                                        <div>
+                                            <h5 class="fw-bold mb-0">@session.CourseName</h5>
+                                            <small class="text-muted">@session.InstructorName • @session.CourseCode</small>
+                                            <div class="small text-primary-emphasis mt-1">
+                                                <i class="bi bi-clock me-1"></i> @session.SessionStartTime.ToLocalTime().ToString("hh:mm tt")
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        @if (hasScanned) {
+                                            <span class="badge bg-success-subtle text-success p-2 px-3 rounded-pill">PRESENT</span>
+                                        } else {
+                                            <a asp-action="Scan" asp-controller="Attendance" asp-route-sessionId="@session.Id" class="btn btn-scan">SCAN QR</a>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <div class="text-center py-5 border rounded-5 bg-white opacity-75 mb-4">
+                            <i class="fa fa-calendar-xmark fa-2x text-muted mb-2"></i>
+                            <p class="text-muted mb-0">No active classes for Level @Model.Level.</p>
+                        </div>
+                    }
+                </div>
+
+                <h4 class="fw-bold mb-4 mt-5 text-danger">Missed Sessions</h4>
+                <div class="row g-3">
+                    @if (Model.MissedSessions != null && Model.MissedSessions.Any())
+                    {
+                        @foreach (var missed in Model.MissedSessions)
+                        {
+                            <div class="col-md-6">
+                                <div class="data-card p-3 border-start border-danger border-4">
+                                    <h6 class="fw-bold mb-1">@missed.CourseName</h6>
+                                    @* Converted to LocalTime for correct date/time display *@
+                                    <div class="small text-muted">@missed.CourseCode • @missed.StartTime.ToLocalTime().ToString("MMM dd, hh:mm tt")</div>
+                                    <span class="badge bg-danger-subtle text-danger mt-2">MISSING</span>
+                                </div>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <div class="col-12">
+                            <p class="text-muted ps-2"><i class="fa fa-circle-check text-success me-2"></i>You haven't missed any classes lately!</p>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="p-5 data-card text-center sticky-top" style="top: 100px;">
+                    <h6 class="fw-bold text-muted mb-4 text-uppercase">Presence Rate</h6>
+                    <div class="circular-progress" style="background: radial-gradient(closest-side, white 82%, transparent 80% 100%), conic-gradient(var(--student-accent) @(attendanceRate)%, #f1f5f9 0);">
+                        <span class="fs-2 fw-bold text-primary">@(Math.Round(attendanceRate))%</span>
+                    </div>
+                    <hr class="my-4 opacity-50">
+                    <div class="row text-start g-2">
+                        <div class="col-6"><small class="text-muted d-block">Attended</small><strong>@Model.TotalSessionsAttended</strong></div>
+                        <div class="col-6"><small class="text-muted d-block">Available</small><strong>@Model.TotalSessionsAvailable</strong></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="refresh-indicator">
+        <i class="fas fa-sync-alt fa-spin me-1"></i> Auto-Sync Active
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    @section Scripts {
+    <script>
+        setInterval(function() {
+            fetch(window.location.href)
+                .then(response => response.text())
+                .then(html => {
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(html, 'text/html');
+                    const newContainer = doc.getElementById('sessions-list');
+                    if (!newContainer) return;
+                    
+                    const newContent = newContainer.innerHTML;
+                    const oldContent = document.getElementById('sessions-list').innerHTML;
+
+                    if (newContent.trim() !== oldContent.trim()) {
+                        window.location.reload();
+                    }
+                })
+                .catch(err => console.warn("Sync error:", err));
+        }, 30000); 
+    </script>
+    }
+</body>
+</html>

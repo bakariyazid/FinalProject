@@ -1,0 +1,12 @@
+{
+  "ExpandedNodes": [
+    "",
+    "\\QRCodeAttendance",
+    "\\QRCodeAttendance\\Models",
+    "\\QRCodeAttendance\\Models\\DTOs",
+    "\\QRCodeAttendance\\Models\\DTOs\\Student",
+    "\\QRCodeAttendance\\Models\\Entities"
+  ],
+  "SelectedNode": "\\QRCodeAttendance\\Models\\DTOs\\Student\\CreateStudentRequestModel.cs",
+  "PreviewInSolutionExplorer": false
+}

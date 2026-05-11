@@ -1,0 +1,233 @@
+@using QRCodeAttendance.Models.DTOs.Student;
+@using QRCodeAttendance.Models.DTOs.StudentDto
+@using QRCodeAttendance.Models.Entities
+@model IReadOnlyList<StudentDto>
+
+@{
+    ViewData["Title"] = "My Students";
+}
+
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+    :root {
+        --glass-bg: rgba(255, 255, 255, 0.07);
+        --glass-border: rgba(255, 255, 255, 0.18);
+        --glass-highlight: rgba(255, 255, 255, 0.1);
+        --accent-color: #4ade80; /* Vibrant Green */
+    }
+
+    body {
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+        min-height: 100vh;
+        color: white;
+    }
+
+    /* Clean Glass Card */
+    .pro-glass-card {
+        background: var(--glass-bg);
+        backdrop-filter: blur(15px) saturate(180%);
+        -webkit-backdrop-filter: blur(15px) saturate(180%);
+        border: 1px solid var(--glass-border);
+        border-radius: 24px;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        overflow: hidden;
+    }
+
+    /* Professional Table Styling */
+    .table-container {
+        border-radius: 16px;
+        overflow: hidden;
+        background: rgba(0, 0, 0, 0.2);
+    }
+
+    .clean-table {
+        margin-bottom: 0;
+        border-collapse: collapse;
+    }
+
+    .clean-table thead {
+        background: rgba(255, 255, 255, 0.03);
+    }
+
+    .clean-table thead th {
+        color: rgba(255, 255, 255, 0.5);
+        font-weight: 600;
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 1.2px;
+        padding: 20px;
+        border: none;
+    }
+
+    .clean-table tbody tr {
+        border-bottom: 1px solid var(--glass-border);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        animation: fadeInUp 0.5s ease backwards;
+    }
+
+    /* Staggered Row Animation */
+    @for (int i = 1; i <= 20; i++) {
+        <text>
+        .clean-table tbody tr:nth-child(@i) { animation-delay: @(i * 0.05)s; }
+        </text>
+    }
+
+    .clean-table tbody tr:hover {
+        background: var(--glass-highlight);
+        transform: translateX(8px);
+    }
+
+    .clean-table td {
+        padding: 18px 20px;
+        border: none;
+        vertical-align: middle;
+        font-size: 0.9rem;
+    }
+
+    /* Animated Status Badges */
+    .level-badge {
+        background: rgba(74, 222, 128, 0.1);
+        color: var(--accent-color);
+        border: 1px solid rgba(74, 222, 128, 0.2);
+        padding: 6px 14px;
+        border-radius: 100px;
+        font-weight: 600;
+        font-size: 0.75rem;
+    }
+
+    /* Action Button Glow */
+    .btn-action {
+        width: 38px;
+        height: 38px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid var(--glass-border);
+        color: white;
+        border-radius: 12px;
+        transition: all 0.3s;
+    }
+
+    .btn-action:hover {
+        background: var(--accent-color);
+        color: #0f172a;
+        box-shadow: 0 0 15px rgba(74, 222, 128, 0.4);
+        transform: translateY(-2px);
+    }
+
+    /* Back Button */
+    .btn-back {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid var(--glass-border);
+        color: white;
+        padding: 10px 20px;
+        border-radius: 14px;
+        text-decoration: none;
+        font-weight: 500;
+        transition: all 0.3s;
+    }
+
+    .btn-back:hover {
+        background: white;
+        color: #0f172a;
+    }
+
+    @@keyframes fadeInUp {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+</style>
+
+<div class="container py-5">
+    <div class="pro-glass-card p-4 animate__animated animate__fadeIn">
+        
+        <div class="row align-items-center mb-5">
+            <div class="col-md-8">
+                <div class="d-flex align-items-center mb-2">
+                    <div style="width: 3px; height: 30px; background: var(--accent-color); margin-right: 15px; border-radius: 10px;"></div>
+                    <h2 class="h3 fw-bold mb-0">@ViewBag.Level Student Roster</h2>
+                </div>
+                <p class="text-white-50 mb-0 ms-4">
+                    Instructor: <span class="text-white">@User.Identity.Name</span> | 
+                    Department: <span class="badge" style="background: rgba(255,255,255,0.1)">@ViewBag.Department</span>
+                </p>
+            </div>
+            <div class="col-md-4 text-md-end mt-3 mt-md-0">
+                <a asp-action="InstructorDashboard" class="btn-back">
+                    <i class="fas fa-grid-2 me-2"></i> Dashboard
+                </a>
+            </div>
+        </div>
+
+        <div class="table-container">
+            <div class="table-responsive">
+                <table class="table clean-table">
+                    <thead>
+                        <tr>
+                            <th class="text-black-50">Student Name</th>
+                            <th class="text-black-50">Matric Number</th>
+                            <th class="text-black-50">Gender</th>
+                            <th class="text-black-50">Level</th>
+                            <th class="text-center text-black-50">Report</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Model != null && Model.Any())
+                        {
+                            foreach (var student in Model)
+                            {
+                                <tr>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <div class="rounded-circle bg-primary d-flex align-items-center justify-content-center me-3" style="width: 35px; height: 35px; background: linear-gradient(45deg, #4ade80, #3b82f6) !important; font-size: 0.8rem; font-weight: bold;">
+                                                @student.FullName.Substring(0, 1)
+                                            </div>
+                                            <span class="fw-semibold">@student.FullName</span>
+                                        </div>
+                                    </td>
+                                    <td class="fw-semibold">@student.MatricNumber<span class="form-control-plaintext"></span></td>
+                                    <td class="fw-semibold">@student.Gender</td>
+                                    <td>
+                                        <span class="level-badge fw-semibold">@student.StudentLevel</span>
+                                    </td>
+                                    <td class="text-center">
+                                        <div class="d-flex justify-content-center">
+                                            <a asp-controller="Attendance" asp-action="StudentReport" asp-route-id="@student.StudentId" 
+                                               class="btn-action" title="View Full Report">
+                                                <i class="fas fa-arrow-right"> View Report </i> 
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="5" class="text-center py-5">
+                                    <div class="opacity-25 mb-3">
+                                        <i class="fas fa-folder-open fa-3x"></i>
+                                    </div>
+                                    <h5 class="text-white-50">No students registered yet</h5>
+                                    <p class="small text-muted">Students in the @ViewBag.Level level will appear here.</p>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="d-flex justify-content-between align-items-center mt-4 px-2">
+            <div class="text-white-50 small">
+                Showing <strong>@Model?.Count()</strong> results
+            </div>
+            <div class="text-white-50 small">
+                <i class="fas fa-clock me-1"></i> Last updated: @DateTime.UtcNow.ToUniversalTime().ToString("h:mm tt")
+            </div>
+        </div>
+    </div>
+</div>

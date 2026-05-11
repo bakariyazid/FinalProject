@@ -1,0 +1,550 @@
+@model IEnumerable<QRCodeAttendance.Models.DTOs.Session.SessionDto>
+
+@{
+    ViewData["Title"] = "Session History & Control";
+}
+
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
+
+<style>
+    :root {
+        --details-bg: #09111f;
+        --details-panel: rgba(15, 23, 42, 0.64);
+        --details-panel-soft: rgba(255, 255, 255, 0.08);
+        --details-border: rgba(255, 255, 255, 0.16);
+        --details-text: #f8fafc;
+        --details-muted: rgba(226, 232, 240, 0.72);
+        --details-green: #5eead4;
+        --details-lime: #a3e635;
+        --details-blue: #60a5fa;
+        --details-amber: #fbbf24;
+        --details-rose: #fb7185;
+        --details-shadow: 0 28px 80px rgba(2, 8, 23, 0.42);
+    }
+
+    body {
+        min-height: 100vh;
+        margin-bottom: 0;
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        color: var(--details-text);
+        background:
+            radial-gradient(circle at 12% 18%, rgba(94, 234, 212, 0.22), transparent 28%),
+            radial-gradient(circle at 82% 8%, rgba(96, 165, 250, 0.24), transparent 30%),
+            radial-gradient(circle at 70% 82%, rgba(163, 230, 53, 0.12), transparent 28%),
+            linear-gradient(135deg, #08111f 0%, #101827 48%, #050816 100%);
+        background-attachment: fixed;
+        overflow-x: hidden;
+    }
+
+    body::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        pointer-events: none;
+        background-image:
+            linear-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+        background-size: 56px 56px;
+        mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.9), transparent 78%);
+    }
+
+    main.pb-3 {
+        padding-bottom: 0 !important;
+    }
+
+    .session-shell {
+        width: min(1180px, calc(100vw - 32px));
+        margin: 0 auto;
+        padding: 48px 0 64px;
+        position: relative;
+    }
+
+    .session-hero {
+        position: relative;
+        overflow: hidden;
+        display: flex;
+        justify-content: space-between;
+        gap: 24px;
+        align-items: center;
+        margin-bottom: 28px;
+        padding: 28px;
+        border: 1px solid var(--details-border);
+        border-radius: 28px;
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0.06));
+        box-shadow: var(--details-shadow);
+        backdrop-filter: blur(26px) saturate(150%);
+        -webkit-backdrop-filter: blur(26px) saturate(150%);
+    }
+
+    .session-hero::after {
+        content: "";
+        position: absolute;
+        inset: 1px;
+        border-radius: 27px;
+        pointer-events: none;
+        background: linear-gradient(120deg, rgba(255, 255, 255, 0.22), transparent 34%, rgba(255, 255, 255, 0.08));
+        opacity: 0.55;
+    }
+
+    .session-hero > * {
+        position: relative;
+        z-index: 1;
+    }
+
+    .session-kicker {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 12px;
+        padding: 8px 12px;
+        border: 1px solid rgba(94, 234, 212, 0.28);
+        border-radius: 999px;
+        color: #ccfbf1;
+        background: rgba(20, 184, 166, 0.12);
+        font-size: 0.76rem;
+        font-weight: 800;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+    }
+
+    .session-hero h1 {
+        margin: 0;
+        font-size: clamp(2.1rem, 5vw, 4.4rem);
+        font-weight: 800;
+        letter-spacing: 0;
+        line-height: 0.98;
+    }
+
+    .session-hero p {
+        max-width: 570px;
+        margin: 14px 0 0;
+        color: var(--details-muted);
+        font-size: 1rem;
+    }
+
+    .session-actions {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+    }
+
+    .glass-link,
+    .btn-new-session,
+    .btn-qr-launch,
+    .btn-past {
+        min-height: 46px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        border-radius: 999px;
+        text-decoration: none;
+        font-weight: 800;
+        transition: transform 0.22s ease, border-color 0.22s ease, background 0.22s ease, box-shadow 0.22s ease;
+    }
+
+    .glass-link {
+        padding: 0 16px;
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        color: rgba(248, 250, 252, 0.76);
+        background: rgba(255, 255, 255, 0.06);
+    }
+
+    .glass-link:hover {
+        color: white;
+        border-color: rgba(255, 255, 255, 0.28);
+        background: rgba(255, 255, 255, 0.12);
+        transform: translateY(-2px);
+    }
+
+    .btn-new-session {
+        padding: 0 20px;
+        border: 0;
+        color: #06221e;
+        background: linear-gradient(135deg, var(--details-green), var(--details-lime));
+        box-shadow: 0 18px 40px rgba(45, 212, 191, 0.24);
+    }
+
+    .btn-new-session:hover,
+    .btn-qr-launch:hover,
+    .btn-past:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 22px 48px rgba(2, 8, 23, 0.34);
+    }
+
+    .session-list {
+        display: grid;
+        gap: 16px;
+    }
+
+    .session-row {
+        position: relative;
+        overflow: hidden;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 20px;
+        align-items: center;
+        padding: 22px;
+        border: 1px solid var(--details-border);
+        border-radius: 24px;
+        background: linear-gradient(135deg, rgba(15, 23, 42, 0.72), rgba(15, 23, 42, 0.38));
+        box-shadow: 0 18px 60px rgba(2, 8, 23, 0.28);
+        backdrop-filter: blur(22px) saturate(150%);
+        -webkit-backdrop-filter: blur(22px) saturate(150%);
+        transition: transform 0.24s ease, border-color 0.24s ease, background 0.24s ease, box-shadow 0.24s ease;
+    }
+
+    .session-row::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        width: 5px;
+        background: linear-gradient(180deg, var(--theme-start, var(--details-green)), var(--theme-end, var(--details-blue)));
+    }
+
+    .session-row::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        background: linear-gradient(120deg, rgba(255, 255, 255, 0.14), transparent 38%);
+        opacity: 0;
+        transition: opacity 0.24s ease;
+    }
+
+    .session-row:hover,
+    .session-row.is-active {
+        transform: translateY(-4px);
+        border-color: rgba(255, 255, 255, 0.28);
+        box-shadow: 0 26px 80px rgba(2, 8, 23, 0.38);
+    }
+
+    .session-row:hover::after,
+    .session-row.is-active::after {
+        opacity: 1;
+    }
+
+    .theme-100 {
+        --theme-start: #5eead4;
+        --theme-end: #60a5fa;
+    }
+
+    .theme-200 {
+        --theme-start: #a3e635;
+        --theme-end: #38bdf8;
+    }
+
+    .course-info,
+    .action-area {
+        position: relative;
+        z-index: 1;
+    }
+
+    .course-title {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 10px;
+    }
+
+    .course-title h5 {
+        margin: 0;
+        color: white;
+        font-size: clamp(1.05rem, 2vw, 1.28rem);
+        font-weight: 800;
+    }
+
+    .level-badge,
+    .course-code {
+        display: inline-flex;
+        align-items: center;
+        min-height: 28px;
+        padding: 5px 10px;
+        border-radius: 999px;
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        background: rgba(255, 255, 255, 0.08);
+        color: rgba(248, 250, 252, 0.84);
+        font-size: 0.74rem;
+        font-weight: 800;
+    }
+
+    .level-badge {
+        color: #ecfeff;
+        background: linear-gradient(135deg, rgba(94, 234, 212, 0.22), rgba(96, 165, 250, 0.18));
+    }
+
+    .session-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        color: var(--details-muted);
+        font-size: 0.9rem;
+    }
+
+    .meta-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        padding: 8px 12px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.07);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .action-area {
+        min-width: 210px;
+        display: flex;
+        justify-content: flex-end;
+    }
+
+    .btn-qr-launch {
+        padding: 0 18px;
+        border: 1px solid rgba(94, 234, 212, 0.36);
+        color: #06221e;
+        background: linear-gradient(135deg, var(--details-green), #e0f2fe);
+    }
+
+    .btn-live-session {
+        color: white;
+        border-color: rgba(96, 165, 250, 0.45);
+        background: linear-gradient(135deg, #2563eb, #06b6d4);
+        box-shadow: 0 16px 36px rgba(37, 99, 235, 0.22);
+    }
+
+    .btn-past {
+        padding: 0 18px;
+        color: rgba(248, 250, 252, 0.86);
+        border: 1px solid rgba(255, 255, 255, 0.16);
+        background: rgba(255, 255, 255, 0.08);
+    }
+
+    .countdown-box {
+        min-width: 190px;
+        padding: 12px 14px;
+        border-radius: 18px;
+        border: 1px solid rgba(251, 191, 36, 0.28);
+        background: rgba(251, 191, 36, 0.1);
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    }
+
+    .countdown-box .timer-main {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        color: #fde68a;
+        font-size: 0.86rem;
+        font-weight: 800;
+    }
+
+    .countdown-box .timer-text {
+        display: block;
+        margin-top: 3px;
+        color: rgba(254, 243, 199, 0.62);
+        font-size: 0.76rem;
+    }
+
+    .empty-session-state {
+        padding: 34px;
+        border: 1px solid var(--details-border);
+        border-radius: 24px;
+        color: var(--details-muted);
+        background: rgba(255, 255, 255, 0.07);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        text-align: center;
+    }
+
+    @@media (max-width: 768px) {
+        .session-shell {
+            width: min(100% - 20px, 680px);
+            padding-top: 24px;
+        }
+
+        .session-hero,
+        .session-row {
+            border-radius: 20px;
+            padding: 20px;
+        }
+
+        .session-hero,
+        .session-row {
+            grid-template-columns: 1fr;
+            align-items: stretch;
+        }
+
+        .session-hero {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .session-actions,
+        .action-area {
+            width: 100%;
+            justify-content: stretch;
+        }
+
+        .glass-link,
+        .btn-new-session,
+        .btn-qr-launch,
+        .btn-past,
+        .countdown-box {
+            width: 100%;
+        }
+
+        .action-area {
+            min-width: 0;
+        }
+    }
+</style>
+
+<div class="session-shell animate__animated animate__fadeIn">
+    <div class="session-hero">
+        <div>
+            <div class="session-kicker">
+                <i class="fa-solid fa-calendar-check"></i>
+                Attendance Sessions
+            </div>
+            <h1>Session Control</h1>
+            <p>Manage your active classes and view attendance history</p>
+        </div>
+        <div class="session-actions">
+            <a asp-action="InstructorDashboard" asp-controller="Instructor" class="glass-link">
+                <i class="fa-solid fa-arrow-left"></i>
+                Dashboard
+            </a>
+            <a asp-action="CreateSession" class="btn-new-session">
+                <i class="fas fa-plus"></i> New Class
+            </a>
+        </div>
+    </div>
+
+    @{
+        // Capture local time once for the entire list evaluation
+        var now = DateTime.UtcNow.ToLocalTime();
+
+        // Sorting: Active sessions (ready or ongoing) first, then by date
+        var sortedSessions = Model.OrderByDescending(s => 
+            now >= s.SessionStartTime.ToLocalTime().AddMinutes(-5) && 
+            now <= s.SessionEndTime.ToLocalTime())
+            .ThenByDescending(s => s.SessionStartTime);
+    }
+
+    @foreach (var session in sortedSessions)
+    {
+        // 1. Convert UTC properties to Local Time for calculation
+        var sessionStartLocal = session.SessionStartTime.ToLocalTime();
+        var sessionEndLocal = session.SessionEndTime.ToLocalTime();
+
+        // 2. Define business logic thresholds
+        var qrExpirationTime = sessionEndLocal.AddMinutes(-10);
+        var readyThreshold = sessionStartLocal.AddMinutes(-5);
+
+        // 3. Evaluate state
+        bool isExpired = now > qrExpirationTime; 
+        bool isTooEarly = now < readyThreshold;
+        bool isGenerated = !string.IsNullOrWhiteSpace(session.QRCodeToken);
+        bool isWithinActiveWindow = now >= readyThreshold && now <= qrExpirationTime;
+
+        string levelTheme = session.Level.ToString() switch {
+            "OneHundred" => "theme-100",
+            "TwoHundred" => "theme-200",
+            _ => "theme-100" 
+        };
+
+        <div class="session-row @(isWithinActiveWindow ? "is-active" : "") @levelTheme">
+            <div class="course-info">
+                <div class="course-title">
+                    <h5>@session.CourseName</h5>
+                    <span class="level-badge">@session.Level</span>
+                    <span class="course-code">#@session.CourseCode</span>
+                </div>
+                <div class="session-meta">
+                    <span class="meta-chip">
+                        <i class="far fa-clock"></i>
+                        @sessionStartLocal.ToString("hh:mm tt") - @sessionEndLocal.ToString("hh:mm tt")
+                    </span>
+                </div>
+            </div>
+
+            <div class="action-area" id="action-container-@session.Id">
+                @if (isExpired)
+                {
+                    <a asp-action="ViewAttendance" asp-route-id="@session.Id" class="btn btn-past">
+                        Records <i class="fas fa-chevron-right ms-2 opacity-50"></i>
+                    </a>
+                }
+                else if (isTooEarly)
+                {
+                    <div class="countdown-box js-session-countdown" 
+                         data-session-id="@session.Id" 
+                         data-ready-at="@(new DateTimeOffset(readyThreshold).ToUnixTimeMilliseconds())">
+                        <span class="timer-main">
+                            <i class="fas fa-hourglass-start"></i> Starts in <span class="timer-display">--:--</span>
+                        </span>
+                        <span class="timer-text">Ready soon</span>
+                    </div>
+                }
+                else if (!isGenerated)
+                {
+                    <a asp-action="GenerateQRCode" asp-route-id="@session.Id" class="btn btn-qr-launch">
+                        <i class="fas fa-play me-2"></i> Generate QRCode
+                    </a>
+                }
+                else
+                {
+                    <a asp-action="LiveSession" asp-route-sessionId="@session.Id" class="btn btn-qr-launch btn-live-session">
+                        <i class="fas fa-eye me-2"></i> View Live Session
+                    </a>
+                }
+            </div>
+        </div>
+    }
+
+    @if (!sortedSessions.Any())
+    {
+        <div class="empty-session-state">
+            <i class="fa-regular fa-calendar-xmark fa-2x mb-3"></i>
+            <div class="fw-bold text-white mb-1">No sessions yet</div>
+            <div>Create a class to start tracking attendance.</div>
+        </div>
+    }
+</div>
+
+@section Scripts {
+    <script>
+        function updateDashboardTimers() {
+            const now = new Date().getTime();
+            document.querySelectorAll('.js-session-countdown').forEach(container => {
+                const readyAt = parseInt(container.getAttribute('data-ready-at'));
+                const sessionId = container.getAttribute('data-session-id');
+                const timeLeft = readyAt - now;
+
+                if (timeLeft <= 0) {
+                    const parent = document.getElementById(`action-container-${sessionId}`);
+                    if (parent && !parent.querySelector('.btn-qr-launch')) {
+                        // Using a simple template for the button refresh
+                        parent.innerHTML = `
+                            <a href="/Session/GenerateQRCode?id=${sessionId}" class="btn btn-qr-launch animate__animated animate__fadeIn">
+                                <i class="fas fa-play me-2"></i> Generate QRCode
+                            </a>
+                        `;
+                    }
+                } else {
+                    const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
+                    const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
+                    const display = container.querySelector('.timer-display');
+                    if (display) {
+                        display.innerText = `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+                    }
+                }
+            });
+        }
+        setInterval(updateDashboardTimers, 1000);
+        updateDashboardTimers();
+    </script>
+}

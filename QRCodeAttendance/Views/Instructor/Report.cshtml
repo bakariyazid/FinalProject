@@ -1,0 +1,248 @@
+@using QRCodeAttendance.Models.Enums
+@model QRCodeAttendance.Models.DTOs.Reports.CourseReportDto
+
+@{
+    ViewData["Title"] = "Attendance Analytics Report";
+}
+
+<style>
+    :root {
+        --glass: rgba(255, 255, 255, 0.7);
+        --glass-border: rgba(255, 255, 255, 0.3);
+        --primary: #6366f1;
+        --success: #22c55e;
+        --warning: #f59e0b;
+        --danger: #ef4444;
+    }
+
+    body {
+        background: radial-gradient(circle at top left, #f8fafc, #e2e8f0);
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        color: #1e293b;
+    }
+
+    .report-container {
+        padding: 2rem 0;
+    }
+
+    .glass-panel {
+        background: var(--glass);
+        backdrop-filter: blur(12px);
+        border: 1px solid var(--glass-border);
+        border-radius: 24px;
+        padding: 1.5rem;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.03);
+        margin-bottom: 2rem;
+    }
+
+    .avatar-sm {
+        width: 32px;
+        height: 32px;
+        background: var(--primary);
+        color: white;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.7rem;
+        font-weight: bold;
+    }
+
+    .table-custom thead th {
+        background: transparent;
+        color: #64748b;
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        border: none;
+        padding: 1rem;
+    }
+
+    .table-custom tbody tr {
+        border-bottom: 1px solid rgba(0,0,0,0.05);
+        transition: all 0.2s;
+    }
+
+    .table-custom tbody tr:hover {
+        background: rgba(255,255,255,0.4);
+        transform: scale(1.005);
+    }
+
+    .status-pill {
+        padding: 5px 12px;
+        border-radius: 10px;
+        font-size: 0.75rem;
+        font-weight: 700;
+    }
+    .status-present { background: #dcfce7; color: #15803d; }
+    .status-late { background: #fef3c7; color: #92400e; }
+    .status-absent { background: #fee2e2; color: #991b1b; }
+
+    @@media print {
+        .no-print { display: none; }
+        .glass-panel { border: 1px solid #ccc; box-shadow: none; }
+    }
+</style>
+
+<div class="container report-container">
+    <div class="d-flex justify-content-between align-items-center mb-4 no-print">
+        <a asp-action="InstructorDashboard" asp-controller="Instructor" class="btn btn-link w-100 mt-3 text-white-50 text-decoration-none small">
+                 Back to Dashboard
+        </a>
+        <div class="d-flex gap-2">
+            <button class="btn btn-white border shadow-sm rounded-pill px-4" onclick="window.print()">
+                <i class="fas fa-print me-2 text-dark"></i> Print Report
+            </button>
+            <button class="btn btn-primary rounded-pill px-4 shadow-sm">
+                <i class="fas fa-download me-2"></i> Export Data
+            </button>
+        </div>
+    </div>
+
+    <div class="glass-panel mb-4 d-flex justify-content-between align-items-center">
+        <div>
+            <span class="badge bg-primary bg-opacity-10 text-primary mb-2 px-3 rounded-pill">Official Attendance Record</span>
+            <h2 class="fw-800 mb-1">@Model.CourseCode: @Model.CourseName</h2>
+            <p class="text-muted mb-0">
+                <i class="fas fa-user-tie me-2 text-primary"></i> <strong>Instructor:</strong> @Model.InstructorName 
+                <span class="mx-3 text-light">|</span>
+                <i class="fas fa-calendar-alt me-2 text-primary"></i> <strong>Generated:</strong> @DateTime.Now.ToString("MMM dd, yyyy")
+            </p>
+        </div>
+        <div class="text-end">
+            <div class="display-6 fw-900 text-primary">@Model.AverageAttendancePercentage%</div>
+            <div class="small fw-bold text-muted uppercase">Avg. Attendance Rate</div>
+        </div>
+    </div>
+
+    <div class="row g-4 mb-4">
+        <div class="col-md-3">
+            <div class="glass-panel text-center">
+                <h6 class="text-muted small fw-bold mb-3 uppercase">Total Sessions</h6>
+                <h2 class="fw-900 mb-0">@Model.TotalSessions</h2>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="glass-panel text-center border-start border-success border-4">
+                <h6 class="text-muted small fw-bold mb-3 uppercase">Total Present</h6>
+                <h2 class="fw-900 text-success mb-0">@Model.TotalPresent</h2>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="glass-panel text-center border-start border-warning border-4">
+                <h6 class="text-muted small fw-bold mb-3 uppercase">Total Late</h6>
+                <h2 class="fw-900 text-warning mb-0">@Model.TotalLate</h2>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="glass-panel text-center border-start border-danger border-4">
+                <h6 class="text-muted small fw-bold mb-3 uppercase">Total Absent</h6>
+                <h2 class="fw-900 text-danger mb-0">@Model.TotalAbsent</h2>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-lg-7">
+            <div class="glass-panel h-100">
+                <h5 class="fw-bold mb-4">Attendance Volatility</h5>
+                <canvas id="reportChart" height="280"></canvas>
+            </div>
+        </div>
+
+        <div class="col-lg-5">
+            <div class="glass-panel h-100">
+                <h5 class="fw-bold mb-4 text-danger">Students at Risk (< 75%)</h5>
+                <div class="list-group list-group-flush bg-transparent">
+                    @foreach (var student in Model.AtRiskStudents)
+                    {
+                        <div class="list-group-item bg-transparent border-0 px-0 d-flex align-items-center justify-content-between">
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="avatar-sm">@student.Name.Substring(0, 1)</div>
+                                <div>
+                                    <div class="fw-bold small">@student.Name</div>
+                                    <div class="text-muted" style="font-size: 0.7rem;">ID: @student.RegNumber</div>
+                                </div>
+                            </div>
+                            <span class="badge rounded-pill bg-danger bg-opacity-10 text-danger fw-bold">@student.AttendanceRate%</span>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12">
+            <div class="glass-panel">
+                <h5 class="fw-bold mb-4">Detailed Attendance Log</h5>
+                <div class="table-responsive">
+                    <table class="table table-custom align-middle">
+                        <thead>
+                            <tr>
+                                <th>Student Information</th>
+                                <th>Session Date</th>
+                                <th>Scan Time</th>
+                                <th>Status</th>
+                                <th>Score</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var record in Model.AttendanceRecords)
+                            {
+                                <tr>
+                                    <td>
+                                        <div class="fw-bold">@record.StudentName</div>
+                                        <div class="text-muted small">@record.StudentEmail</div>
+                                    </td>
+                                    <td>@record.SessionDate.ToString("dd MMM yyyy")</td>
+                                    <td>@(record.ScanTime?.ToString("hh:mm tt") ?? "---")</td>
+                                    <td>
+                                        <span class="status-pill status-@record.Status.ToString().ToLower()">
+                                            @record.Status
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <div class="progress" style="height: 6px; width: 60px;">
+                                            @* <div class="progress-bar bg-primary" style="width: @(record.Status == AttendanceStatus.Present ? "100" : (record.Status == AttendanceStatus.Late ? "50" : "0"))%"></div> *@
+                                            <div class="progress-bar bg-primary" style="width: @(record.Status == "Present" ? "100" : (record.Status == "Late" ? "50" : "0"))%"></div>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    const ctx = document.getElementById('reportChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: @Html.Raw(Json.Serialize(Model.DailyStats.Select(s => s.Date.ToString("dd/MM")))),
+            datasets: [{
+                label: 'Present Students',
+                data: @Html.Raw(Json.Serialize(Model.DailyStats.Select(s => s.Count))),
+                backgroundColor: '#6366f1',
+                borderRadius: 8,
+                barThickness: 20
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: { legend: { display: false } },
+            scales: {
+                y: { 
+                    beginAtZero: true, 
+                    grid: { borderDash: } 
+                },
+                x: { 
+                    grid: { display: false } 
+                }
+            }
+        }
+    });
+</script>

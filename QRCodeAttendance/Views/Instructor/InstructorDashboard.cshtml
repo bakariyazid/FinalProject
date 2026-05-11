@@ -1,0 +1,418 @@
+@using QRCodeAttendance.Models.DTOs
+@using QRCodeAttendance.Models.DTOs.Session
+@using QRCodeAttendance.Models.Enums
+@model InstructorDashboardDto
+
+@{
+    var sessions = Model?.RecentSessions ?? new List<SessionDto>();
+    ViewData["Title"] = "Instructor Analytics";
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+    
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+    <style>
+        :root {
+            --primary: #6366f1;
+            --sidebar-bg: #0f172a;
+            --body-bg: #f8fafc;
+            --card-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.04), 0 4px 6px -2px rgba(0, 0, 0, 0.02);
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            --accent-green: #4ade80; /* Added for the new button */
+        }
+
+        body {
+            background-color: var(--body-bg);
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            color: #1e293b;
+            margin: 0;
+            display: flex;
+        }
+
+        /* SIDEBAR NAVIGATION - LOCKED */
+        .sidebar {
+            width: 280px;
+            height: 100vh;
+            background: var(--sidebar-bg);
+            position: fixed;
+            left: 0;
+            top: 0;
+            padding: 2.5rem 1.5rem;
+            color: white;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .brand-box {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 2rem; /* Adjusted for button space */
+            padding: 0 0.5rem;
+            flex-shrink: 0;
+        }
+
+        .brand-box h2 {
+            font-size: 1.25rem;
+            white-space: nowrap; 
+            margin: 0;
+        }
+
+        /* NEW BUTTON STYLE */
+        .btn-create-session-sidebar {
+            background: var(--accent-green);
+            color: #0f172a !important;
+            padding: 14px;
+            border-radius: 14px;
+            margin-bottom: 2.5rem;
+            text-decoration: none !important;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            font-weight: 700;
+            font-size: 0.9rem;
+            transition: var(--transition);
+            box-shadow: 0 10px 20px rgba(74, 222, 128, 0.2);
+        }
+
+        .btn-create-session-sidebar:hover {
+            transform: translateY(-3px);
+            background: white;
+            box-shadow: 0 15px 25px rgba(255, 255, 255, 0.1);
+        }
+
+        .nav-link {
+            color: rgba(255, 255, 255, 0.6) !important;
+            padding: 12px 16px !important;
+            border-radius: 12px;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none !important;
+            transition: var(--transition);
+        }
+
+        .nav-link:hover, .nav-link.active {
+            background: rgba(255, 255, 255, 0.1);
+            color: white !important;
+        }
+
+        .nav-link.active { 
+            background: var(--primary) !important; 
+            box-shadow: 0 10px 15px -3px rgba(99, 102, 241, 0.3); 
+        }
+
+        /* MAIN CONTENT AREA - FIXED MARGIN */
+        .main-content {
+            flex: 1;
+            margin-left: 280px; 
+            padding: 2.5rem;
+            min-width: 0;
+        }
+
+        .header-section {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2.5rem;
+        }
+
+        /* CARDS & CONTAINERS */
+        .stat-card {
+            background: white;
+            border-radius: 20px;
+            padding: 1.5rem;
+            box-shadow: var(--card-shadow);
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            border: 1px solid rgba(0,0,0,0.02);
+        }
+
+        .icon-box {
+            width: 56px; height: 56px;
+            border-radius: 16px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.5rem;
+        }
+
+        .icon-blue { background: #e0e7ff; color: #4338ca; }
+        .icon-purple { background: #f3e8ff; color: #7e22ce; }
+
+        .analytics-container, .table-container {
+            background: white;
+            border-radius: 24px;
+            padding: 2rem;
+            box-shadow: var(--card-shadow);
+            margin-bottom: 2rem;
+        }
+
+        /* QR INTERFACE */
+        .qr-card {
+            background: linear-gradient(135deg, #6366f1, #a855f7);
+            color: white;
+            border-radius: 24px;
+            padding: 2rem;
+            text-align: center;
+            box-shadow: 0 20px 25px -5px rgba(99, 102, 241, 0.2);
+        }
+
+        .qr-placeholder {
+            background: white;
+            padding: 15px;
+            border-radius: 20px;
+            display: inline-block;
+            margin: 1.5rem 0;
+        }
+
+        .badge-active { background: #dcfce7; color: #166534; padding: 6px 12px; border-radius: 8px; font-weight: 600; font-size: 0.85rem; }
+        .badge-closed { background: #fee2e2; color: #991b1b; padding: 6px 12px; border-radius: 8px; font-weight: 600; font-size: 0.85rem; }
+
+        @@media (max-width: 1024px) {
+            .sidebar { width: 80px; padding: 2rem 1rem; }
+            .sidebar span, .brand-box h2, .btn-create-session-sidebar span { display: none; }
+            .main-content { margin-left: 80px; }
+        }
+    </style>
+</head>
+
+<body>
+
+    <nav class="sidebar">
+        <div class="brand-box">
+            <i class="fa fa-qrcode fa-2x"></i>
+            <h2 class="fw-bold">QR Attendance</h2>
+        </div>
+
+        <a asp-controller="Session" asp-action="CreateSession" class="btn-create-session-sidebar">
+            <i class="fa fa-plus-circle"></i> <span>New Session</span>
+        </a>
+        
+        <ul class="nav flex-column h-100">
+            <li class="nav-item"><a class="nav-link active" href="#"><i class="fa fa-th-large"></i> <span>Dashboard</span></a></li>
+            <li class="nav-item">
+                 <a class="nav-link" data-bs-toggle="collapse" href="#studentsDropdown" role="button" aria-expanded="false" 
+                aria-controls="studentsDropdown">
+                    <i class="fa fa-user-graduate"></i> 
+                    <span>Students</span>
+                    <i class="fa fa-chevron-down ms-auto small opacity-50"></i>
+                </a></li>
+
+    <div class="collapse" id="studentsDropdown">
+        <div class="d-grid gap-1 ps-4 mt-1">
+            <a asp-action="ViewMyStudents" 
+               asp-route-level="@((int)StudentLevel.HundredLevel)" 
+               class="nav-link py-2" 
+               style="font-size: 0.85rem;">
+                <i class="fa fa-circle-notch fa-xs"></i> <span>View 100 Level</span>
+            </a>
+            
+            <a asp-action="ViewMyStudents" 
+               asp-route-level="@((int)StudentLevel.TwoHundredLevel)" 
+               class="nav-link py-2" 
+               style="font-size: 0.85rem;">
+                <i class="fa fa-circle-notch fa-xs"></i> <span> View 200 Level</span>
+            </a>
+        </div>
+    </div>
+</li>
+            <li class="nav-item"><a class="nav-link" asp-controller="Session" asp-action="Details"><i class="fa fa-calendar-check"></i> <span>Sessions</span></a></li>
+            <li class="nav-item"><a class="nav-link" asp-controller="Instructor" asp-action="Report"><i class="fa fa-file-invoice"></i> <span>Reports</span></a></li>
+            <li class="nav-item mt-auto mb-4">
+    <form asp-controller="User" asp-action="Logout" method="post" id="logoutForm">
+        <a href="#" class="nav-link text-danger" onclick="document.getElementById('logoutForm').submit(); return false;">
+            <i class="fa fa-power-off text-danger"></i> <span>Logout</span>
+        </a>
+    </form>
+</li>
+        </ul>
+    </nav>
+
+    <main class="main-content">
+        <header class="header-section">
+            <div>
+                <h1 class="h3 fw-bold mb-1">Instructor Dashboard</h1>
+                <h3 class="text-blue-50 mb-0 ms-4">
+                    Instructor: <span> Welcome, @User.Identity.Name</span>
+                </h3>
+            </div>
+            <div class="d-flex align-items-center gap-3">
+                <div class="bg-white p-2 rounded-circle shadow-sm">
+                    <img src="https://ui-avatars.com/api/?name=Instructor&background=6366f1&color=fff" class="rounded-circle" width="35" height="35" />
+                </div>
+            </div>
+        </header>
+
+        <div class="row g-4 mb-4">
+            <div class="col-md-6 col-xl-4">
+                <div class="stat-card">
+                    <div class="icon-box icon-blue"><i class="fa fa-layer-group"></i></div>
+                    <div>
+                        <h6 class="text-muted mb-0 small uppercase">Total Sessions</h6>
+                        <h2 class="fw-bold mb-0">@(Model?.TotalSessions ?? 0)</h2>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 col-xl-4">
+                <div class="stat-card">
+                    <div class="icon-box icon-purple"><i class="fa fa-users-check"></i></div>
+                    <div>
+                        <h6 class="text-muted mb-0 small uppercase">Total Attendances</h6>
+                        <h2 class="fw-bold mb-0">@(Model?.TotalAttendances ?? 0)</h2>
+                    </div>
+                </div>
+            </div>
+        </div>
+</main>
+        @*<div class="row g-4">
+             <div class="col-lg-8">
+                <div class="analytics-container h-100">
+                    <h5 class="fw-bold mb-4">Attendance Overview</h5>
+                    <div style="height: 300px;">
+                        <canvas id="attendanceChart"></canvas>
+                    </div>
+                </div>
+            </div> *@
+
+            @* <div class="col-lg-4">
+                <div class="qr-card h-100">
+                    <h5 class="fw-bold mb-3">QR Generator</h5>
+                    <div class="d-grid gap-2 mb-3">
+                        @foreach (var session in sessions.Where(s => s.IsActive)) {
+                            <button class="btn btn-light btn-sm fw-bold rounded-3" 
+                                    onclick="generateQR('@session.QRCodeToken', '@session.QRCodeExpiry')">
+                                <i class="fa fa-play-circle me-2"></i>@session.CourseCode
+                            </button>
+                        }
+                        @if(!sessions.Any(s => s.IsActive)){
+                            <div class="small py-3 border border-white border-opacity-25 border-dashed rounded-3">No Active Sessions</div>
+                        }
+                    </div>
+                    <div class="qr-placeholder" id="qrcode">
+                        <i class="fa fa-qrcode fa-5x text-dark opacity-10"></i>
+                    </div>
+                    <div id="timer" class="mt-2 fw-bold fs-4">00:00</div>
+                </div>
+            </div> *@
+
+            @* <div class="col-12">
+                <div class="table-container">
+                    <h5 class="fw-bold mb-4">Recent Sessions</h5>
+                    <div class="table-responsive">
+                        <table class="table align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>CourseName</th>
+                                    <th>CourseCode</th>
+                                    <th>SessionStartTime</th>
+                                    <th>Status</th>
+                                    <th>Date</th>
+                                </tr>
+                            </thead>
+                           <tbody>
+                                @foreach (var session in sessions) {
+                                    <tr>
+                                        <td>
+                                            <div class="fw-bold">@session.CourseName</div>
+                                            <div class="text-muted small">@session.CourseCode</div>
+                                        </td>
+                                        <td>@session.SessionStartTime.ToString("hh:mm tt") - @session.SessionEndTime.ToString("hh:mm tt")</td>
+                                        <td>
+                                            <span class="@(session.IsActive ? "badge-active" : "badge-closed")">
+                                                @(session.IsActive ? "● Active" : "Closed")
+                                            </span>
+                                        </td>
+                                        <td class="text-muted">@session.CreatedDate.ToUniversalTime().ToShortDateString()</td>
+                                        <td class="text-muted">@session.UpdatedDate.ToUniversalTime().ToShortDateString()</td>
+                                        <td>
+                                            <a asp-controller="Session" asp-action="Details" asp-route-id="@session.Id" class="btn btn-sm btn-outline-primary">
+                                                <i class="fa fa-eye"></i> View
+                                            </a>
+                                        </td>
+
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div> 
+        </div>*@
+    
+
+    <script>
+        // Chart Implementation
+        const ctx = document.getElementById('attendanceChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: @Html.Raw(Json.Serialize(sessions.Select(s => s.CourseCode))),
+                datasets: [{
+                    label: 'Students Present',
+                    // USE THE NEW STATS PROPERTY HERE
+                    data: @Html.Raw(Json.Serialize(Model.AttendanceStats)), 
+                    borderColor: '#6366f1',
+                    tension: 0.4,
+                    fill: true,
+                    backgroundColor: 'rgba(99, 102, 241, 0.1)',
+                    pointBackgroundColor: '#6366f1',
+                    pointRadius: 5
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { 
+                    legend: { display: false },
+                    tooltip: { mode: 'index', intersect: false }
+                },
+                scales: {
+                    y: { beginAtZero: true, grid: { display: false } },
+                    x: { grid: { display: false } }
+                }
+            }
+        });
+
+        function generateQR(token, expiry){
+            document.getElementById("qrcode").innerHTML = "";
+            new QRCode(document.getElementById("qrcode"), {
+                text: token,
+                width: 150,
+                height: 150,
+                colorDark : "#0f172a",
+                colorLight : "#ffffff"
+            });
+            startTimer(expiry);
+        }
+
+        function startTimer(expiry) {
+            let end = new Date(expiry).getTime();
+            if(window.timerInterval) clearInterval(window.timerInterval);
+            window.timerInterval = setInterval(() => {
+                let now = new Date().getTime();
+                let distance = end - now;
+                if (distance < 0) {
+                    clearInterval(window.timerInterval);
+                    document.getElementById("timer").innerText = "EXPIRED";
+                    return;
+                }
+                let m = Math.floor(distance / (1000 * 60));
+                let s = Math.floor((distance % (1000 * 60)) / 1000);
+                document.getElementById("timer").innerText = `${m}m ${s}s`;
+            }, 1000);
+        }
+    </script>
+</body>
+</html>

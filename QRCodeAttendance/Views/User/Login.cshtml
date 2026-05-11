@@ -1,0 +1,248 @@
+@model QRCodeAttendance.Models.DTOs.User.LoginRequestModel
+@{
+    ViewData["Title"] = "Secure Login";
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            /* New Color Palette: Emerald/Cyan Glass */
+            --accent: #10b981; 
+            --accent-hover: #059669;
+            --glass: rgba(15, 23, 42, 0.65);
+            --glass-light: rgba(255, 255, 255, 0.05);
+            --border: rgba(255, 255, 255, 0.15);
+            --text-muted: rgba(255, 255, 255, 0.6);
+        }
+
+        body {
+            /* Background image aligned with Institutional/Tech theme */
+            background: linear-gradient(rgba(15, 23, 42, 0.8), rgba(15, 23, 42, 0.8)), 
+                        url('https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?q=80&w=2000&auto=format&fit=crop');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed; /* Ensures it shows on every screen/scroll */
+            height: 100vh;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            overflow: hidden;
+        }
+
+        .login-wrapper {
+            display: flex;
+            width: 1000px;
+            height: 600px;
+            background: var(--glass);
+            backdrop-filter: blur(20px) saturate(160%);
+            -webkit-backdrop-filter: blur(20px) saturate(160%);
+            border: 1px solid var(--border);
+            border-radius: 28px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            overflow: hidden;
+            position: relative;
+        }
+
+        .brand-side {
+            flex: 1;
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.7), rgba(6, 182, 212, 0.7));
+            padding: 4rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            color: white;
+            position: relative;
+            border-right: 1px solid var(--border);
+        }
+
+        .form-side {
+            flex: 1.2;
+            padding: 4rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            z-index: 2;
+        }
+
+        .input-group {
+            margin-bottom: 1.5rem;
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .input-group > i:not(.password-toggle) {
+            position: absolute;
+            left: 18px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--accent);
+            z-index: 5;
+            font-size: 0.9rem;
+        }
+
+        .form-control {
+            background: var(--glass-light) !important;
+            border: 1px solid var(--border) !important;
+            border-radius: 14px !important;
+            padding: 14px 45px 14px 50px !important;
+            color: white !important;
+            transition: all 0.3s ease;
+        }
+
+        .form-control:focus {
+            background: rgba(255, 255, 255, 0.1) !important;
+            border-color: var(--accent) !important;
+            box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.15) !important;
+        }
+
+        .form-control::placeholder {
+            color: rgba(255, 255, 255, 0.3);
+        }
+
+        .password-toggle {
+            position: absolute;
+            right: 18px;
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: pointer;
+            color: var(--text-muted);
+            z-index: 10;
+        }
+
+        .btn-login {
+            background: var(--accent);
+            border: none;
+            padding: 14px;
+            border-radius: 14px;
+            font-weight: 700;
+            color: #0f172a; /* Dark text for high contrast on emerald */
+            width: 100%;
+            margin-top: 1rem;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-login:hover {
+            background: var(--accent-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(16, 185, 129, 0.2);
+        }
+
+        .register-link {
+            color: var(--accent);
+            text-decoration: none;
+            font-weight: 600;
+            transition: 0.3s;
+        }
+
+        .register-link:hover {
+            color: white;
+            text-decoration: underline;
+        }
+
+        /* Decorative "QR" element for the glass background */
+        .glass-bg-icon {
+            position: absolute;
+            bottom: -50px;
+            right: -20px;
+            font-size: 20rem;
+            color: rgba(255, 255, 255, 0.03);
+            transform: rotate(-15deg);
+            pointer-events: none;
+        }
+
+        @@media (max-width: 992px) {
+            .login-wrapper { width: 95%; height: auto; flex-direction: column; margin: 20px; }
+            .brand-side { padding: 2.5rem; border-right: none; border-bottom: 1px solid var(--border); }
+            .form-side { padding: 3rem 1.5rem; }
+            body { overflow-y: auto; }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="login-wrapper">
+        <i class="fas fa-qrcode glass-bg-icon"></i>
+        
+        <div class="brand-side">
+            <h1 class="display-4 fw-800 mb-3">Welcome Back.</h1>
+            <p class="lead opacity-75">Sign in to manage your attendance records and track real-time classroom activity.</p>
+            
+            <div class="mt-auto d-flex align-items-center gap-2">
+                <div style="background: white; padding: 8px; border-radius: 10px;">
+                    <i class="fas fa-qrcode fa-2x" style="color: var(--accent)"></i>
+                </div>
+                <span class="fw-bold tracking-wider uppercase">QRCodeAttendance v2.0</span>
+            </div>
+        </div>
+
+        <div class="form-side">
+            <div class="mb-5">
+                <h2 class="fw-800 text-white mb-1">Login</h2>
+                <p style="color: var(--text-muted)">Enter your institutional credentials</p>
+            </div>
+
+            <form asp-action="Login" method="post">
+                @Html.AntiForgeryToken()
+
+                <div class="input-group">
+                    <i class="fas fa-envelope"></i>
+                    <input asp-for="Email" type="email" class="form-control" placeholder="Institutional Email" required />
+                </div>
+
+                <div class="input-group">
+                    <i class="fas fa-lock"></i>
+                    <input asp-for="Password" type="password" class="form-control" id="password-field" placeholder="Password" required />
+                    <i class="fas fa-eye password-toggle" id="toggle-password"></i>
+                </div>
+
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="remember" style="background-color: transparent; border-color: var(--border);">
+                        <label class="form-check-label small" for="remember" style="color: var(--text-muted)">Remember me</label>
+                    </div>
+                    <a href="#" class="small text-decoration-none" style="color: var(--accent)">Forgot password?</a>
+                </div>
+
+                <button type="submit" class="btn-login">
+                    Access Dashboard <i class="fas fa-sign-in-alt ms-2"></i>
+                </button>
+            </form>
+
+            <div class="mt-5 text-center">
+                <p class="small" style="color: var(--text-muted)">New to the platform?</p>
+                <div class="d-flex justify-content-center gap-3 mt-2">
+                     <a href="/Student/RegisterStudent" class="register-link small">Student Portal</a>
+                    <span style="color: var(--border)">|</span>
+                     <a href="/Instructor/RegisterInstructor" class="register-link small">Instructor Portal <i class="fas fa-chevron-right small ms-1"></i></a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const togglePassword = document.querySelector('#toggle-password');
+        const password = document.querySelector('#password-field');
+
+        togglePassword.addEventListener('click', function () {
+            const type = password.getAttribute('type') === 'password' ? 'text' : 'password';
+            password.setAttribute('type', type);
+            this.classList.toggle('fa-eye');
+            this.classList.toggle('fa-eye-slash');
+        });
+    </script>
+</body>
+</html>
