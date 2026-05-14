@@ -200,12 +200,12 @@ namespace QRCodeAttendance.Implementation.Services
 
                         RecentAttendances = attendances
                             .OrderByDescending(a => a.ScanTime)
-                            .Take(5)
                             .Select(a => new AttendanceDto
                             {
                                 Id = a.Id,
-                                CourseName = a.CourseName,
-                                CourseCode = a.CourseCode,
+                                SessionId = a.SessionId,
+                                CourseName = a.CourseName ?? a.ClassSession?.CourseName ?? "Unknown Course",
+                                CourseCode = a.CourseCode ?? a.ClassSession?.CourseCode ?? "N/A",
                                 ScanTime = a.ScanTime,
                                 Status = a.Status
                             }).ToList()
@@ -228,79 +228,130 @@ namespace QRCodeAttendance.Implementation.Services
             }
 
         public async Task<BaseResponse<double>> GetMyAttendancePercentage(Guid studentId)
-        {
-            var student = await _studentRepository.Get<Student>(s => s.UserId == studentId);
-            if (student == null) 
-            return new BaseResponse<double> 
-            { 
-                Status = false, 
-                Message = "Student not found"
-            };
-
-            var now = DateTime.UtcNow;
-
-            int totalSessions = await _sessionRepository.Count<Session>(s => 
-                s.SessionEndTime <= now && 
-                s.Level == student.StudentLevel && 
-                s.Department == student.Department);
-
-            if (totalSessions == 0)
             {
-                return new BaseResponse<double> { Status = true, Message = "No sessions yet", Data = 0 };
+                var student = await _studentRepository.Get<Student>(s => s.UserId == studentId);
+                if (student == null) 
+                return new BaseResponse<double> 
+                { 
+                    Status = false, 
+                    Message = "Student not found"
+                };
+
+                var now = DateTime.UtcNow;
+
+                int totalSessions = await _sessionRepository.Count<Session>(s => 
+                    s.SessionEndTime <= now && 
+                    s.Level == student.StudentLevel && 
+                    s.Department == student.Department);
+
+                if (totalSessions == 0)
+                {
+                    return new BaseResponse<double> { Status = true, Message = "No sessions yet", Data = 0 };
+                }
+
+                int attendedCount = await _attendanceRepository.Count<Attendance>(a => 
+                    a.StudentId == student.Id && a.Status == AttendanceStatus.Present);
+
+                double percentage = ((double)attendedCount / totalSessions) * 100;
+
+                return new BaseResponse<double>
+                {
+                    Status = true,
+                    Message = "Attendance percentage calculated",
+                    Data = Math.Round(percentage, 2)
+                };
             }
 
-            int attendedCount = await _attendanceRepository.Count<Attendance>(a => 
-                a.StudentId == student.Id && a.Status == AttendanceStatus.Present);
-
-            double percentage = ((double)attendedCount / totalSessions) * 100;
-
-            return new BaseResponse<double>
-            {
-                Status = true,
-                Message = "Attendance percentage calculated",
-                Data = Math.Round(percentage, 2)
-            };
-        }
-
-              public async Task<BaseResponse<StudentDto>> GetStudentProfile(Guid userId)
-            {
-                var student = await _studentRepository.Get<Student>(x => x.UserId == userId);
-
-                if (student == null)
+            public async Task<BaseResponse<StudentDto>> GetStudentProfile(Guid userId)
                 {
+                    var student = await _studentRepository.Get<Student>(x => x.UserId == userId);
+
+                    if (student == null)
+                    {
+                        return new BaseResponse<StudentDto>
+                        {
+                            Message = "Student not found",
+                            Status = false,
+                            Data = null
+                        };
+                    }
+
+                    var studentDto = new StudentDto
+                    {
+                        StudentId = student.Id,
+                        UserId = student.UserId, 
+                        FullName = student.FullName(),
+                        Email = student.Email,
+                        FirstName = student.FirstName,
+                        LastName = student.LastName,
+                        PhoneNumber = student.PhoneNumber,
+                        Address = student.Address,
+                        Gender = student.Gender,
+                        DateOfBirth = student.DateOfBirth,
+                        MatricNumber = student.MatricNumber,
+                        StudentLevel = student.StudentLevel,
+                        Department = student.Department,
+                        CreatedDate = student.CreatedDate, 
+                        UpdatedDate = student.UpdatedDate  
+                    };
+
                     return new BaseResponse<StudentDto>
                     {
-                        Message = "Student not found",
-                        Status = false
+                        Data = studentDto,
+                        Message = "Student profile retrieved successfully",
+                        Status = true
                     };
                 }
 
-                var studentDto = new StudentDto
-                {
-                    StudentId = student.Id,
-                    FullName = student.FullName(),
-                    Email = student.Email,
-                    FirstName = student.FirstName,
-                    LastName = student.LastName,
-                    PhoneNumber = student.PhoneNumber,
-                    Address = student.Address,
-                    Gender = student.Gender,
-                    DateOfBirth = student.DateOfBirth,
-                    MatricNumber = student.MatricNumber
-                };
+    
 
-                return new BaseResponse<StudentDto>
+    public async Task<BaseResponse<bool>> UpdateStudentProfile(Guid userId, UpdateStudentRequestModel request)
+        {
+            try
+            {
+                var student = await _studentRepository.Get<Student>(s => s.UserId == userId);
+                
+                if (student == null)
                 {
-                    Data = studentDto,
-                    Message = "Student profile retrieved successfully",
-                    Status = true
+                    _logger.LogWarning("Update failed: Student with UserId {UserId} not found.", userId);
+                    return new BaseResponse<bool> { Status = false, Message = "Student record not found." };
+                }
+
+                student.FirstName = request.FirstName ?? student.FirstName;
+                student.LastName = request.LastName ?? student.LastName;
+                student.PhoneNumber = request.PhoneNumber ?? student.PhoneNumber;
+                student.Address = request.Address ?? student.Address;
+                student.Email = request.Email ?? student.Email;
+                student.Gender = request.Gender != default ? request.Gender : student.Gender;
+                student.StudentLevel = request.StudentLevel != default ? request.StudentLevel : student.StudentLevel;
+                student.Department = request.Department != default ? request.Department : student.Department;
+                student.DateOfBirth = request.DateOfBirth != default ? request.DateOfBirth : student.DateOfBirth;
+                student.UpdatedDate = DateTime.UtcNow.ToUniversalTime();
+
+                _studentRepository.Update(student);
+                
+                await _unitOfWork.SaveChangesAsync();
+
+                _logger.LogInformation("Successfully updated profile for Student {UserId}.", userId);
+
+                return new BaseResponse<bool> 
+                { 
+                    Status = true, 
+                    Message = "Profile updated successfully",
+                    Data = true 
                 };
             }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred while updating profile for Student {UserId}. Error: {Message}", userId, ex.Message);
 
-    
-        public Task<BaseResponse<bool>> UpdateStudentProfile(Guid userId, UpdateStudentRequestModel request)
-        {
-            throw new NotImplementedException();
+                return new BaseResponse<bool>
+                {
+                    Status = false,
+                    Message = "An unexpected error occurred while saving your changes. Please try again later.",
+                    Data = false
+                };
+            }
         }
 
         
@@ -364,115 +415,7 @@ namespace QRCodeAttendance.Implementation.Services
 
 
 
-    //    public async Task<BaseResponse<IReadOnlyList<AttendanceDto>>> GetMyAttendance(Guid studentId)
-    //     {
-    //         var attendances = await _attendanceRepository.GetByStudentId(studentId);
-
-    //         if (attendances == null || !attendances.Any())
-    //         {
-    //             return new BaseResponse<IReadOnlyList<AttendanceDto>>
-    //             {
-    //                 Status = true, 
-    //                 Message = "No attendance records found yet.",
-    //                 Data = new List<AttendanceDto>()
-    //             };
-    //         }
-
-    //         var attendanceDtos = attendances
-    //             .OrderByDescending(a => a.ScanTime) 
-    //             .Select(a => new AttendanceDto
-    //             {
-    //                 Id = a.Id,          
-    //                 StudentId = a.StudentId,
-    //                 SessionId = a.SessionId,
-    //                 CourseName = a.CourseName ?? "Unknown Course",
-    //                 CourseCode = a.CourseCode ?? "N/A",
-    //                 ScanTime = a.ScanTime,
-    //                 Status = a.Status 
-    //             })
-    //             .ToList();
-
-    //         return new BaseResponse<IReadOnlyList<AttendanceDto>>
-    //         {
-    //             Status = true,
-    //             Message = $"Successfully retrieved {attendanceDtos.Count} records",
-    //             Data = attendanceDtos
-    //         };
-    //     }
-
-
-    //    public async Task<BaseResponse<double>> GetMyAttendancePercentage(Guid studentId)
-    //     {
-    //         var sessions = await _sessionRepository.GetAll<Session>();
-
-    //         if (sessions == null || !sessions.Any())
-    //         {
-    //             return new BaseResponse<double>
-    //             {
-    //                 Status = false,
-    //                 Message = "No sessions have been held yet",
-    //                 Data = 0
-    //             };
-    //         }
-
-    //         var allAttendances = await _attendanceRepository.GetAll(a => a.StudentId == studentId);
-            
-    //         var sessionIds = sessions.Select(s => s.Id).ToHashSet();
-    //         var attendedCount = allAttendances.Count(a => 
-    //                         sessionIds.Contains(a.SessionId) && 
-    //                         a.Status == AttendanceStatus.Present);
-
-    //         int totalSessions = sessions.Count();
-            
-    //         double percentage = totalSessions > 0 
-    //             ? ((double)attendedCount / totalSessions) * 100 : 0;
-
-    //         return new BaseResponse<double>
-    //         {
-    //             Status = true,
-    //             Message = "Attendance percentage calculated",
-    //             Data = Math.Round(percentage, 2) 
-    //         };
-    //     }
-
-   
-           
-
-        // public async Task<BaseResponse<IReadOnlyList<SessionDto>>> GetAvailableSessions(Guid studentId)
-        //     {
-        //         var student = await _studentRepository.Get<Student>(x => x.Id == studentId);
-        //         if (student == null)
-        //         {
-        //             return new BaseResponse<IReadOnlyList<SessionDto>>
-        //             {
-        //                 Message = "Student not found",
-        //                 Status = false
-        //             };
-        //         }
-
-        //         var sessions = await _sessionRepository.GetAll<Session>();
-
-        //         var sessionDtos = sessions.Select(x => new SessionDto
-        //         {
-        //             Id = x.Id,
-        //             SessionStartTime = x.SessionStartTime,
-        //             SessionEndTime = x.SessionEndTime, 
-        //             CourseName = x.CourseName,
-        //             CourseCode = x.CourseCode,
-        //             InstructorId = x.InstructorId,
-        //             IsActive = x.IsActive,
-        //             QRCodeToken = x.QRCodeToken,
-        //             QRCodeExpiry = x.QRCodeExpiry,
-        //         }).ToList();
-
-        //         return new BaseResponse<IReadOnlyList<SessionDto>>
-        //         {
-        //             Data = sessionDtos,
-        //             Message = "Sessions retrieved successfully",
-        //             Status = true
-        //         };
-        //     }
-
+    
           
     }
 }

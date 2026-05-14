@@ -67,21 +67,67 @@ namespace QRCodeAttendance.Controllers
             return View(response.Data);
         }
 
+            // var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            // _logger.LogInformation("Student {UserId} requested profile", userId);
 
+            // var response = await _studentService.GetStudentProfile(Guid.Parse(userId));
 
-        [HttpGet("profile")]
-        public async Task<IActionResult> Profile()
+            // return View(response.Data);
+
+        [HttpGet("Student/StdProfile")]
+        public async Task<IActionResult> StdProfile()
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            _logger.LogInformation("Student {UserId} requested profile", userId);
+                
+                if (string.IsNullOrEmpty(userId))
+                {
+                    return RedirectToAction("Login", "User");
+                }
 
-            var response = await _studentService.GetStudentProfile(Guid.Parse(userId));
+                _logger.LogInformation("Student {UserId} requested profile", userId);
 
-            return View(response.Data);
+                var response = await _studentService.GetStudentProfile(Guid.Parse(userId));
+
+                if (response == null || response.Data == null)
+                {
+                    _logger.LogWarning("Profile data for user {UserId} was not found.", userId);
+                    return NotFound("Student profile not found.");
+                }
+
+                return View(response.Data);
         }
 
-        [HttpPost("profile")]
-        public async Task<IActionResult> UpdateProfile(UpdateStudentRequestModel model)
+        [HttpGet("Student/EditStdProfile")]
+        public async Task<IActionResult> EditStdProfile()
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userId)) return RedirectToAction("Login", "User");
+
+            var response = await _studentService.GetStudentProfile(Guid.Parse(userId));
+            
+            if (response == null || !response.Status || response.Data == null)
+            {
+                return NotFound("Student profile not found.");
+            }
+
+            var model = new UpdateStudentRequestModel
+            {
+                FirstName = response.Data.FirstName,
+                LastName = response.Data.LastName,
+                Email = response.Data.Email,
+                PhoneNumber = response.Data.PhoneNumber,
+                Address = response.Data.Address,
+                Gender = response.Data.Gender,
+                Department = response.Data.Department,
+                DateOfBirth = response.Data.DateOfBirth,
+                StudentLevel = response.Data.StudentLevel
+            };
+            return View(model);
+        }
+
+
+        [HttpPost]
+        public async Task<IActionResult> EditStdProfile(UpdateStudentRequestModel model)
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             _logger.LogInformation("Student {UserId} updating profile", userId);
@@ -96,7 +142,7 @@ namespace QRCodeAttendance.Controllers
             }
 
             _logger.LogInformation("Profile updated successfully for {UserId}", userId);
-            return RedirectToAction("Profile");
+            return RedirectToAction("StdProfile");
         }
 
 

@@ -332,9 +332,9 @@ namespace QRCodeAttendance.Implementation.Services
                         Id = a.Id,
                         StudentId = a.StudentId,
                         SessionId = a.SessionId,
-                        StudentName = a.Student.FullName(), 
-                        CourseName = a.ClassSession.CourseName,
-                        CourseCode = a.ClassSession.CourseCode,
+                        StudentName = a.Student?.FullName() ?? a.StudentName, 
+                        CourseName = a.ClassSession?.CourseName ?? a.CourseName,
+                        CourseCode = a.ClassSession?.CourseCode ?? a.CourseCode,
                         Status = a.Status, 
                         ScanTime = a.ScanTime,
                         CreatedDate = a.CreatedDate
@@ -377,7 +377,11 @@ namespace QRCodeAttendance.Implementation.Services
                         Department = session.Department,
                         SessionStartTime = session.SessionStartTime,
                         SessionEndTime = session.SessionEndTime,
-                        IsActive = session.IsActive
+                        IsActive = session.IsActive,
+                        QRCodeToken = session.QRCodeToken,
+                        QRCodeExpiry = session.QRCodeExpiry,
+                        CreatedDate = session.CreatedDate,
+                        UpdatedDate = session.UpdatedDate
                     };
 
                     response.Status = true;

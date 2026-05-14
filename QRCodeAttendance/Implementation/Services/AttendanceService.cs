@@ -18,53 +18,30 @@ namespace QRCodeAttendance.Implementation.Services
           private readonly IUnitOfWork _unitOfWork; 
           private readonly ISessionRepository _sessionRepository;
           private readonly ICurrentUserService _currentUserService;
+          private readonly IStudentRepository _studentRepository;
 
         public AttendanceService(IAttendanceRepository attendanceRepository, IUnitOfWork unitOfWork, 
-        ISessionRepository sessionRepository, ICurrentUserService currentUserService)
+        ISessionRepository sessionRepository, ICurrentUserService currentUserService, IStudentRepository studentRepository)
         {
             _attendanceRepository = attendanceRepository;
             _unitOfWork = unitOfWork;
             _sessionRepository = sessionRepository;
             _currentUserService = currentUserService;
+            _studentRepository = studentRepository;
         }
-
-        // public async Task<BaseResponse<bool>> MarkAttendance(Guid studentId, Guid sessionId)
-        // {
-        //     var alreadyMarked = await _attendanceRepository.HasStudentMarkedAttendance(studentId, sessionId);
-
-        //     if (alreadyMarked)
-        //     {
-        //         return new BaseResponse<bool>
-        //         {
-        //             Status = false,
-        //             Message = "Student has already marked attendance for this session",
-        //             Data = false
-        //         };
-        //     }
-
-        //     var attendance = new Attendance
-        //     {
-        //         Id = Guid.NewGuid(),
-        //         StudentId = studentId,
-        //         SessionId = sessionId,
-        //         ScanTime = DateTime.UtcNow,
-        //         Status = AttendanceStatus.Present
-        //     };
-
-        //     await _attendanceRepository.Add(attendance);
-
-        //     return new BaseResponse<bool>
-        //     {
-        //         Status = true,
-        //         Message = "Attendance marked successfully",
-        //         Data = true
-        //     };
-        // }
 
         public async Task<BaseResponse<bool>> MarkAttendance(Guid sessionId, string qrCode)
         {
 
-            var studentId = _currentUserService.UserId;
+            var student = await _studentRepository.Get<Student>(s => s.UserId == _currentUserService.UserId);
+            if (student == null)
+                return new BaseResponse<bool>
+                {
+                    Status = false,
+                    Message = "Student record not found"
+                };
+
+            var studentId = student.Id;
 
             var session = await _sessionRepository.Get<Session>(s => s.Id == sessionId);
             if (session == null) 
@@ -74,6 +51,28 @@ namespace QRCodeAttendance.Implementation.Services
                      Message = "Session not found" 
                 };
 
+            var now = DateTime.UtcNow.ToUniversalTime();
+
+            if (now > session.SessionEndTime.AddMinutes(-10))
+                return new BaseResponse<bool>
+                {
+                    Status = false,
+                    Message = "The class has been end"
+                };
+
+            if (!session.IsActive || now < session.SessionStartTime.AddMinutes(-5))
+                return new BaseResponse<bool>
+                {
+                    Status = false,
+                    Message = "This QR Code is not for a live attendance session"
+                };
+
+            if (now > session.QRCodeExpiry)
+                return new BaseResponse<bool>
+                {
+                    Status = false,
+                    Message = "This QR Code has expired. Please scan the current live QR Code"
+                };
 
             if (qrCode != session.QRCodeToken)
                 return new BaseResponse<bool> 
@@ -81,8 +80,6 @@ namespace QRCodeAttendance.Implementation.Services
                     Status = false, 
                     Message = "Invalid or expired QR Code" 
                 };
-
-            var now = DateTime.UtcNow.ToUniversalTime();
 
             var qrHardExpiry = session.SessionEndTime.AddMinutes(-10);
             if (now > qrHardExpiry)
@@ -92,9 +89,8 @@ namespace QRCodeAttendance.Implementation.Services
                     Message = "Attendance closed (Class ending soon)" 
                 };
 
-            
             var lateThreshold = session.SessionStartTime.AddMinutes(30);
-            AttendanceStatus autoStatus = (now <= lateThreshold) ? AttendanceStatus.Present : AttendanceStatus.Late;
+            AttendanceStatus autoStatus = (now <= lateThreshold) ? AttendanceStatus.Present : AttendanceStatus.Absent;
 
             
             var alreadyMarked = await _attendanceRepository.HasStudentMarkedAttendance(studentId, sessionId);
@@ -107,7 +103,7 @@ namespace QRCodeAttendance.Implementation.Services
                 Id = Guid.NewGuid(),
                 StudentId = studentId,
                 SessionId = sessionId,
-                StudentName = _currentUserService.Email, 
+                StudentName = student.FullName(), 
                 CourseName = session.CourseName,
                 CourseCode = session.CourseCode,
                 ScanTime = DateTime.UtcNow.ToUniversalTime(),

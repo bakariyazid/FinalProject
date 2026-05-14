@@ -291,39 +291,47 @@ namespace QRCodeAttendance.Implementation.Services
         }
 
 
-    public async Task<BaseResponse<InstructorDto>> GetInstructorProfile(Guid userId)
-        {
-            var instructor = await _instructorRepository.Get<Instructor>(i => i.UserId == userId);
-
-            if (instructor == null)
+        public async Task<BaseResponse<InstructorDto>> GetInstructorProfile(Guid userId)
             {
+                var instructor = await _instructorRepository.Get<Instructor>(i => i.UserId == userId);
+
+                if (instructor == null)
+                {
+                    return new BaseResponse<InstructorDto>
+                    {
+                        Status = false,
+                        Message = "Instructor not found",
+                        Data = null
+                    };
+                }
+
+                var instructorDto = new InstructorDto
+                {
+                    InstructorId = instructor.Id,
+                    UserId = instructor.UserId,
+                    FirstName = instructor.FirstName, 
+                    LastName = instructor.LastName,   
+                    FullName = instructor.FullName(),
+                    Email = instructor.Email,
+                    PhoneNumber = instructor.PhoneNumber,
+                    Address = instructor.Address,
+                    Gender = instructor.Gender,
+                    Department = instructor.Department,
+                    DateOfBirth = instructor.DateOfBirth,
+                    CreatedDate = instructor.CreatedDate,
+                    UpdatedDate = instructor.UpdatedDate
+                };
+
                 return new BaseResponse<InstructorDto>
                 {
-                    Status = false,
-                    Message = "Instructor not found",
-                    Data = null
+                    Status = true,
+                    Message = "Instructor retrieved successfully",
+                    Data = instructorDto
                 };
             }
 
-            var instructorDto = new InstructorDto
-            {
-                InstructorId = instructor.Id,
-                UserId = instructor.UserId,
-                FullName = instructor.FullName(),
-                Email = instructor.Email,
-                Department = instructor.Department
-            };
-
-            return new BaseResponse<InstructorDto>
-            {
-                Status = true,
-                Message = "Instructor retrieved successfully",
-                Data = instructorDto
-            };
-        }
-
       
-        public async Task<BaseResponse<bool>> UpdateInstructorProfile(Guid userId, UpdateInstructorRequestModel request)
+        public async Task<BaseResponse<bool>> UpdateInsProfile(Guid userId, UpdateInstructorRequestModel request)
             {
                 var response = new BaseResponse<bool>();
 
@@ -340,8 +348,11 @@ namespace QRCodeAttendance.Implementation.Services
                 instructor.FirstName = request.FirstName ?? instructor.FirstName;
                 instructor.LastName = request.LastName ?? instructor.LastName;
                 instructor.PhoneNumber = request.PhoneNumber ?? instructor.PhoneNumber;
+                instructor.Gender = request.Gender != default ? request.Gender : instructor.Gender;
+                instructor.Department = request.Department != default ? request.Department : instructor.Department;
                 instructor.DateOfBirth = request.DateOfBirth != default ? request.DateOfBirth : instructor.DateOfBirth;
                 instructor.Address = request.Address ?? instructor.Address;
+                instructor.UpdatedDate = DateTime.UtcNow.ToUniversalTime();
 
 
                 if (instructor.User != null)

@@ -20,7 +20,7 @@ namespace QRCodeAttendance.Interface.Services
         Task<BaseResponse<InstructorDashboardDto>> GetDashboard(Guid userId);
         Task<BaseResponse<InstructorDto>> GetInstructorProfile(Guid userId);
         
-        Task<BaseResponse<bool>> UpdateInstructorProfile(Guid userId, UpdateInstructorRequestModel request);
+        Task<BaseResponse<bool>> UpdateInsProfile(Guid userId, UpdateInstructorRequestModel request);
         Task<BaseResponse<IReadOnlyList<SessionDto>>> GetInstructorSessions(Guid userId);
 
 

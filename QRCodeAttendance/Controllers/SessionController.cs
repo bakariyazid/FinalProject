@@ -132,6 +132,30 @@ namespace QRCodeAttendance.Controllers
                 });
             }
 
+            [HttpGet]
+            public async Task<IActionResult> LiveAttendanceStatus(Guid sessionId)
+            {
+                var response = await _sessionService.GetSessionAttendance(sessionId);
+                var attendances = response.Status && response.Data != null
+                    ? response.Data.OrderByDescending(a => a.ScanTime).ToList()
+                    : new List<QRCodeAttendance.Models.DTOs.Attendance.AttendanceDto>();
+
+                var latest = attendances.FirstOrDefault();
+
+                return Json(new
+                {
+                    success = true,
+                    count = attendances.Count,
+                    latest = latest == null ? null : new
+                    {
+                        id = latest.Id,
+                        studentName = latest.StudentName,
+                        courseCode = latest.CourseCode,
+                        scanTime = latest.ScanTime.ToLocalTime().ToString("hh:mm tt")
+                    }
+                });
+            }
+
 
 
         // GET: /Session/Edit/{id}

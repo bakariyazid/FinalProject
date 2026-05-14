@@ -2,8 +2,9 @@
 
 @{
     ViewData["Title"] = "Live Session Tracking";
-    
-    string levelTheme = Model.Level.ToString() switch {
+
+    string levelTheme = Model.Level.ToString() switch
+    {
         "OneHundred" => "theme-100",
         "TwoHundred" => "theme-200",
         _ => "theme-100"
@@ -13,146 +14,603 @@
     string localSessionEnd = Model.SessionEndTime.ToLocalTime().ToString("O");
 }
 
-<div class="page-header mb-4">
-        <div>
-            <h1 class="display-4 fw-800 mb-0">Live Session</h1>
-            <p class="text-white-50 small">
-                @Model.CourseName 
-                <span class="level-badge ms-2">@Model.Level</span>
-                <span class="text-white-50 fw-light ms-2" style="font-size: 0.9rem;">#@Model.CourseCode</span>
-            </p>
-        </div>
-    </div>
+<style>
+    body {
+        margin-bottom: 0;
+        background:
+            radial-gradient(circle at top left, rgba(14, 165, 233, 0.18), transparent 32rem),
+            radial-gradient(circle at bottom right, rgba(34, 197, 94, 0.14), transparent 28rem),
+            linear-gradient(135deg, #f8fafc 0%, #eef6ff 48%, #f6fbf7 100%);
+    }
 
-<div class="container py-5 animate__animated animate__fadeIn @levelTheme">
-    <div class="qr-hero-card">
-        <div id="session-warning-alert" class="alert alert-danger animate__animated animate__pulse animate__infinite d-none mb-4">
-            <i class="fas fa-exclamation-triangle me-2"></i> 
-            ATTENDANCE ENDING SOON: QR expires in <span id="alert-countdown">5:00</span>!
-        </div>
+    body:has(.qr-session-page.theme-200) {
+        background:
+            radial-gradient(circle at top left, rgba(99, 102, 241, 0.16), transparent 32rem),
+            radial-gradient(circle at bottom right, rgba(20, 184, 166, 0.16), transparent 28rem),
+            linear-gradient(135deg, #f8fafc 0%, #f1f5ff 48%, #eefdf9 100%);
+    }
 
-        <div class="live-indicator">
-            <div class="pulse-dot animate__animated animate__pulse animate__infinite"></div> 
-            LIVE SESSION
-        </div>
+    body > .container {
+        max-width: none;
+        width: 100%;
+        padding-left: 0;
+        padding-right: 0;
+    }
 
-        <h2 class="display-4 fw-800 mb-5">Point your camera here</h2>
+    body > .container > main {
+        padding-bottom: 0 !important;
+    }
 
-        <div class="qr-wrapper animate__animated animate__zoomIn">
-            <div id="big-qrcode"></div>
-        </div>
+    .qr-session-page {
+        min-height: calc(100vh - 3rem);
+        width: 100%;
+        padding: 2rem 1rem 3rem;
+        color: #0f172a;
+        background:
+            radial-gradient(circle at top left, rgba(14, 165, 233, 0.18), transparent 32rem),
+            radial-gradient(circle at bottom right, rgba(34, 197, 94, 0.14), transparent 28rem),
+            linear-gradient(135deg, #f8fafc 0%, #eef6ff 48%, #f6fbf7 100%);
+    }
 
-        <div class="row g-4 mt-5">
-            <div class="col-md-6">
-                <div class="stat-pill">
-                    <p class="text-white-50 small fw-bold mb-2">CURRENT ATTENDEES</p>
-                    <h1 class="display-3 fw-900 text-success mb-0" id="attendance-count">0</h1>
-                </div>
+    .qr-session-page.theme-200 {
+        background:
+            radial-gradient(circle at top left, rgba(99, 102, 241, 0.16), transparent 32rem),
+            radial-gradient(circle at bottom right, rgba(20, 184, 166, 0.16), transparent 28rem),
+            linear-gradient(135deg, #f8fafc 0%, #f1f5ff 48%, #eefdf9 100%);
+    }
+
+    .session-shell {
+        max-width: 1120px;
+        margin: 0 auto;
+    }
+
+    .session-topbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        margin-bottom: 1.25rem;
+    }
+
+    .session-title {
+        margin: 0;
+        font-size: clamp(2rem, 4vw, 3.5rem);
+        font-weight: 800;
+        letter-spacing: 0;
+    }
+
+    .session-subtitle {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 0.6rem;
+        margin: 0.4rem 0 0;
+        color: #475569;
+        font-size: 0.96rem;
+    }
+
+    .level-badge,
+    .course-code-badge,
+    .live-indicator {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.45rem;
+        min-height: 2rem;
+        padding: 0.35rem 0.75rem;
+        border: 1px solid rgba(15, 23, 42, 0.1);
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.74);
+        color: #0f172a;
+        font-size: 0.78rem;
+        font-weight: 800;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
+    }
+
+    .course-code-badge {
+        color: #334155;
+        text-transform: none;
+    }
+
+    .live-indicator {
+        background: #ecfdf5;
+        color: #047857;
+        border-color: rgba(4, 120, 87, 0.18);
+        white-space: nowrap;
+    }
+
+    .pulse-dot {
+        width: 0.65rem;
+        height: 0.65rem;
+        border-radius: 50%;
+        background: #22c55e;
+        box-shadow: 0 0 0 rgba(34, 197, 94, 0.5);
+        animation: qrPulse 1.5s infinite;
+    }
+
+    .qr-hero-card {
+        overflow: hidden;
+        border: 1px solid rgba(15, 23, 42, 0.08);
+        border-radius: 24px;
+        background: rgba(255, 255, 255, 0.88);
+        box-shadow: 0 24px 70px rgba(15, 23, 42, 0.12);
+        backdrop-filter: blur(18px);
+    }
+
+    .qr-hero-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1.05fr) minmax(320px, 0.95fr);
+        min-height: 620px;
+    }
+
+    .qr-info-panel {
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        padding: clamp(1.5rem, 4vw, 3rem);
+        background: linear-gradient(160deg, #0f172a 0%, #164e63 58%, #065f46 100%);
+        color: #ffffff;
+    }
+
+    .qr-info-panel .live-indicator {
+        width: max-content;
+        background: rgba(236, 253, 245, 0.12);
+        color: #bbf7d0;
+        border-color: rgba(187, 247, 208, 0.22);
+        box-shadow: none;
+    }
+
+    .scan-heading {
+        margin: 2rem 0 1rem;
+        font-size: clamp(2.2rem, 5vw, 4.5rem);
+        line-height: 0.98;
+        font-weight: 900;
+        letter-spacing: 0;
+    }
+
+    .scan-note {
+        max-width: 34rem;
+        margin: 0;
+        color: rgba(255, 255, 255, 0.72);
+        font-size: 1rem;
+    }
+
+    .session-warning {
+        border: 1px solid rgba(220, 38, 38, 0.22);
+        border-radius: 16px;
+        background: #fef2f2;
+        color: #991b1b;
+        font-weight: 800;
+    }
+
+    .qr-stage {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        gap: 1.25rem;
+        padding: clamp(1.5rem, 4vw, 3rem);
+    }
+
+    .qr-wrapper {
+        position: relative;
+        display: grid;
+        place-items: center;
+        width: min(100%, 430px);
+        aspect-ratio: 1;
+        margin: 0 auto;
+        border: 1px solid rgba(15, 23, 42, 0.08);
+        border-radius: 28px;
+        background: linear-gradient(145deg, #ffffff, #f8fafc);
+        box-shadow: inset 0 0 0 12px #ffffff, 0 22px 48px rgba(15, 23, 42, 0.12);
+        transition: opacity 0.25s ease, transform 0.25s ease;
+    }
+
+    .qr-wrapper.is-rotating {
+        opacity: 0.46;
+        transform: scale(0.985);
+    }
+
+    #big-qrcode {
+        display: grid;
+        place-items: center;
+        width: min(78vw, 320px);
+        height: min(78vw, 320px);
+    }
+
+    #big-qrcode img,
+    #big-qrcode canvas {
+        width: 100% !important;
+        height: 100% !important;
+        border-radius: 12px;
+    }
+
+    .rotation-strip {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        width: min(100%, 430px);
+        margin: 0 auto;
+        padding: 0.9rem 1rem;
+        border: 1px solid rgba(15, 23, 42, 0.08);
+        border-radius: 16px;
+        background: #f8fafc;
+    }
+
+    .rotation-label,
+    .stat-label {
+        margin: 0;
+        color: #64748b;
+        font-size: 0.76rem;
+        font-weight: 800;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+    }
+
+    .timer-text {
+        color: #0f766e;
+        font-size: clamp(2rem, 4vw, 3rem);
+        line-height: 1;
+        font-weight: 900;
+        font-variant-numeric: tabular-nums;
+        letter-spacing: 0;
+    }
+
+    .stat-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 1rem;
+    }
+
+    .stat-pill {
+        min-height: 132px;
+        padding: 1.2rem;
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        border-radius: 18px;
+        background: rgba(255, 255, 255, 0.09);
+    }
+
+    .stat-value {
+        margin: 0.25rem 0 0;
+        color: #86efac;
+        font-size: clamp(2.4rem, 5vw, 4rem);
+        line-height: 1;
+        font-weight: 900;
+        font-variant-numeric: tabular-nums;
+    }
+
+    .stat-pill .timer-text {
+        color: #bfdbfe;
+    }
+
+    .scan-toast {
+        position: fixed;
+        right: 1.25rem;
+        top: 1.25rem;
+        z-index: 2000;
+        display: flex;
+        align-items: center;
+        gap: 0.85rem;
+        max-width: min(92vw, 420px);
+        padding: 1rem 1.1rem;
+        border: 1px solid rgba(34, 197, 94, 0.24);
+        border-radius: 18px;
+        background: rgba(240, 253, 244, 0.94);
+        color: #064e3b;
+        box-shadow: 0 24px 60px rgba(15, 23, 42, 0.18);
+        transform: translateY(-1rem);
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.25s ease, transform 0.25s ease;
+        backdrop-filter: blur(18px);
+    }
+
+    .scan-toast.show {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    .scan-toast-icon {
+        display: grid;
+        place-items: center;
+        width: 2.5rem;
+        height: 2.5rem;
+        border-radius: 999px;
+        background: #22c55e;
+        color: #ffffff;
+        flex: 0 0 auto;
+    }
+
+    .scan-toast-title {
+        margin: 0;
+        font-weight: 900;
+    }
+
+    .scan-toast-text {
+        margin: 0;
+        color: #047857;
+        font-size: 0.9rem;
+    }
+
+    @@keyframes qrPulse {
+        0% {
+            box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.5);
+        }
+
+        70% {
+            box-shadow: 0 0 0 0.55rem rgba(34, 197, 94, 0);
+        }
+
+        100% {
+            box-shadow: 0 0 0 0 rgba(34, 197, 94, 0);
+        }
+    }
+
+    @@media (max-width: 991.98px) {
+        .session-topbar,
+        .rotation-strip {
+            align-items: flex-start;
+            flex-direction: column;
+        }
+
+        .qr-hero-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .qr-info-panel {
+            min-height: 420px;
+        }
+    }
+
+    @@media (max-width: 575.98px) {
+        .qr-session-page {
+            padding-top: 1rem;
+        }
+
+        .qr-hero-card,
+        .qr-wrapper {
+            border-radius: 18px;
+        }
+
+        .stat-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
+<div class="qr-session-page @levelTheme">
+    <div class="session-shell">
+        <div class="session-topbar">
+            <div>
+                <h1 class="session-title">Live Session</h1>
+                <p class="session-subtitle">
+                    @Model.CourseName
+                    <span class="level-badge">@Model.Level</span>
+                    <span class="course-code-badge">#@Model.CourseCode</span>
+                </p>
             </div>
-            <div class="col-md-6">
-                <div class="stat-pill">
-                    <p class="text-white-50 small fw-bold mb-2">QR ROTATION IN</p>
-                    <div id="live-timer" class="timer-text">00:00</div>
-                </div>
+            <div class="live-indicator">
+                <span class="pulse-dot"></span>
+                LIVE SESSION
+            </div>
+        </div>
+
+        <div class="qr-hero-card">
+            <div class="qr-hero-grid">
+                <section class="qr-info-panel" aria-label="Live session information">
+                    <div>
+                        <div class="live-indicator">
+                            <span class="pulse-dot"></span>
+                            LIVE SESSION
+                        </div>
+
+                        <h2 class="scan-heading">Point your camera here</h2>
+                        <p class="scan-note">The QR Code refreshes every 5 minutes during the live attendance window.</p>
+                    </div>
+
+                    <div>
+                        <div id="session-warning-alert" class="session-warning alert animate__animated animate__pulse animate__infinite d-none mb-4">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            ATTENDANCE ENDING SOON: QR expires in <span id="alert-countdown">5:00</span>!
+                        </div>
+
+                        <div class="stat-grid">
+                            <div class="stat-pill">
+                                <p class="stat-label">CURRENT ATTENDEES</p>
+                                <h3 class="stat-value" id="attendance-count">0</h3>
+                            </div>
+                            <div class="stat-pill">
+                                <p class="stat-label">QR ROTATION IN</p>
+                                <div id="live-timer" class="timer-text">00:00</div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="qr-stage" aria-label="QR Code display">
+                    <div class="qr-wrapper animate__animated animate__zoomIn" id="qr-wrapper">
+                        <div id="big-qrcode"></div>
+                    </div>
+
+                    <div class="rotation-strip">
+                        <div>
+                            <p class="rotation-label">QR ROTATION IN</p>
+                            <div id="rotation-status" class="text-muted small">Automatic refresh is active.</div>
+                        </div>
+                        <div id="stage-timer" class="timer-text">00:00</div>
+                    </div>
+                </section>
             </div>
         </div>
     </div>
 </div>
 
+<div class="scan-toast" id="scan-toast" role="status" aria-live="polite">
+    <div class="scan-toast-icon">
+        <i class="fas fa-check"></i>
+    </div>
+    <div>
+        <p class="scan-toast-title">Student just scanned</p>
+        <p class="scan-toast-text"><span id="scan-toast-name">A student</span> marked attendance.</p>
+    </div>
+</div>
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script>
-    // 1. Setup Global State
     let currentExpiry = new Date('@localExpiry').getTime();
     const sessionEndTime = new Date('@localSessionEnd').getTime();
-    const token = "@Model.QRCodeToken";
+    let token = "@Model.QRCodeToken";
     let qrObj = null;
+    let isRefreshing = false;
+    let lastSeenAttendanceId = null;
+    let toastTimer = null;
 
-    // 2. Initialize QR Code
     function initQR() {
         const container = document.getElementById("big-qrcode");
+
         if (!token || token.trim() === "") {
-            container.innerHTML = "<p class='text-danger'>Error: No Token found.</p>";
+            container.innerHTML = "<p class='text-danger fw-bold text-center mb-0'>Error: No Token found.</p>";
             return;
         }
-        
+
         qrObj = new QRCode(container, {
             text: token,
             width: 320,
             height: 320,
-            colorDark : "#0f172a",
-            colorLight : "#ffffff",
-            correctLevel : QRCode.CorrectLevel.H
+            colorDark: "#0f172a",
+            colorLight: "#ffffff",
+            correctLevel: QRCode.CorrectLevel.H
         });
     }
 
-    // 3. Countdown Logic
+    function setTimerText(value) {
+        document.getElementById("live-timer").innerText = value;
+        document.getElementById("stage-timer").innerText = value;
+    }
+
+    function formatDuration(milliseconds) {
+        const totalSeconds = Math.max(0, Math.floor(milliseconds / 1000));
+        const minutes = Math.floor(totalSeconds / 60);
+        const seconds = totalSeconds % 60;
+        return `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+    }
+
     function startCountdown() {
-        const timerDisplay = document.getElementById("live-timer");
         const alertBox = document.getElementById("session-warning-alert");
         const alertCountdown = document.getElementById("alert-countdown");
+        const qrWrapper = document.getElementById("qr-wrapper");
+        const rotationStatus = document.getElementById("rotation-status");
 
         const interval = setInterval(async () => {
             const now = new Date().getTime();
-            
-            // Hard Cutoff: 10 minutes before class ends
             const hardCutoffTime = sessionEndTime - (10 * 60 * 1000);
             const warningStartTime = sessionEndTime - (15 * 60 * 1000);
 
-            // Show warning if within the last 5 minutes of QR availability
             if (now >= warningStartTime && now < hardCutoffTime) {
                 alertBox.classList.remove("d-none");
-                const timeLeft = hardCutoffTime - now;
-                const am = Math.floor(timeLeft / 60000);
-                const as = Math.floor((timeLeft % 60000) / 1000);
-                alertCountdown.innerText = `${am}:${as < 10 ? '0' : ''}${as}`;
+                alertCountdown.innerText = formatDuration(hardCutoffTime - now);
             }
 
-            // Close Attendance
             if (now >= hardCutoffTime) {
                 clearInterval(interval);
-                timerDisplay.innerText = "CLOSED";
-                document.getElementById("big-qrcode").style.opacity = "0.1";
+                setTimerText("CLOSED");
+                qrWrapper.style.opacity = "0.12";
+                rotationStatus.innerText = "Attendance has closed.";
                 alertBox.innerHTML = "<i class='fas fa-lock me-2'></i> ATTENDANCE CLOSED.";
                 alertBox.classList.remove("d-none");
                 return;
             }
 
-            // Standard Rotation Countdown
             const diff = currentExpiry - now;
 
             if (diff <= 0) {
-                timerDisplay.innerText = "ROTATING...";
+                setTimerText("ROTATING");
+                rotationStatus.innerText = "Generating a fresh QR Code...";
+                qrWrapper.classList.add("is-rotating");
                 await refreshToken();
-                return; 
+                qrWrapper.classList.remove("is-rotating");
+                rotationStatus.innerText = "Automatic refresh is active.";
+                return;
             }
 
-            const m = Math.floor(diff / 60000);
-            const s = Math.floor((diff % 60000) / 1000);
-            timerDisplay.innerText = `${m}:${s < 10 ? '0' : ''}${s}`;
+            setTimerText(formatDuration(diff));
         }, 1000);
     }
 
-    // 4. Refresh Token via AJAX
     async function refreshToken() {
+        if (isRefreshing) {
+            return;
+        }
+
+        isRefreshing = true;
+
         try {
-            const response = await fetch('/Session/GenerateQRCode?sessionId=@Model.Id', { 
-                method: 'POST',
-                headers: { 'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value }
+            const response = await fetch('/Session/GenerateQrCode?sessionId=@Model.Id', {
+                method: 'POST'
             });
             const result = await response.json();
 
-            if (result.status === 1 || result.status === true) { 
+            if (result.success === true) {
+                token = result.token;
                 qrObj.clear();
-                qrObj.makeCode(result.data.qrCodeToken);
-                // Update expiry for next cycle
-                currentExpiry = new Date(result.data.qrCodeExpiry).getTime();
+                qrObj.makeCode(token);
+                currentExpiry = new Date(result.expiry).getTime();
+            } else {
+                console.error("Rotation Error:", result.message || "Unable to refresh QR Code.");
             }
         } catch (err) {
             console.error("Rotation Error:", err);
+        } finally {
+            isRefreshing = false;
         }
     }
 
-    // Initialize
+    function showScanToast(studentName) {
+        const toast = document.getElementById("scan-toast");
+        const name = document.getElementById("scan-toast-name");
+
+        name.innerText = studentName || "A student";
+        toast.classList.add("show");
+
+        if (toastTimer) {
+            clearTimeout(toastTimer);
+        }
+
+        toastTimer = setTimeout(() => {
+            toast.classList.remove("show");
+        }, 4500);
+    }
+
+    async function refreshAttendanceStatus(showNewScanAlert) {
+        try {
+            const response = await fetch('/Session/LiveAttendanceStatus?sessionId=@Model.Id', {
+                cache: 'no-store'
+            });
+            const result = await response.json();
+
+            if (result.success !== true) {
+                return;
+            }
+
+            document.getElementById("attendance-count").innerText = result.count;
+
+            if (!result.latest) {
+                return;
+            }
+
+            if (lastSeenAttendanceId && result.latest.id !== lastSeenAttendanceId && showNewScanAlert) {
+                showScanToast(result.latest.studentName);
+            }
+
+            lastSeenAttendanceId = result.latest.id;
+        } catch (err) {
+            console.warn("Attendance status sync failed:", err);
+        }
+    }
+
     initQR();
     startCountdown();
+    refreshAttendanceStatus(false);
+    setInterval(() => refreshAttendanceStatus(true), 4000);
 </script>

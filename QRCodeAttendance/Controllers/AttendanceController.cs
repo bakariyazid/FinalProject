@@ -27,32 +27,33 @@ namespace QRCodeAttendance.Controllers
         }
 
 
-        [HttpGet]
+        [HttpGet("attendance/scan/{sessionId:guid}")]
         public IActionResult ScanQRCode(Guid? sessionId)
         {
             ViewBag.SessionId = sessionId;
             return View();
         }
 
-       [HttpPost]
-        public async Task<IActionResult> ScanQRCode(string qrCode)
+       [HttpPost("attendance/scan")]
+        public async Task<IActionResult> ScanQRCode(Guid sessionId, string qrCode)
         {
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            var response = await _attendanceService.MarkAttendance(Guid.Parse(userId), qrCode);
+            var response = await _attendanceService.MarkAttendance(sessionId, qrCode);
 
             if (!response.Status)
             {
                 ViewBag.ErrorMessage = response.Message;
+                ViewBag.SessionId = sessionId;
                 return View(); 
             }
 
             TempData["SuccessMessage"] = "Attendance marked successfully!";
-            return RedirectToAction("StudentDashboard");
+            return RedirectToAction("StudentDashboard", "Student");
         }
 
 
 
         // GET: /Session/Attendance/{id}
+        [HttpGet]
         public async Task<IActionResult> Attendance(Guid id)
         {
             var response = await _sessionService.GetSessionAttendance(id);
@@ -74,19 +75,7 @@ namespace QRCodeAttendance.Controllers
         [HttpGet("attendance/{sessionId}")]
         public async Task<IActionResult> ViewAttendance(Guid sessionId)
         {
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-
-            _logger.LogInformation("Instructor {UserId} viewing attendance for session {SessionId}", userId, sessionId);
-
-            var response = await _sessionService.GetSessionAttendance(sessionId);
-
-            if (!response.Status)
-            {
-                _logger.LogWarning("Failed to fetch attendance for session {SessionId}: {Message}", sessionId, response.Message);
-                ViewBag.ErrorMessage = response.Message;
-            }
-
-            return View(response.Data);
+            return Redirect($"/attendance/scan/{sessionId}");
         }
     }
 }

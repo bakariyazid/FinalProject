@@ -67,7 +67,12 @@
 
                 <div id="result"></div>
 
-                <a asp-action="StudentDashboard" class="btn btn-outline-secondary rounded-pill px-4">
+                @if (ViewBag.ErrorMessage != null)
+                {
+                    <div class="alert alert-danger rounded-4 fw-semibold">@ViewBag.ErrorMessage</div>
+                }
+
+                <a asp-action="StudentDashboard" asp-controller="Student" class="btn btn-outline-secondary rounded-pill px-4">
                     <i class="fa fa-arrow-left me-2"></i>Back to Dashboard
                 </a>
             </div>
@@ -76,7 +81,8 @@
 </div>
 
 @* Hidden form to send data back to your Controller *@
-<form id="attendanceForm" asp-action="ProcessScan" asp-controller="Attendance" method="post">
+<form id="attendanceForm" action="/attendance/scan" method="post">
+    <input type="hidden" id="sessionId" name="sessionId" value="@ViewBag.SessionId" />
     <input type="hidden" id="qrCodeData" name="qrCode" />
 </form>
 

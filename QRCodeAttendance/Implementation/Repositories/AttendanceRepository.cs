@@ -31,6 +31,7 @@ namespace QRCodeAttendance.Implementation.Repositories
             {
                 return await _qrCodeDbContext.Attendances
                     .AsNoTracking()
+                    .Include(a => a.ClassSession)
                     .Where(a => a.StudentId == studentId)
                     .OrderByDescending(a => a.ScanTime)
                     .ToListAsync();
@@ -48,8 +49,11 @@ namespace QRCodeAttendance.Implementation.Repositories
         public async Task<IReadOnlyList<Attendance>> GetBySession(Guid sessionId)
         {
                     return await _qrCodeDbContext.Attendances
+                .Include(a => a.Student)
+                .Include(a => a.ClassSession)
                 .Where(a => a.SessionId == sessionId)
                 .AsNoTracking()
+                .OrderByDescending(a => a.ScanTime)
                 .ToListAsync();
         }
 

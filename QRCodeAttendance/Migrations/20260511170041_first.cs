@@ -217,8 +217,8 @@ namespace QRCodeAttendance.Migrations
                 columns: new[] { "Id", "CreatedDate", "Name", "UpdatedDate" },
                 values: new object[,]
                 {
-                    { new Guid("c8f2e5ab-9f34-4b93-9b7c-1a5986d79e42"), new DateTime(2026, 5, 7, 17, 7, 9, 896, DateTimeKind.Local).AddTicks(8399), "Student", new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified) },
-                    { new Guid("d9719e67-53f4-4f9c-bdb2-4c3956789abc"), new DateTime(2026, 5, 7, 17, 7, 9, 896, DateTimeKind.Local).AddTicks(8416), "Instructor", new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified) }
+                    { new Guid("c8f2e5ab-9f34-4b93-9b7c-1a5986d79e42"), new DateTime(2026, 5, 11, 18, 0, 40, 742, DateTimeKind.Local).AddTicks(4532), "Student", new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified) },
+                    { new Guid("d9719e67-53f4-4f9c-bdb2-4c3956789abc"), new DateTime(2026, 5, 11, 18, 0, 40, 742, DateTimeKind.Local).AddTicks(4551), "Instructor", new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified) }
                 });
 
             migrationBuilder.CreateIndex(

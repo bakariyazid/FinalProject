@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using QRCodeAttendance.Interface.Services;
 using QRCodeAttendance.Models.DTOs.Instructor;
+using QRCodeAttendance.Models.DTOs.Reports;
 using QRCodeAttendance.Models.DTOs.Session;
 using QRCodeAttendance.Models.Enums;
 
@@ -130,53 +131,122 @@ namespace QRCodeAttendance.Controllers
             }
       
     [HttpGet]
-        public async Task<IActionResult> Report(string courseCode)
+        public async Task<IActionResult> Report(Guid? sessionId, string? courseCode)
         {
             string instructorName = User.Identity?.Name ?? "Instructor";
 
             var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
             
-            if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out Guid instructorId))
+            if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out Guid userId))
             {
                 return Unauthorized();
             }
 
-            var report = await _reportService.GenerateCourseReportAsync(courseCode, instructorId);
+            var instructor = await _instructorService.GetInstructorProfile(userId);
+            if (!instructor.Status || instructor.Data == null)
+            {
+                return Unauthorized();
+            }
+
+            var instructorId = instructor.Data.InstructorId;
+            var sessionsResponse = await _sessionService.GetSessionsByInstructor(instructorId);
+            ViewBag.CompletedSessions = sessionsResponse.Data?
+                .Where(s => DateTime.UtcNow >= s.SessionEndTime.AddMinutes(-10))
+                .OrderByDescending(s => s.SessionStartTime)
+                .ToList() ?? new List<SessionDto>();
+
+            CourseReportDto report;
+            if (sessionId.HasValue)
+            {
+                report = await _reportService.GenerateSessionReportAsync(sessionId.Value, instructorId);
+            }
+            else if (!string.IsNullOrWhiteSpace(courseCode))
+            {
+                report = await _reportService.GenerateCourseReportAsync(courseCode, instructorId);
+            }
+            else
+            {
+                report = new CourseReportDto
+                {
+                    InstructorId = instructorId,
+                    InstructorName = instructorName,
+                    IsReportAvailable = false,
+                    Message = "Select a completed class session to view its attendance report."
+                };
+            }
 
             report.InstructorId = instructorId;
-            report.InstructorName = instructorName; 
+            report.InstructorName ??= instructorName; 
             return View("Report", report);
         }
 
+            [HttpGet("Instructor/InsProfile")]
+            public async Task<IActionResult> InsProfile()
+            {
+                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                
+                if (string.IsNullOrEmpty(userId))
+                {
+                    return RedirectToAction("Login", "User");
+                }
 
-                [HttpGet("profile")]
-        public async Task<IActionResult> Profile()
+                _logger.LogInformation("Instructor {UserId} requested profile", userId);
+
+                var response = await _instructorService.GetInstructorProfile(Guid.Parse(userId));
+
+                if (response == null || response.Data == null)
+                {
+                    _logger.LogWarning("Profile data for user {UserId} was not found.", userId);
+                    return NotFound("Instructor profile not found.");
+                }
+
+                return View(response.Data);
+            }
+
+        [HttpGet("Instructor/EditInsProfile")]
+        public async Task<IActionResult> EditInsProfile()
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            _logger.LogInformation("Student {UserId} requested profile", userId);
+            if (string.IsNullOrEmpty(userId)) return RedirectToAction("Login", "User");
 
             var response = await _instructorService.GetInstructorProfile(Guid.Parse(userId));
+            
+            if (response == null || !response.Status || response.Data == null)
+            {
+                return NotFound("Instructor profile not found.");
+            }
 
-            return View(response.Data);
+            var editModel = new UpdateInstructorRequestModel
+            {
+                FirstName = response.Data.FirstName,
+                LastName = response.Data.LastName,
+                Email = response.Data.Email,
+                PhoneNumber = response.Data.PhoneNumber,
+                Address = response.Data.Address,
+                Gender = response.Data.Gender,
+                Department = response.Data.Department,
+                DateOfBirth = response.Data.DateOfBirth
+            };
+            return View(editModel);
         }
 
-        [HttpPost("profile")]
-        public async Task<IActionResult> UpdateProfile(UpdateInstructorRequestModel model)
+        [HttpPost]
+        public async Task<IActionResult> EditInsProfile(UpdateInstructorRequestModel model)
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            _logger.LogInformation("Student {UserId} updating profile", userId);
+            _logger.LogInformation("Instructor {UserId} updating profile", userId);
 
-            var response = await _instructorService.UpdateInstructorProfile(Guid.Parse(userId), model);
+            var response = await _instructorService.UpdateInsProfile(Guid.Parse(userId), model);
 
             if (!response.Status)
             {
                 _logger.LogWarning("Profile update failed for {UserId}: {Message}", userId, response.Message);
                 ViewBag.ErrorMessage = response.Message;
-                return View("Profile", model);
+                return View("EditInsProfile", model);
             }
 
-            _logger.LogInformation("Profile updated successfully for {UserId}", userId);
-            return RedirectToAction("Profile");
+            _logger.LogInformation(" Instructor Profile updated successfully for {UserId}", userId);
+            return RedirectToAction("InsProfile");
         }
 
        

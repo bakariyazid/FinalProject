@@ -135,3 +135,4 @@ E:\Project folder\FinalProject\QRCodeAttendance\obj\Debug\net8.0\refint\QRCodeAt
 E:\Project folder\FinalProject\QRCodeAttendance\obj\Debug\net8.0\QRCodeAttendance.pdb
 E:\Project folder\FinalProject\QRCodeAttendance\obj\Debug\net8.0\QRCodeAttendance.genruntimeconfig.cache
 E:\Project folder\FinalProject\QRCodeAttendance\obj\Debug\net8.0\ref\QRCodeAttendance.dll
+E:\Project folder\FinalProject\QRCodeAttendance\obj\Debug\net8.0\QRCodeAttendance.sourcelink.json

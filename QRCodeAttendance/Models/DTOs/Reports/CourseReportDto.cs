@@ -9,8 +9,14 @@ namespace QRCodeAttendance.Models.DTOs.Reports
         {
             public string? CourseName { get; set; }
             public string? CourseCode { get; set; }
+            public Guid? SessionId { get; set; }
             public Guid InstructorId { get; set; }
             public string? InstructorName { get; set; }
+            public DateTime? SessionStartTime { get; set; }
+            public DateTime? SessionEndTime { get; set; }
+            public DateTime? ReportAvailableFrom { get; set; }
+            public bool IsReportAvailable { get; set; } = true;
+            public string? Message { get; set; }
             public int TotalSessions { get; set; }
             public int TotalPresent { get; set; }
             public int TotalLate { get; set; }

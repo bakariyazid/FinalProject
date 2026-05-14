@@ -107,11 +107,22 @@
                 <div class="bg-primary text-white p-2 rounded-3 shadow-sm"><i class="fa fa-qrcode"></i></div>
                 <span class="fw-bold fs-4">AttendancePro</span>
             </div>
-            <div class="d-flex align-items-center gap-3">
+
+           <div class="d-flex align-items-center gap-3">
                 <div class="text-end d-none d-md-block">
                     <p class="mb-0 fw-bold small">@Model.UserName</p>
                     <span class="text-muted" style="font-size: 0.75rem;">@studentDept</span>
                 </div>
+
+                <div class="vr mx-2 d-none d-md-block"></div>
+
+                <div class="d-none d-md-block">
+                    <a asp-controller="Student" asp-action="StdProfile" 
+                    class="nav-link text-muted small @(ViewContext.RouteData.Values["Action"]?.ToString() == "StdProfile" ? "active fw-bold text-primary" : "")">
+                        <i class="fa fa-user-circle"></i> <span>My Profile</span>
+                    </a>
+                </div>
+
                 <div class="vr mx-2 d-none d-md-block"></div>
                 <form asp-controller="User" asp-action="Logout" method="post">
                     @Html.AntiForgeryToken()
@@ -140,16 +151,17 @@
                     {
                         @foreach (var session in Model.ActiveSessions)
                         {
-                            bool hasScanned = Model.RecentAttendances.Any(a => a.SessionId == session.Id);
+                            bool hasScanned = Model.RecentAttendances?.Any(a => a.SessionId == session.Id) == true;
                             <div class="data-card p-4 mb-3 animate__animated animate__fadeInUp">
                                 <div class="d-flex justify-content-between align-items-center">
                                     <div class="d-flex align-items-center gap-3">
                                         @if(!hasScanned){ <div class="pulse-red"></div> }
                                         <div>
-                                            <h5 class="fw-bold mb-0">@session.CourseName</h5>
-                                            <small class="text-muted">@session.InstructorName • @session.CourseCode</small>
+                                            <h5 class="fw-bold mb-0">@session.CourseName • @session.CourseCode</h5>
+                                            <small class="text-muted"> This Class is holding by @session.InstructorName </small>
                                             <div class="small text-primary-emphasis mt-1">
                                                 <i class="bi bi-clock me-1"></i> @session.SessionStartTime.ToLocalTime().ToString("hh:mm tt")
+                                                to @session.SessionEndTime.ToLocalTime().ToString("hh:mm tt")
                                             </div>
                                         </div>
                                     </div>
@@ -157,7 +169,7 @@
                                         @if (hasScanned) {
                                             <span class="badge bg-success-subtle text-success p-2 px-3 rounded-pill">PRESENT</span>
                                         } else {
-                                            <a asp-action="Scan" asp-controller="Attendance" asp-route-sessionId="@session.Id" class="btn btn-scan">SCAN QR</a>
+                                            <a href="/attendance/scan/@session.Id" class="btn btn-scan">SCAN QR</a>
                                         }
                                     </div>
                                 </div>
@@ -169,6 +181,29 @@
                         <div class="text-center py-5 border rounded-5 bg-white opacity-75 mb-4">
                             <i class="fa fa-calendar-xmark fa-2x text-muted mb-2"></i>
                             <p class="text-muted mb-0">No active classes for Level @Model.Level.</p>
+                        </div>
+                    }
+                </div>
+
+                <h4 class="fw-bold mb-4 mt-5 text-success">Attended Sessions</h4>
+                <div class="row g-3">
+                    @if (Model.RecentAttendances != null && Model.RecentAttendances.Any())
+                    {
+                        @foreach (var attendance in Model.RecentAttendances)
+                        {
+                            <div class="col-md-6">
+                                <div class="data-card p-3 border-start border-success border-4">
+                                    <h6 class="fw-bold mb-1">@attendance.CourseName</h6>
+                                    <div class="small text-muted">@attendance.CourseCode &bull; @attendance.ScanTime.ToLocalTime().ToString("MMM dd, hh:mm tt")</div>
+                                    <span class="badge bg-success-subtle text-success mt-2">@attendance.Status</span>
+                                </div>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <div class="col-12">
+                            <p class="text-muted ps-2"><i class="fa fa-qrcode text-primary me-2"></i>No scanned classes yet.</p>
                         </div>
                     }
                 </div>

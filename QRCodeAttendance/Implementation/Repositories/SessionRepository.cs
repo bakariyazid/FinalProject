@@ -42,6 +42,8 @@ namespace QRCodeAttendance.Implementation.Repositories
         {
             return await _qrCodeDbContext.Sessions
                 .Include(s => s.Attendances)
+                    .ThenInclude(a => a.Student)
+                .Include(s => s.Instructor)
                 .FirstOrDefaultAsync(s => s.Id == sessionId);
         }
 
@@ -66,6 +68,7 @@ namespace QRCodeAttendance.Implementation.Repositories
         {
                 return await _qrCodeDbContext.Sessions
                 .AsNoTracking()
+                .Include(s => s.Instructor)
                 .Where(expression)
                 .ToListAsync();
         }

@@ -9,5 +9,6 @@ namespace QRCodeAttendance.Interface.Services
     public interface IReportService
     {
         Task<CourseReportDto> GenerateCourseReportAsync(string courseCode, Guid instructorId);
+        Task<CourseReportDto> GenerateSessionReportAsync(Guid sessionId, Guid instructorId);
     }
 }

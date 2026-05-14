@@ -18,6 +18,71 @@ namespace QRCodeAttendance.Implementation.Services
             _sessionRepository = sessionRepository;
         }
 
+        public async Task<CourseReportDto> GenerateSessionReportAsync(Guid sessionId, Guid instructorId)
+        {
+            var session = await _sessionRepository.GetSessionWithAttendances(sessionId);
+
+            if (session == null || session.InstructorId != instructorId)
+            {
+                return new CourseReportDto
+                {
+                    SessionId = sessionId,
+                    IsReportAvailable = false,
+                    Message = "Report not found for this instructor."
+                };
+            }
+
+            var reportAvailableFrom = session.SessionEndTime.AddMinutes(-10);
+            var now = DateTime.UtcNow;
+            var orderedAttendances = session.Attendances
+                .OrderBy(a => a.ScanTime)
+                .ToList();
+
+            var report = new CourseReportDto
+            {
+                SessionId = session.Id,
+                CourseName = session.CourseName,
+                CourseCode = session.CourseCode,
+                InstructorId = session.InstructorId,
+                InstructorName = session.Instructor?.FullName(),
+                SessionStartTime = session.SessionStartTime,
+                SessionEndTime = session.SessionEndTime,
+                ReportAvailableFrom = reportAvailableFrom,
+                IsReportAvailable = now >= reportAvailableFrom,
+                TotalSessions = 1,
+                AttendanceRecords = orderedAttendances.Select(a => new AttendanceRecordDto
+                {
+                    StudentName = a.Student?.FullName() ?? a.StudentName,
+                    StudentEmail = a.Student?.Email ?? string.Empty,
+                    SessionDate = session.SessionStartTime,
+                    ScanTime = a.ScanTime,
+                    Status = a.Status.ToString()
+                }).ToList()
+            };
+
+            report.TotalPresent = orderedAttendances.Count(a => a.Status == AttendanceStatus.Present);
+            report.TotalLate = orderedAttendances.Count(a => a.Status == AttendanceStatus.Late);
+            report.TotalAbsent = orderedAttendances.Count(a => a.Status == AttendanceStatus.Absent);
+
+            var totalScans = orderedAttendances.Count;
+            report.AverageAttendancePercentage = totalScans == 0
+                ? 0
+                : Math.Round((double)report.TotalPresent / totalScans * 100, 2);
+
+            report.DailyStats.Add(new DailyStatDto
+            {
+                Date = session.SessionStartTime,
+                Count = report.TotalPresent
+            });
+
+            if (!report.IsReportAvailable)
+            {
+                report.Message = $"Report will be available when the QR Code expires at {reportAvailableFrom.ToLocalTime():hh:mm tt}.";
+            }
+
+            return report;
+        }
+
 
    public async Task<CourseReportDto> GenerateCourseReportAsync(string courseCode, Guid instructorId)
         {

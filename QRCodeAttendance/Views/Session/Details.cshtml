@@ -474,8 +474,8 @@
             <div class="action-area" id="action-container-@session.Id">
                 @if (isExpired)
                 {
-                    <a asp-action="ViewAttendance" asp-route-id="@session.Id" class="btn btn-past">
-                        Records <i class="fas fa-chevron-right ms-2 opacity-50"></i>
+                    <a asp-controller="Instructor" asp-action="Report" asp-route-sessionId="@session.Id" class="btn btn-past">
+                        Report <i class="fas fa-chevron-right ms-2 opacity-50"></i>
                     </a>
                 }
                 else if (isTooEarly)

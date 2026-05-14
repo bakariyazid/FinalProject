@@ -63,39 +63,31 @@ public class CreateStudentRequestModel
 
 public class UpdateStudentRequestModel
 {
-        [Required]
+
         [MaxLength(55)]
         public string? FirstName { get; set; }
-        
-        [Required]
+
         [MaxLength(120)]
         public string? LastName { get; set; }
 
-        [Required]
         [MaxLength(20)]
         public string? MatricNumber {get; set;}
 
-        [Required]
         public DateTime DateOfBirth { get; set; } 
 
-        [Required]
         [MaxLength(50)]
         public string? Address { get; set; }
 
-        [Required]
         [MaxLength(20)]
         public string? PhoneNumber { get; set; }
 
-        [Required]
-        public Gender Gender    { get; set; }   
-        [Required]
+        public Gender Gender   { get; set; }   
+
         public StudentLevel StudentLevel {get; set;}
-        [Required]
+
         public Departments Department {get; set;}
-        [Required]
+
         [MaxLength(30)]
         public string? Email { get; set; }
-        [Required]
-        [MaxLength(30)]
-        public string? EmailConfirmed { get; set; }
+
 }
