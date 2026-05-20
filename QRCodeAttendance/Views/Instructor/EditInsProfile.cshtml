@@ -168,8 +168,10 @@
             .row > div { margin-bottom: 1rem; }
         }
     </style>
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
 </head>
-<body>
+<body class="with-portal-chrome">
+    @await Html.PartialAsync("_PortalHeader")
 
     <div class="edit-container">
         <div class="header-section">
@@ -199,7 +201,7 @@
                 </div>
 
                 <div class="col-md-7 form-group">
-                    <label class="control-label" asp-for="Email">Institutional Email</label>
+                    <label class="control-label" asp-for="Email">Email</label>
                     <div class="input-wrapper">
                         <i class="fas fa-envelope input-icon"></i>
                         <input asp-for="Email" class="form-control" type="email" placeholder="email@institution.com" />
@@ -256,5 +258,6 @@
         </form>
     </div>
 
+    @await Html.PartialAsync("_PortalFooter")
 </body>
 </html>

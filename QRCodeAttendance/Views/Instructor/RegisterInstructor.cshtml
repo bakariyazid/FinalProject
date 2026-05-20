@@ -125,9 +125,11 @@
             border-radius: 12px;
         }
     </style>
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
 </head>
 
-<body>
+<body class="with-portal-chrome">
+    @await Html.PartialAsync("_PortalHeader")
     <div class="container">
         <div class="row justify-content-center">
             <div class="col-xl-7 col-lg-8 col-md-10">
@@ -233,5 +235,6 @@
             </div>
         </div>
     </div>
+    @await Html.PartialAsync("_PortalFooter")
 </body>
 </html>

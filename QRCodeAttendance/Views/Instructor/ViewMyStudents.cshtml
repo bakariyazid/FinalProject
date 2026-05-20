@@ -151,7 +151,7 @@
                     <h2 class="h3 fw-bold mb-0">@ViewBag.Level Student Roster</h2>
                 </div>
                 <p class="text-white-50 mb-0 ms-4">
-                    Instructor: <span class="text-white">@User.Identity.Name</span> | 
+                    Instructor: <span class="text-white">@(User.Identity?.Name ?? "Instructor")</span> | 
                     Department: <span class="badge" style="background: rgba(255,255,255,0.1)">@ViewBag.Department</span>
                 </p>
             </div>

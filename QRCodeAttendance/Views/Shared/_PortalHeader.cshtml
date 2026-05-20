@@ -1,0 +1,18 @@
+<header class="app-shell-header" role="banner">
+    <div class="app-shell-header__inner">
+        <a class="app-shell-brand" asp-controller="Home" asp-action="Index" aria-label="QRCode Attendance home">
+            <span class="app-shell-brand__mark">QR</span>
+            <span class="app-shell-brand__text">
+                <span class="app-shell-brand__title">QR Code Attendance</span>
+                <span class="app-shell-brand__subtitle">Masroor International Technical College</span>
+            </span>
+        </a>
+
+        <nav class="app-shell-nav" aria-label="Primary navigation">
+            <a asp-controller="Home" asp-action="Index">Home</a>
+            <a asp-controller="User" asp-action="Login">Login</a>
+            <a asp-controller="Student" asp-action="RegisterStudent">Student</a>
+            <a asp-controller="Instructor" asp-action="RegisterInstructor">Instructor</a>
+        </nav>
+    </div>
+</header>

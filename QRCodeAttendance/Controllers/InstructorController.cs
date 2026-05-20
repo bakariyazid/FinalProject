@@ -114,7 +114,12 @@ namespace QRCodeAttendance.Controllers
             public async Task<IActionResult> ViewMyStudents(StudentLevel level)
             {
                 var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-                var instructor = await _instructorService.GetInstructorProfile(Guid.Parse(userId));
+                if (string.IsNullOrEmpty(userId) || !Guid.TryParse(userId, out var userGuid))
+                {
+                    return RedirectToAction("Login", "User");
+                }
+
+                var instructor = await _instructorService.GetInstructorProfile(userGuid);
                 
                 var response = await _instructorService.GetStudentsByDeptAndLevel(instructor.Data.Department, level);
 
@@ -185,14 +190,14 @@ namespace QRCodeAttendance.Controllers
             {
                 var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
                 
-                if (string.IsNullOrEmpty(userId))
+                if (string.IsNullOrEmpty(userId) || !Guid.TryParse(userId, out var instructorUserId))
                 {
                     return RedirectToAction("Login", "User");
                 }
 
                 _logger.LogInformation("Instructor {UserId} requested profile", userId);
 
-                var response = await _instructorService.GetInstructorProfile(Guid.Parse(userId));
+                var response = await _instructorService.GetInstructorProfile(instructorUserId);
 
                 if (response == null || response.Data == null)
                 {
@@ -207,9 +212,12 @@ namespace QRCodeAttendance.Controllers
         public async Task<IActionResult> EditInsProfile()
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (string.IsNullOrEmpty(userId)) return RedirectToAction("Login", "User");
+            if (string.IsNullOrEmpty(userId) || !Guid.TryParse(userId, out var instructorUserId))
+            {
+                return RedirectToAction("Login", "User");
+            }
 
-            var response = await _instructorService.GetInstructorProfile(Guid.Parse(userId));
+            var response = await _instructorService.GetInstructorProfile(instructorUserId);
             
             if (response == null || !response.Status || response.Data == null)
             {
@@ -234,9 +242,14 @@ namespace QRCodeAttendance.Controllers
         public async Task<IActionResult> EditInsProfile(UpdateInstructorRequestModel model)
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userId) || !Guid.TryParse(userId, out var instructorUserId))
+            {
+                return RedirectToAction("Login", "User");
+            }
+
             _logger.LogInformation("Instructor {UserId} updating profile", userId);
 
-            var response = await _instructorService.UpdateInsProfile(Guid.Parse(userId), model);
+            var response = await _instructorService.UpdateInsProfile(instructorUserId, model);
 
             if (!response.Status)
             {

@@ -178,7 +178,7 @@
 
     .session-list {
         display: grid;
-        gap: 16px;
+        gap: 24px;
     }
 
     .session-row {
@@ -189,6 +189,7 @@
         gap: 20px;
         align-items: center;
         padding: 22px;
+        margin-bottom: 8px;
         border: 1px solid var(--details-border);
         border-radius: 24px;
         background: linear-gradient(135deg, rgba(15, 23, 42, 0.72), rgba(15, 23, 42, 0.38));
@@ -359,6 +360,77 @@
         text-align: center;
     }
 
+    .history-meta {
+        margin-top: 12px;
+        padding-top: 12px;
+        border-top: 1px solid rgba(255, 255, 255, 0.08);
+        display: flex;
+        gap: 20px;
+        font-size: 0.78rem;
+        font-weight: 500;
+        color: rgba(248, 250, 252, 0.45);
+    }
+
+    .history-item {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .history-item b {
+        color: rgba(248, 250, 252, 0.7);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        font-size: 0.7rem;
+    }
+
+    .history-label-never {
+        color: var(--details-rose);
+        font-style: italic;
+        opacity: 0.8;
+    }
+
+    /* Edit/Delete Icons */
+    .row-controls {
+        display: flex;
+        gap: 8px;
+        margin-right: 12px;
+        align-items: center;
+    }
+
+    .icon-btn {
+        width: 38px;
+        height: 38px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 12px;
+        border: 1px solid var(--details-border);
+        background: rgba(255, 255, 255, 0.05);
+        color: var(--details-muted);
+        transition: all 0.2s ease;
+        text-decoration: none;
+    }
+
+    .icon-btn:hover {
+        transform: translateY(-2px);
+        background: rgba(255, 255, 255, 0.12);
+        color: white;
+    }
+
+    .icon-btn.edit:hover {
+        border-color: var(--details-blue);
+        color: var(--details-blue);
+        box-shadow: 0 0 15px rgba(96, 165, 250, 0.2);
+    }
+
+    .icon-btn.delete:hover {
+        border-color: var(--details-rose);
+        color: var(--details-rose);
+        box-shadow: 0 0 15px rgba(251, 113, 133, 0.2);
+    }
+    
+
     @@media (max-width: 768px) {
         .session-shell {
             width: min(100% - 20px, 680px);
@@ -462,16 +534,49 @@
                     <h5>@session.CourseName</h5>
                     <span class="level-badge">@session.Level</span>
                     <span class="course-code">#@session.CourseCode</span>
-                </div>
-                <div class="session-meta">
+
                     <span class="meta-chip">
                         <i class="far fa-clock"></i>
-                        @sessionStartLocal.ToString("hh:mm tt") - @sessionEndLocal.ToString("hh:mm tt")
+                        Start Time: @sessionStartLocal.ToString("hh:mm tt") - End Time: @sessionEndLocal.ToString("hh:mm tt")
                     </span>
+                </div>
+                <div class="session-meta">
+
+                    <div class="history-meta">
+                        <div class="history-item">
+                            <b>Created on:</b>
+                            <span>@session.CreatedDate.ToLocalTime().ToString("MMM dd, yyyy – hh:mm tt")</span>
+                        </div>
+    
+                        <div class="history-item">
+                            <b>Last Updated:</b>
+                            @if (session.UpdatedDate != DateTime.MinValue && session.UpdatedDate != session.CreatedDate)
+                                {
+                                    <span>@session.UpdatedDate.ToLocalTime().ToString("MMM dd, yyyy – hh:mm tt")</span>
+                                }
+                            else
+                            {
+                                <span class="history-label-never">Never Updated</span>
+                            }
+                        </div>
+                    </div>
+
+
                 </div>
             </div>
 
             <div class="action-area" id="action-container-@session.Id">
+                <div class="row-controls">
+                    <a asp-action="EditSession" asp-route-sessionId="@session.Id" class="icon-btn edit" title="Edit Session">
+                        <i class="fa-solid fa-pen-to-square"></i>
+                    </a>
+                    <a asp-action="Delete" asp-route-id="@session.Id" class="icon-btn delete"
+                           onclick="return confirm('Are you sure you want to delete this session? This cannot be undone.')"
+                           title="Delete Session">
+                        <i class="fa-solid fa-trash-can"></i>
+                    </a>
+                </div>
+
                 @if (isExpired)
                 {
                     <a asp-controller="Instructor" asp-action="Report" asp-route-sessionId="@session.Id" class="btn btn-past">
@@ -480,8 +585,7 @@
                 }
                 else if (isTooEarly)
                 {
-                    <div class="countdown-box js-session-countdown" 
-                         data-session-id="@session.Id" 
+                    <div class="countdown-box js-session-countdown" data-session-id="@session.Id"
                          data-ready-at="@(new DateTimeOffset(readyThreshold).ToUnixTimeMilliseconds())">
                         <span class="timer-main">
                             <i class="fas fa-hourglass-start"></i> Starts in <span class="timer-display">--:--</span>
@@ -497,7 +601,7 @@
                 }
                 else
                 {
-                    <a asp-action="LiveSession" asp-route-sessionId="@session.Id" class="btn btn-qr-launch btn-live-session">
+                    <a asp-action="GenerateQRCode" asp-route-id="@session.Id" class="btn btn-qr-launch btn-live-session">
                         <i class="fas fa-eye me-2"></i> View Live Session
                     </a>
                 }

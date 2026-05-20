@@ -186,8 +186,10 @@
             .main-content { padding: 2rem; }
         }
     </style>
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
 </head>
-<body>
+<body class="with-portal-chrome">
+    @await Html.PartialAsync("_PortalHeader")
 
     <div class="student-portal">
         <div class="sidebar">
@@ -253,16 +255,11 @@
                     <div class="label">Birth Date</div>
                     <div class="value">@Model.DateOfBirth.ToString("dd MMM, yyyy")</div>
                 </div>
-                        <!-- Cute Address Card -->
-            <div class="address-card-cute">
-                <div class="icon-square">
-                    <i class="fa-solid fa-info"></i>
-                </div>
-                <div>
-                    <div class="label" style="font-weight: 800; font-size: 0.9rem; color: white;">Address Information</div>
-                    <div class="value" style="color: #cbd5e1; font-size: 0.85rem; text-transform: uppercase;">@Model.Address</div>
-                </div>
-            </div>
+                <div class="data-card">
+                    <div class="label">Residential Address</div>
+                        <div class="value">@Model.Address</div>
+                     </div>
+               </div>
 
             <hr style="border-color: rgba(255,255,255,0.1); margin: 2rem 0;">
 
@@ -299,5 +296,6 @@
         </div>
     </div>
 
+    @await Html.PartialAsync("_PortalFooter")
 </body>
 </html>

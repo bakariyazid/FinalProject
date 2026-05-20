@@ -156,11 +156,12 @@
                 <div class="list-group list-group-flush bg-transparent">
                     @foreach (var student in Model.AtRiskStudents)
                     {
+                        var studentName = string.IsNullOrWhiteSpace(student.Name) ? "Unknown Student" : student.Name;
                         <div class="list-group-item bg-transparent border-0 px-0 d-flex align-items-center justify-content-between">
                             <div class="d-flex align-items-center gap-3">
-                                <div class="avatar-sm">@student.Name.Substring(0, 1)</div>
+                                <div class="avatar-sm">@studentName.Substring(0, 1)</div>
                                 <div>
-                                    <div class="fw-bold small">@student.Name</div>
+                                    <div class="fw-bold small">@studentName</div>
                                     <div class="text-muted" style="font-size: 0.7rem;">ID: @student.RegNumber</div>
                                 </div>
                             </div>
@@ -186,20 +187,21 @@
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach (var record in Model.AttendanceRecords)
-                            {
-                                <tr>
-                                    <td>
-                                        <div class="fw-bold">@record.StudentName</div>
+                        @foreach (var record in Model.AttendanceRecords)
+                        {
+                            var recordStatus = record.Status ?? "Unknown";
+                            <tr>
+                                <td>
+                                    <div class="fw-bold">@record.StudentName</div>
                                         <div class="text-muted small">@record.StudentEmail</div>
                                     </td>
                                     <td>@record.SessionDate.ToString("dd MMM yyyy")</td>
-                                    <td>@(record.ScanTime?.ToString("hh:mm tt") ?? "---")</td>
-                                    <td>
-                                        <span class="status-pill status-@record.Status.ToString().ToLower()">
-                                            @record.Status
-                                        </span>
-                                    </td>
+                                <td>@(record.ScanTime?.ToString("hh:mm tt") ?? "---")</td>
+                                <td>
+                                    <span class="status-pill status-@recordStatus.ToLower()">
+                                        @recordStatus
+                                    </span>
+                                </td>
                                     <td>
                                         <div class="progress" style="height: 6px; width: 60px;">
                                             @* <div class="progress-bar bg-primary" style="width: @(record.Status == AttendanceStatus.Present ? "100" : (record.Status == AttendanceStatus.Late ? "50" : "0"))%"></div> *@

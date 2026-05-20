@@ -170,19 +170,21 @@
                 .form-panel { padding: 2rem; }
             }
     </style>
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
 </head>
-<body>
+<body class="with-portal-chrome">
+    @await Html.PartialAsync("_PortalHeader")
 
     <div class="main-card">
         <div class="row g-0">
             <!-- Left Side: Profile Identity -->
             <div class="col-lg-4 info-panel">
                 <div class="profile-preview">
-                    @Model.FirstName[0]
+                    @((Model.FirstName ?? "S")[0])
                 </div>
                 <h2 class="fw-bold mb-1">@Model.FirstName @Model.LastName</h2>
             <p class="mb-4 fw-bold" style="color: rgba(103, 232, 249, 0.7); font-size: 0.85rem; letter-spacing: 0.5px;">
-                Student ID: #@Model.Email.Split('@')[0]
+                Student ID: #@((Model.Email ?? string.Empty).Split('@')[0])
             </p>
 
             <div class="p-3 rounded-4 mb-4" style="background: rgba(6, 182, 212, 0.1); border: 1px solid rgba(6, 182, 212, 0.2);">
@@ -258,5 +260,6 @@
         </div>
     </div>
 
+    @await Html.PartialAsync("_PortalFooter")
 </body>
 </html>

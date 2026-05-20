@@ -64,7 +64,7 @@ namespace QRCodeAttendance.Identity
             throw new NotImplementedException();
         }
 
-        public async Task<User> FindUserAsync(string email)
+        public async Task<User?> FindUserAsync(string email)
         {
             if (string.IsNullOrEmpty(email))
             {
@@ -96,7 +96,7 @@ namespace QRCodeAttendance.Identity
 
         public string GenerateToken(User user, IEnumerable<string> roles)
         {
-            var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration.GetSection("JwtTokenSettings:TokenKey").Value));
+            var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration.GetSection("JwtTokenSettings:TokenKey").Value ?? string.Empty));
             var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha512);
             IList<Claim> claims = new List<Claim>
             {
@@ -110,13 +110,13 @@ namespace QRCodeAttendance.Identity
             }
             var token = new JwtSecurityToken("", "", claims,
                 DateTime.UtcNow,
-                expires: DateTime.UtcNow.AddMinutes(Convert.ToInt32(_configuration.GetSection("JwtTokenSettings:TokenExpiryPeriod").Value)),
+                expires: DateTime.UtcNow.AddMinutes(Convert.ToInt32(_configuration.GetSection("JwtTokenSettings:TokenExpiryPeriod").Value ?? "60")),
                 signingCredentials: credentials);
 
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
 
-        public JwtSecurityToken GetClaims(string token)
+        public JwtSecurityToken? GetClaims(string token)
         {
             if (!string.IsNullOrEmpty(token))
             {
@@ -136,10 +136,10 @@ namespace QRCodeAttendance.Identity
 
         public string GetClaimValue(string type)
         {
-            return _httpContextAccessor.HttpContext.User.FindFirst(type).Value;
+            return _httpContextAccessor.HttpContext?.User.FindFirst(type)?.Value ?? string.Empty;
         }
 
-        public string GetPasswordHash(string password, string salt = null)
+        public string GetPasswordHash(string password, string? salt = null)
         {
             if (string.IsNullOrEmpty(salt))
             {
@@ -159,7 +159,7 @@ namespace QRCodeAttendance.Identity
         //     return roles.UserRoles.Select(role => role.Role.Name).ToList();
         // }
 
-        public string GetUserIdentity()
+        public string? GetUserIdentity()
         {
             return _httpContextAccessor.HttpContext?.User?.FindFirst(JwtRegisteredClaimNames.UniqueName)?.Value;
         }
@@ -177,10 +177,10 @@ namespace QRCodeAttendance.Identity
 
 
 
-        public IEnumerable<Claim> ValidateToken(string jwtToken)
+        public IEnumerable<Claim>? ValidateToken(string jwtToken)
         {
             var tokenHandler = new JwtSecurityTokenHandler();
-            var key = Encoding.ASCII.GetBytes(_configuration.GetSection("JwtTokenSettings:TokenKey").Value);
+            var key = Encoding.ASCII.GetBytes(_configuration.GetSection("JwtTokenSettings:TokenKey").Value ?? string.Empty);
 
             try
             {
@@ -214,14 +214,19 @@ namespace QRCodeAttendance.Identity
             var httpContext = _httpContextAccessor.HttpContext;
 
             // Check if a user is authenticated
-            if (httpContext.User.Identity.IsAuthenticated)
+            if (httpContext?.User.Identity?.IsAuthenticated == true)
             {
                 // Retrieve the user's unique identifier (e.g., user ID) from claims
                 var email = httpContext.User.FindFirst(ClaimTypes.Email)?.Value;
                 // var user = await _userRepository.GetByEmailAsync(email);
+                if (string.IsNullOrEmpty(email))
+                {
+                    throw new BadHttpRequestException("Unable to get logged in user");
+                }
+
                 var user = await _userRepository.GetByEmail(email);
 
-                return user;
+                return user ?? throw new BadHttpRequestException("Unable to get logged in user");
 
             }
 

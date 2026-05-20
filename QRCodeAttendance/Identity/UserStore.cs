@@ -65,7 +65,7 @@ namespace QRCodeAttendance.Identity
             _qrCodeDbContext.Dispose();
         }
 
-        public async Task<User> FindByEmailAsync(string normalizedEmail, CancellationToken cancellationToken)
+        public async Task<User?> FindByEmailAsync(string normalizedEmail, CancellationToken cancellationToken)
         {
             normalizedEmail = normalizedEmail.ToLower();
             cancellationToken.ThrowIfCancellationRequested();
@@ -76,7 +76,7 @@ namespace QRCodeAttendance.Identity
             return await _qrCodeDbContext.Set<User>().SingleOrDefaultAsync(u => u.Email.ToLower() == normalizedEmail, cancellationToken);
         }
 
-        public async Task<User> FindByIdAsync(string userId, CancellationToken cancellationToken)
+        public async Task<User?> FindByIdAsync(string userId, CancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();
             if (string.IsNullOrEmpty(userId))
@@ -86,7 +86,7 @@ namespace QRCodeAttendance.Identity
             return await _qrCodeDbContext.Set<User>().FindAsync(new object[] { Guid.Parse(userId) }, cancellationToken);
         }
 
-        public async Task<User> FindByNameAsync(string userName, CancellationToken cancellationToken)
+        public async Task<User?> FindByNameAsync(string userName, CancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();
             if (string.IsNullOrEmpty(userName))
@@ -96,14 +96,14 @@ namespace QRCodeAttendance.Identity
             return await _qrCodeDbContext.Set<User>().FirstOrDefaultAsync(u => u.Email == userName, cancellationToken);
         }
 
-        public Task<string> GetEmailAsync(User user, CancellationToken cancellationToken)
+        public Task<string?> GetEmailAsync(User user, CancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();
             if (user == null)
             {
                 throw new ArgumentNullException(nameof(user));
             }
-            return Task.FromResult(user.Email.ToLower());
+            return Task.FromResult<string?>(user.Email.ToLower());
         }
 
         public Task<bool> GetEmailConfirmedAsync(User user, CancellationToken cancellationToken)
@@ -117,34 +117,34 @@ namespace QRCodeAttendance.Identity
             return Task.FromResult(true);
         }
 
-        public Task<string> GetNormalizedEmailAsync(User user, CancellationToken cancellationToken)
+        public Task<string?> GetNormalizedEmailAsync(User user, CancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();
             if (user == null)
             {
                 throw new ArgumentNullException(nameof(user));
             }
-            return Task.FromResult(user.Email.ToLower());
+            return Task.FromResult<string?>(user.Email.ToLower());
         }
 
-        public Task<string> GetNormalizedUserNameAsync(User user, CancellationToken cancellationToken)
+        public Task<string?> GetNormalizedUserNameAsync(User user, CancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();
             if (user == null)
             {
                 throw new ArgumentNullException(nameof(user));
             }
-            return Task.FromResult(user.Email.ToLower());
+            return Task.FromResult<string?>(user.Email.ToLower());
         }
 
-        public Task<string> GetPasswordHashAsync(User user, CancellationToken cancellationToken)
+        public Task<string?> GetPasswordHashAsync(User user, CancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();
             if (user == null)
             {
                 throw new ArgumentNullException(nameof(user));
             }
-            return Task.FromResult(user.PasswordHash);
+            return Task.FromResult<string?>(user.PasswordHash);
         }
 
         public Task<bool> GetPhoneNumberConfirmedAsync(User user, CancellationToken cancellationToken)
@@ -167,7 +167,7 @@ namespace QRCodeAttendance.Identity
                     .Select(r => r.Name)
                     .FirstOrDefaultAsync(cancellationToken);
 
-            return new List<string> { role };
+            return role == null ? new List<string>() : new List<string> { role };
         }
 
         public Task<string> GetUserIdAsync(User user, CancellationToken cancellationToken)
@@ -180,14 +180,14 @@ namespace QRCodeAttendance.Identity
             return Task.FromResult(user.Id.ToString());
         }
 
-        public Task<string> GetUserNameAsync(User user, CancellationToken cancellationToken)
+        public Task<string?> GetUserNameAsync(User user, CancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();
             if (user == null)
             {
                 throw new ArgumentNullException(nameof(user));
             }
-            return Task.FromResult(user.Email.ToLower());
+            return Task.FromResult<string?>(user.Email.ToLower());
         }
 
        public async Task<IList<User>> GetUsersInRoleAsync(string roleName, CancellationToken cancellationToken)
@@ -195,7 +195,7 @@ namespace QRCodeAttendance.Identity
                 cancellationToken.ThrowIfCancellationRequested();
                 return await _qrCodeDbContext.Set<User>()
                     .Include(u => u.Role)
-                    .Where(u => u.Role.Name == roleName)
+                    .Where(u => u.Role != null && u.Role.Name == roleName)
                     .ToListAsync(cancellationToken);
             }
        
@@ -234,14 +234,14 @@ namespace QRCodeAttendance.Identity
             throw new NotSupportedException("Users must always have a role. Use AddToRoleAsync to change the role instead.");
         }
 
-        public Task SetEmailAsync(User user, string email, CancellationToken cancellationToken)
+        public Task SetEmailAsync(User user, string? email, CancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();
             if (user == null)
             {
                 throw new ArgumentNullException(nameof(user));
             }
-            user.Email = email.ToLower();
+            user.Email = (email ?? string.Empty).ToLower();
             return Task.CompletedTask;
         }
 
@@ -255,46 +255,46 @@ namespace QRCodeAttendance.Identity
             return Task.CompletedTask;
         }
 
-        public Task SetNormalizedEmailAsync(User user, string normalizedEmail, CancellationToken cancellationToken)
+        public Task SetNormalizedEmailAsync(User user, string? normalizedEmail, CancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();
             if (user == null)
             {
                 throw new ArgumentNullException(nameof(user));
             }
-            user.Email = normalizedEmail.ToLower();
+            user.Email = (normalizedEmail ?? string.Empty).ToLower();
             return Task.CompletedTask;
         }
 
-        public Task SetNormalizedUserNameAsync(User user, string normalizedName, CancellationToken cancellationToken)
+        public Task SetNormalizedUserNameAsync(User user, string? normalizedName, CancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();
             if (user == null)
             {
                 throw new ArgumentNullException(nameof(user));
             }
-            user.Email = normalizedName.ToLower();
+            user.Email = (normalizedName ?? string.Empty).ToLower();
             return Task.CompletedTask;
         }
 
-        public Task SetPasswordHashAsync(User user, string passwordHash, CancellationToken cancellationToken)
+        public Task SetPasswordHashAsync(User user, string? passwordHash, CancellationToken cancellationToken)
             {
                 if (user == null)
                     throw new ArgumentNullException(nameof(user));
 
-                user.PasswordHash = passwordHash;
+                user.PasswordHash = passwordHash ?? string.Empty;
                 return Task.CompletedTask;
             }
 
 
-        public Task SetUserNameAsync(User user, string userName, CancellationToken cancellationToken)
+        public Task SetUserNameAsync(User user, string? userName, CancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();
             if (user == null)
             {
                 throw new ArgumentNullException(nameof(user));
             }
-            user.Email = userName.ToLower();
+            user.Email = (userName ?? string.Empty).ToLower();
             return Task.CompletedTask;
         }
 

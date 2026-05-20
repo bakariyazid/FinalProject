@@ -38,7 +38,6 @@ public class BaseRepository : IBaseRepository
     public virtual async Task Delete<T>(T entity) where T : BaseEntity
     {
         _qrCodeDbContext.Set<T>().Remove(entity);
-        await _qrCodeDbContext.SaveChangesAsync();
     }
 
     public virtual async Task<T> Get<T>(Expression<Func<T, bool>> expression) where T : BaseEntity

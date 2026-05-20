@@ -9,7 +9,8 @@
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/QRCodeAttendance.styles.css" asp-append-version="true" />
 </head>
-<body>
+<body class="with-portal-chrome">
+    @await Html.PartialAsync("_PortalHeader")
     @* <header>
         <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3"> 
             <div class="container-fluid">
@@ -42,6 +43,7 @@
             &copy; 2026 - QRCodeAttendance - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
         </div>
     </footer>  *@
+    @await Html.PartialAsync("_PortalFooter")
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>

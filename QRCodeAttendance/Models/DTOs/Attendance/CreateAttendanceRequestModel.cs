@@ -8,6 +8,6 @@ namespace QRCodeAttendance.Models.DTOs.Attendance
 {
     public class CreateAttendanceRequestModel
     {
-        public string QrCodeData { get; set; }
+        public string QrCodeData { get; set; } = string.Empty;
     }
 }

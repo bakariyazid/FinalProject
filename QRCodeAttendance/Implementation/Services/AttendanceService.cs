@@ -287,6 +287,7 @@ namespace QRCodeAttendance.Implementation.Services
             }
 
             await _attendanceRepository.Delete(attendance);
+            await _unitOfWork.SaveChangesAsync();
 
             return new BaseResponse<bool>
             {

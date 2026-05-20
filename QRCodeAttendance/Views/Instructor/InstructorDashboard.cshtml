@@ -482,9 +482,11 @@
             }
         }
     </style>
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
 </head>
 
-<body>
+<body class="with-portal-chrome">
+    @await Html.PartialAsync("_PortalHeader")
 
     <nav class="sidebar">
         <div class="brand-box">
@@ -716,5 +718,6 @@
             }, 1000);
         }
     </script>
+    @await Html.PartialAsync("_PortalFooter")
 </body>
 </html>

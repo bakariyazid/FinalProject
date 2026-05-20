@@ -194,9 +194,11 @@
             background: rgba(239, 68, 68, 0.05) !important;
         }
     </style>
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
 </head>
 
-<body>
+<body class="with-portal-chrome">
+    @await Html.PartialAsync("_PortalHeader")
     <div class="glass-card">
         <div class="header-section">
             <div class="brand-logo">
@@ -298,5 +300,6 @@
             </div>
         </div>
     </div>
+    @await Html.PartialAsync("_PortalFooter")
 </body>
 </html>

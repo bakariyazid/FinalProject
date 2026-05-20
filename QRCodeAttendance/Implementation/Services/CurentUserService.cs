@@ -33,12 +33,12 @@ namespace QRCodeAttendance.Implementation.Services
             public string Email =>
                 _httpContextAccessor.HttpContext?
                 .User?
-                .FindFirst(ClaimTypes.Email)?.Value;
+                .FindFirst(ClaimTypes.Email)?.Value ?? string.Empty;
 
             public string Role =>
                 _httpContextAccessor.HttpContext?
                 .User?
-                .FindFirst(ClaimTypes.Role)?.Value;
+                .FindFirst(ClaimTypes.Role)?.Value ?? string.Empty;
         }
             
 }

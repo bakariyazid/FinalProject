@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using System.Text;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using QRCodeAttendance.Interface.Services;
@@ -54,9 +55,14 @@ namespace QRCodeAttendance.Controllers
         public async Task<IActionResult> StudentDashboard()
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userId) || !Guid.TryParse(userId, out var studentUserId))
+            {
+                return RedirectToAction("Login", "User");
+            }
+
             _logger.LogInformation("Student {UserId} requested dashboard", userId);
 
-            var response = await _studentService.GetDashboard(Guid.Parse(userId));
+            var response = await _studentService.GetDashboard(studentUserId);
 
             if (!response.Status)
             {
@@ -79,14 +85,14 @@ namespace QRCodeAttendance.Controllers
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
                 
-                if (string.IsNullOrEmpty(userId))
+                if (string.IsNullOrEmpty(userId) || !Guid.TryParse(userId, out var studentUserId))
                 {
                     return RedirectToAction("Login", "User");
                 }
 
                 _logger.LogInformation("Student {UserId} requested profile", userId);
 
-                var response = await _studentService.GetStudentProfile(Guid.Parse(userId));
+                var response = await _studentService.GetStudentProfile(studentUserId);
 
                 if (response == null || response.Data == null)
                 {
@@ -101,9 +107,12 @@ namespace QRCodeAttendance.Controllers
         public async Task<IActionResult> EditStdProfile()
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (string.IsNullOrEmpty(userId)) return RedirectToAction("Login", "User");
+            if (string.IsNullOrEmpty(userId) || !Guid.TryParse(userId, out var studentUserId))
+            {
+                return RedirectToAction("Login", "User");
+            }
 
-            var response = await _studentService.GetStudentProfile(Guid.Parse(userId));
+            var response = await _studentService.GetStudentProfile(studentUserId);
             
             if (response == null || !response.Status || response.Data == null)
             {
@@ -130,9 +139,14 @@ namespace QRCodeAttendance.Controllers
         public async Task<IActionResult> EditStdProfile(UpdateStudentRequestModel model)
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userId) || !Guid.TryParse(userId, out var studentUserId))
+            {
+                return RedirectToAction("Login", "User");
+            }
+
             _logger.LogInformation("Student {UserId} updating profile", userId);
 
-            var response = await _studentService.UpdateStudentProfile(Guid.Parse(userId), model);
+            var response = await _studentService.UpdateStudentProfile(studentUserId, model);
 
             if (!response.Status)
             {
@@ -151,9 +165,14 @@ namespace QRCodeAttendance.Controllers
         public async Task<IActionResult> AttendancePercentage()
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userId) || !Guid.TryParse(userId, out var studentUserId))
+            {
+                return RedirectToAction("Login", "User");
+            }
+
             _logger.LogInformation("Student {UserId} requested attendance percentage", userId);
 
-            var response = await _studentService.GetMyAttendancePercentage(Guid.Parse(userId));
+            var response = await _studentService.GetMyAttendancePercentage(studentUserId);
 
             if (!response.Status)
             {
@@ -164,6 +183,127 @@ namespace QRCodeAttendance.Controllers
 
             ViewBag.AttendancePercentage = response.Data;
             return View();
+        }
+
+        [HttpGet("Student/AttendanceReport")]
+        public async Task<IActionResult> AttendanceReport()
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userId) || !Guid.TryParse(userId, out var studentUserId))
+            {
+                return RedirectToAction("Login", "User");
+            }
+
+            var response = await _studentService.GetAttendanceReport(studentUserId);
+            if (!response.Status)
+            {
+                ViewBag.ErrorMessage = response.Message;
+            }
+
+            return View(response.Data);
+        }
+
+        [HttpGet("Student/AttendanceReportPdf/{sessionId}")]
+        public async Task<IActionResult> AttendanceReportPdf(Guid sessionId)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userId) || !Guid.TryParse(userId, out var studentUserId))
+            {
+                return RedirectToAction("Login", "User");
+            }
+
+            var response = await _studentService.GetAttendanceReportItem(studentUserId, sessionId);
+            if (!response.Status)
+            {
+                return NotFound(response.Message);
+            }
+
+            var pdfBytes = BuildAttendancePdf(response.Data);
+            var safeCourseCode = string.Concat(response.Data.CourseCode.Where(char.IsLetterOrDigit));
+            var fileName = $"Attendance-{safeCourseCode}-{response.Data.ScanTime:yyyyMMdd}.pdf";
+
+            return File(pdfBytes, "application/pdf", fileName);
+        }
+
+        private static byte[] BuildAttendancePdf(StudentAttendanceReportItemDto report)
+        {
+            static string Escape(string value) => value
+                .Replace("\\", "\\\\")
+                .Replace("(", "\\(")
+                .Replace(")", "\\)");
+
+            var lines = new[]
+            {
+                "QRCode Attendance - Student Class Report",
+                "",
+                $"Student: {report.StudentName}",
+                $"Matric Number: {report.MatricNumber}",
+                $"Department: {report.Department}",
+                $"Level: {report.Level}",
+                "",
+                $"Course: {report.CourseName}",
+                $"Course Code: {report.CourseCode}",
+                $"Instructor: {report.InstructorName}",
+                $"Class Start: {report.SessionStartTime.ToLocalTime():MMM dd, yyyy hh:mm tt}",
+                $"Class End: {report.SessionEndTime.ToLocalTime():MMM dd, yyyy hh:mm tt}",
+                "",
+                $"Attendance Status: {report.Status}",
+                $"Scan Time: {report.ScanTime.ToLocalTime():MMM dd, yyyy hh:mm tt}",
+                "",
+                $"Generated: {DateTime.Now:MMM dd, yyyy hh:mm tt}"
+            };
+
+            var content = new StringBuilder();
+            content.AppendLine("BT");
+            content.AppendLine("/F1 22 Tf");
+            content.AppendLine("72 760 Td");
+            content.AppendLine($"({Escape(lines[0])}) Tj");
+            content.AppendLine("0 -34 Td");
+            content.AppendLine("/F1 12 Tf");
+
+            foreach (var line in lines.Skip(1))
+            {
+                content.AppendLine("0 -22 Td");
+                content.AppendLine($"({Escape(line)}) Tj");
+            }
+
+            content.AppendLine("ET");
+
+            var contentBytes = Encoding.ASCII.GetBytes(content.ToString());
+            var objects = new List<string>
+            {
+                "<< /Type /Catalog /Pages 2 0 R >>",
+                "<< /Type /Pages /Kids [3 0 R] /Count 1 >>",
+                "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 4 0 R >> >> /Contents 5 0 R >>",
+                "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>",
+                $"<< /Length {contentBytes.Length} >>\nstream\n{content}\nendstream"
+            };
+
+            using var output = new MemoryStream();
+            void Write(string value)
+            {
+                var bytes = Encoding.ASCII.GetBytes(value);
+                output.Write(bytes, 0, bytes.Length);
+            }
+
+            Write("%PDF-1.4\n");
+            var offsets = new List<long> { 0 };
+            for (var i = 0; i < objects.Count; i++)
+            {
+                offsets.Add(output.Position);
+                Write($"{i + 1} 0 obj\n{objects[i]}\nendobj\n");
+            }
+
+            var xrefPosition = output.Position;
+            Write($"xref\n0 {objects.Count + 1}\n");
+            Write("0000000000 65535 f \n");
+            foreach (var offset in offsets.Skip(1))
+            {
+                Write($"{offset:0000000000} 00000 n \n");
+            }
+
+            Write($"trailer\n<< /Size {objects.Count + 1} /Root 1 0 R >>\nstartxref\n{xrefPosition}\n%%EOF");
+            return output.ToArray();
         }
     }
 }

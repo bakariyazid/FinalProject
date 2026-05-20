@@ -74,7 +74,7 @@ namespace QRCodeAttendance.Implementation.Services
 
                 (var valid, var message) = ValidatePassword(request.PasswordHash);
                 if (!valid)
-                    return new BaseResponse<bool> { Message = message, Status = false };
+                    return new BaseResponse<bool> { Message = message ?? string.Empty, Status = false };
 
                 var strategy = _unitOfWork.CreateExecutionStrategy();
 
@@ -199,7 +199,7 @@ namespace QRCodeAttendance.Implementation.Services
                             FullName = instructor.FullName(),
                             Address = instructor.Address,
                             DateOfBirth = instructor.DateOfBirth,
-                            Email = instructor.User.Email,
+                            Email = instructor.User?.Email ?? instructor.Email,
                             PhoneNumber = instructor.PhoneNumber,
                             Department = instructor.Department,
                             CreatedDate = instructor.CreatedDate,
@@ -301,7 +301,7 @@ namespace QRCodeAttendance.Implementation.Services
                     {
                         Status = false,
                         Message = "Instructor not found",
-                        Data = null
+                        Data = default!
                     };
                 }
 

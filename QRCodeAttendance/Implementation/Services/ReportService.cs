@@ -105,8 +105,8 @@ namespace QRCodeAttendance.Implementation.Services
                 
                 AttendanceRecords = sessions.SelectMany(s => s.Attendances.Select(a => new AttendanceRecordDto
                 {
-                    StudentName = a.Student.FullName(), 
-                    StudentEmail = a.Student.Email,
+                    StudentName = a.Student?.FullName() ?? a.StudentName, 
+                    StudentEmail = a.Student?.Email ?? string.Empty,
                     SessionDate = s.SessionStartTime,
                     ScanTime = a.ScanTime,
                     Status = a.Status.ToString()
@@ -142,8 +142,8 @@ namespace QRCodeAttendance.Implementation.Services
                     {
                         report.AtRiskStudents.Add(new StudentRiskDto
                         {
-                            Name = student.Data.FullName(),
-                            RegNumber = student.Data.MatricNumber, 
+                            Name = student.Data?.FullName() ?? "Unknown Student",
+                            RegNumber = student.Data?.MatricNumber, 
                             AttendanceRate = studentRate
                         });
                     }

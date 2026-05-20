@@ -98,8 +98,10 @@
             z-index: 999;
         }
     </style>
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
 </head>
-<body>
+<body class="with-portal-chrome">
+    @await Html.PartialAsync("_PortalHeader")
 
     <nav class="student-nav">
         <div class="container d-flex justify-content-between align-items-center">
@@ -185,7 +187,12 @@
                     }
                 </div>
 
-                <h4 class="fw-bold mb-4 mt-5 text-success">Attended Sessions</h4>
+                <div class="d-flex justify-content-between align-items-center gap-3 mb-4 mt-5">
+                    <h4 class="fw-bold mb-0 text-success">Recent Attended Sessions</h4>
+                    <a asp-controller="Student" asp-action="AttendanceReport" class="btn btn-outline-success rounded-pill fw-bold px-4">
+                        <i class="fa fa-chart-line me-2"></i>Full Report
+                    </a>
+                </div>
                 <div class="row g-3">
                     @if (Model.RecentAttendances != null && Model.RecentAttendances.Any())
                     {
@@ -195,7 +202,13 @@
                                 <div class="data-card p-3 border-start border-success border-4">
                                     <h6 class="fw-bold mb-1">@attendance.CourseName</h6>
                                     <div class="small text-muted">@attendance.CourseCode &bull; @attendance.ScanTime.ToLocalTime().ToString("MMM dd, hh:mm tt")</div>
-                                    <span class="badge bg-success-subtle text-success mt-2">@attendance.Status</span>
+                                    <div class="d-flex align-items-center justify-content-between gap-2 mt-2">
+                                        <span class="badge bg-success-subtle text-success">@attendance.Status</span>
+                                        <a asp-controller="Student" asp-action="AttendanceReportPdf" asp-route-sessionId="@attendance.SessionId"
+                                           class="small fw-bold text-success text-decoration-none">
+                                            <i class="fa fa-download me-1"></i>PDF
+                                        </a>
+                                    </div>
                                 </div>
                             </div>
                         }
@@ -277,5 +290,6 @@
         }, 30000); 
     </script>
     }
+    @await Html.PartialAsync("_PortalFooter")
 </body>
 </html>

@@ -66,7 +66,7 @@ namespace QRCodeAttendance.Implementation.Services
 
                         (var valid, var message) = ValidatePassword(request.PasswordHash);
                         if (!valid)
-                            return new BaseResponse<bool> { Message = message, Status = false };
+                            return new BaseResponse<bool> { Message = message ?? string.Empty, Status = false };
 
                         var strategy = _unitOfWork.CreateExecutionStrategy();
 
@@ -200,6 +200,7 @@ namespace QRCodeAttendance.Implementation.Services
 
                         RecentAttendances = attendances
                             .OrderByDescending(a => a.ScanTime)
+                            .Take(5)
                             .Select(a => new AttendanceDto
                             {
                                 Id = a.Id,
@@ -224,8 +225,98 @@ namespace QRCodeAttendance.Implementation.Services
                     response.Message = "An internal error occurred while loading your dashboard.";
                 }
 
-                return response;
+                    return response;
             }
+
+        public async Task<BaseResponse<StudentAttendanceReportDto>> GetAttendanceReport(Guid userId)
+        {
+            var student = await _studentRepository.Get<Student>(s => s.UserId == userId);
+            if (student == null)
+            {
+                return new BaseResponse<StudentAttendanceReportDto>
+                {
+                    Status = false,
+                    Message = "Student record not found."
+                };
+            }
+
+            var attendances = await _attendanceRepository.GetByStudentId(student.Id);
+            var records = attendances
+                .OrderByDescending(a => a.ScanTime)
+                .Select(a => ToStudentAttendanceReportItem(student, a))
+                .ToList();
+
+            return new BaseResponse<StudentAttendanceReportDto>
+            {
+                Status = true,
+                Message = "Attendance report retrieved successfully.",
+                Data = new StudentAttendanceReportDto
+                {
+                    StudentName = student.FullName(),
+                    MatricNumber = student.MatricNumber,
+                    Department = student.Department,
+                    Level = student.StudentLevel,
+                    TotalAttended = records.Count,
+                    Records = records
+                }
+            };
+        }
+
+        public async Task<BaseResponse<StudentAttendanceReportItemDto>> GetAttendanceReportItem(Guid userId, Guid sessionId)
+        {
+            var student = await _studentRepository.Get<Student>(s => s.UserId == userId);
+            if (student == null)
+            {
+                return new BaseResponse<StudentAttendanceReportItemDto>
+                {
+                    Status = false,
+                    Message = "Student record not found."
+                };
+            }
+
+            var attendance = (await _attendanceRepository.GetByStudentId(student.Id))
+                .FirstOrDefault(a => a.SessionId == sessionId);
+
+            if (attendance == null)
+            {
+                return new BaseResponse<StudentAttendanceReportItemDto>
+                {
+                    Status = false,
+                    Message = "Attendance report was not found for this class."
+                };
+            }
+
+            return new BaseResponse<StudentAttendanceReportItemDto>
+            {
+                Status = true,
+                Message = "Attendance report retrieved successfully.",
+                Data = ToStudentAttendanceReportItem(student, attendance)
+            };
+        }
+
+        private static StudentAttendanceReportItemDto ToStudentAttendanceReportItem(Student student, Attendance attendance)
+        {
+            var session = attendance.ClassSession;
+
+            return new StudentAttendanceReportItemDto
+            {
+                AttendanceId = attendance.Id,
+                SessionId = attendance.SessionId,
+                StudentName = student.FullName(),
+                MatricNumber = student.MatricNumber,
+                Department = student.Department,
+                Level = student.StudentLevel,
+                CourseName = attendance.CourseName ?? session?.CourseName ?? "Unknown Course",
+                CourseCode = attendance.CourseCode ?? session?.CourseCode ?? "N/A",
+                InstructorName = session?.Instructor != null
+                    ? $"{session.Instructor.FirstName} {session.Instructor.LastName}"
+                    : "Instructor",
+                SessionStartTime = session?.SessionStartTime ?? attendance.ScanTime,
+                SessionEndTime = session?.SessionEndTime ?? attendance.ScanTime,
+                ScanTime = attendance.ScanTime,
+                Status = attendance.Status
+            };
+        }
 
         public async Task<BaseResponse<double>> GetMyAttendancePercentage(Guid studentId)
             {
@@ -272,7 +363,7 @@ namespace QRCodeAttendance.Implementation.Services
                         {
                             Message = "Student not found",
                             Status = false,
-                            Data = null
+                            Data = default!
                         };
                     }
 

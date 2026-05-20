@@ -49,8 +49,10 @@
             margin: 10px !important;
         }
     </style>
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
 </head>
-<body>
+<body class="with-portal-chrome">
+    @await Html.PartialAsync("_PortalHeader")
 
 <div class="container py-5">
     <div class="row justify-content-center">
@@ -120,5 +122,6 @@
     html5QrcodeScanner.render(onScanSuccess, onScanFailure);
 </script>
 
+    @await Html.PartialAsync("_PortalFooter")
 </body>
 </html>

@@ -59,8 +59,8 @@ namespace QRCodeAttendance.Implementation.Services
                 InstructorId = instructor.Id,
                 QRCodeToken = string.Empty,
                 QRCodeExpiry = request.QRCodeExpiry.ToUniversalTime(),
-                CreatedDate = DateTime.UtcNow,
-                UpdatedDate = DateTime.UtcNow
+                CreatedDate = DateTime.UtcNow.ToUniversalTime(),
+                UpdatedDate = DateTime.UtcNow.ToUniversalTime()
             };
 
             await _sessionRepository.Add(session);
@@ -166,8 +166,88 @@ namespace QRCodeAttendance.Implementation.Services
                 return response;
             }
 
+        public async Task<BaseResponse<SessionDto>> GetSessionById(Guid sessionId)
+        {
+            var response = new BaseResponse<SessionDto>();
 
-     public async Task<BaseResponse<SessionDto>> UpdateSession(Guid sessionId, UpdateSessionRequestModel request)
+            try
+            {
+                var session = await _sessionRepository.Get<Session>(s => s.Id == sessionId);
+
+                if (session == null)
+                {
+                    response.Status = false;
+                    response.Message = "Session not found";
+                    return response;
+                }
+
+                response.Data = new SessionDto
+                {
+                    Id = session.Id,
+                    InstructorId = session.InstructorId,
+                    CourseName = session.CourseName,
+                    CourseCode = session.CourseCode,
+                    Level = session.Level,
+                    Department = session.Department,
+                    SessionStartTime = session.SessionStartTime,
+                    SessionEndTime = session.SessionEndTime,
+                    IsActive = session.IsActive,
+                    QRCodeToken = session.QRCodeToken,
+                    QRCodeExpiry = session.QRCodeExpiry,
+                    CreatedDate = session.CreatedDate,
+                    UpdatedDate = session.UpdatedDate
+                };
+
+                response.Status = true;
+                response.Message = "Session retrieved successfully";
+            }
+            catch (Exception ex)
+            {
+                response.Status = false;
+                response.Message = ex.Message;
+            }
+
+            return response;
+        }
+
+        public async Task<BaseResponse<IReadOnlyList<SessionDto>>> GetAllSessions()
+        {
+            var response = new BaseResponse<IReadOnlyList<SessionDto>>();
+
+            try
+            {
+                var sessions = await _sessionRepository.GetAll<Session>();
+
+                var sessionDtos = sessions.Select(session => new SessionDto
+                {
+                    Id = session.Id,
+                    CourseName = session.CourseName,
+                    CourseCode = session.CourseCode,
+                    Level = session.Level,
+                    Department = session.Department,
+                    SessionStartTime = session.SessionStartTime,
+                    SessionEndTime = session.SessionEndTime,
+                    IsActive = session.IsActive,
+                    QRCodeToken = session.QRCodeToken,
+                    QRCodeExpiry = session.QRCodeExpiry,
+                    CreatedDate = session.CreatedDate,
+                    UpdatedDate = session.UpdatedDate
+                }).ToList();
+
+                response.Data = sessionDtos;
+                response.Status = true;
+                response.Message = "Sessions retrieved successfully";
+            }
+            catch (Exception ex)
+            {
+                response.Status = false;
+                response.Message = ex.Message;
+            }
+
+            return response;
+        }
+
+        public async Task<BaseResponse<SessionDto>> UpdateSession(Guid sessionId, UpdateSessionRequestModel request)
             {
                  
                 var session = await _sessionRepository.Get<Session>(s => s.Id == sessionId);
@@ -183,9 +263,11 @@ namespace QRCodeAttendance.Implementation.Services
                 
                 session.CourseName = request.CourseName;
                 session.CourseCode = request.CourseCode;
-                session.SessionStartTime = request.SessionStartTime;
-                session.SessionEndTime = request.SessionEndTime;
-                session.UpdatedDate = DateTime.UtcNow;
+                session.Level = request.Level;
+                session.Department = request.Department;
+                session.SessionStartTime = request.SessionStartTime.ToUniversalTime();
+                session.SessionEndTime = request.SessionEndTime.ToUniversalTime();
+                session.UpdatedDate = DateTime.UtcNow.ToUniversalTime();
 
                 _sessionRepository.Update(session);
                 await _unitOfWork.SaveChangesAsync();
@@ -195,9 +277,13 @@ namespace QRCodeAttendance.Implementation.Services
                     Id = session.Id,
                     CourseName = session.CourseName,
                     CourseCode = session.CourseCode,
+                    Level = session.Level,
+                    Department = session.Department,
                     SessionStartTime = session.SessionStartTime,
                     SessionEndTime = session.SessionEndTime,
-                    IsActive = session.IsActive
+                    IsActive = session.IsActive,
+                    CreatedDate = session.CreatedDate,
+                    UpdatedDate = session.UpdatedDate
                 };
 
                 return new BaseResponse<SessionDto>
@@ -352,151 +438,6 @@ namespace QRCodeAttendance.Implementation.Services
                 }
             }
 
-        public async Task<BaseResponse<SessionDto>> GetSessionById(Guid sessionId)
-            {
-                var response = new BaseResponse<SessionDto>();
-
-                try
-                {
-                    var session = await _sessionRepository.Get<Session>(s=> s.Id == sessionId);
-
-                    if (session == null)
-                    {
-                        response.Status = false;
-                        response.Message = "Session not found";
-                        return response;
-                    }
-
-                    response.Data = new SessionDto
-                    {
-                        Id = session.Id,
-                        InstructorId = session.InstructorId,    
-                        CourseName = session.CourseName,
-                        CourseCode = session.CourseCode,
-                        Level = session.Level,
-                        Department = session.Department,
-                        SessionStartTime = session.SessionStartTime,
-                        SessionEndTime = session.SessionEndTime,
-                        IsActive = session.IsActive,
-                        QRCodeToken = session.QRCodeToken,
-                        QRCodeExpiry = session.QRCodeExpiry,
-                        CreatedDate = session.CreatedDate,
-                        UpdatedDate = session.UpdatedDate
-                    };
-
-                    response.Status = true;
-                    response.Message = "Session retrieved successfully";
-                }
-                catch (Exception ex)
-                {
-                    response.Status = false;
-                    response.Message = ex.Message;
-                }
-
-                return response;
-            }
-
-     public async Task<BaseResponse<IReadOnlyList<SessionDto>>> GetAllSessions()
-        {
-            var response = new BaseResponse<IReadOnlyList<SessionDto>>();
-
-            try
-            {
-                var sessions = await _sessionRepository.GetAll<Session>();
-
-                var sessionDtos = sessions.Select(session => new SessionDto
-                {
-                    Id = session.Id,
-                    CourseName = session.CourseName,
-                    CourseCode = session.CourseCode,
-                    Level = session.Level,
-                    Department = session.Department,
-                    SessionStartTime = session.SessionStartTime,
-                    SessionEndTime = session.SessionEndTime,
-                    IsActive = session.IsActive
-                }).ToList();
-
-                response.Data = sessionDtos;
-                response.Status = true;
-                response.Message = "Sessions retrieved successfully";
-            }
-            catch (Exception ex)
-            {
-                response.Status = false;
-                response.Message = ex.Message;
-            }
-
-            return response;
-        }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        // public async Task<BaseResponse<bool>> ValidateSessionQrCode(Guid sessionId, string qrCode)
-        //     {
-        //         var session = await _sessionRepository.Get<Session>(s => s.Id == sessionId);
-        //         if (session == null) return new BaseResponse<bool> { Status = false, Message = "Session not found" };
-
-        //         if (qrCode != session.QRCodeToken)
-        //             return new BaseResponse<bool> { Status = false, Message = "Invalid QR Code" };
-
-        //         var now = DateTime.UtcNow;
-
-        //         var qrHardExpiry = session.SessionEndTime.AddMinutes(-10);
-        //         if (now > qrHardExpiry)
-        //         {
-        //             return new BaseResponse<bool> 
-        //             { 
-        //                 Status = false,
-        //                  Message = "QR Code has expired (Class ending soon)" 
-        //             };
-        //         }
-
-        //         AttendanceStatus autoStatus;
-        //         var lateThreshold = session.SessionStartTime.AddMinutes(30);
-
-        //         if (now <= lateThreshold)
-        //         {
-        //             autoStatus = AttendanceStatus.Present; 
-        //         }
-        //         else
-        //         {
-        //             autoStatus = AttendanceStatus.Late; 
-        //         }
-
-        //         var studentId = _currentUserService.UserId;
-        //         var existing = await _attendanceRepository.Get<Attendance>(a =>
-        //             a.SessionId == sessionId && a.StudentId == studentId);
-
-        //         if (existing != null)
-        //             return new BaseResponse<bool> { Status = false, Message = "Attendance already marked" };
-
-        //         var attendance = new Attendance
-        //         {
-        //             SessionId = session.Id,
-        //             StudentId = studentId,
-        //             StudentName = _currentUserService.Email,
-        //             Status = autoStatus,
-        //             ScanTime = now,
-        //             CreatedDate = now
-        //         };
-
-        //         await _attendanceRepository.Add(attendance);
-        //         await _unitOfWork.SaveChangesAsync();
-
-        //         return new BaseResponse<bool> { Status = true, Message = $"Marked as {autoStatus}" };
-        //     }
-
+       
     }
 }

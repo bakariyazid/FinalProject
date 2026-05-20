@@ -11,11 +11,11 @@ namespace QRCodeAttendance.Models.DTOs.Attendance
         public Guid Id {get; set;}
         public Guid StudentId {get; set;}
         public Guid SessionId {get; set;}
-        public string CourseName {get; set;}
-        public string CourseCode {get; set;}
+        public string CourseName {get; set;} = string.Empty;
+        public string CourseCode {get; set;} = string.Empty;
         public DateTime ScanTime {get; set;}
         public AttendanceStatus Status {get; set;}
-        public string StudentName {get; set;}
+        public string StudentName {get; set;} = string.Empty;
         public DateTime CreatedDate {get; set;}
         public DateTime UpdatedDate {get; set;}
     

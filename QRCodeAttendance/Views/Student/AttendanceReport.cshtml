@@ -1,0 +1,314 @@
+@model QRCodeAttendance.Models.DTOs.Student.StudentAttendanceReportDto
+
+@{
+    ViewData["Title"] = "Attendance Report";
+    Layout = null;
+    var attendanceCount = Model?.TotalAttended ?? 0;
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --ink: #0f172a;
+            --muted: #64748b;
+            --line: #e2e8f0;
+            --surface: #ffffff;
+            --page: #f8fafc;
+            --accent: #0ea5e9;
+            --success: #16a34a;
+        }
+
+        body {
+            min-height: 100vh;
+            margin: 0;
+            color: var(--ink);
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background:
+                radial-gradient(circle at 8% 12%, rgba(14, 165, 233, 0.12), transparent 28rem),
+                radial-gradient(circle at 86% 8%, rgba(34, 197, 94, 0.10), transparent 28rem),
+                var(--page);
+        }
+
+        .report-nav {
+            position: sticky;
+            top: 0;
+            z-index: 20;
+            background: rgba(255, 255, 255, 0.86);
+            border-bottom: 1px solid var(--line);
+            backdrop-filter: blur(16px);
+        }
+
+        .report-shell {
+            width: min(1180px, calc(100vw - 32px));
+            margin: 0 auto;
+            padding: 32px 0 56px;
+        }
+
+        .hero {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto;
+            gap: 24px;
+            align-items: center;
+            padding: 30px;
+            border: 1px solid var(--line);
+            border-radius: 24px;
+            background: linear-gradient(135deg, #ffffff, #eff6ff);
+            box-shadow: 0 24px 70px rgba(15, 23, 42, 0.08);
+        }
+
+        .hero h1 {
+            margin: 0;
+            font-size: clamp(2rem, 4vw, 3.6rem);
+            font-weight: 800;
+            letter-spacing: 0;
+        }
+
+        .hero p {
+            margin: 10px 0 0;
+            color: var(--muted);
+        }
+
+        .stat-card {
+            min-width: 190px;
+            padding: 22px;
+            border-radius: 20px;
+            background: var(--ink);
+            color: white;
+            text-align: center;
+        }
+
+        .stat-card strong {
+            display: block;
+            font-size: 3rem;
+            line-height: 1;
+            color: #86efac;
+        }
+
+        .student-strip {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 12px;
+            margin: 22px 0;
+        }
+
+        .info-pill {
+            padding: 16px;
+            border: 1px solid var(--line);
+            border-radius: 16px;
+            background: rgba(255, 255, 255, 0.86);
+        }
+
+        .label {
+            margin: 0 0 4px;
+            color: var(--muted);
+            font-size: 0.72rem;
+            font-weight: 800;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        .value {
+            margin: 0;
+            font-weight: 800;
+        }
+
+        .report-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 18px;
+        }
+
+        .report-card {
+            border: 1px solid var(--line);
+            border-radius: 20px;
+            background: var(--surface);
+            box-shadow: 0 16px 48px rgba(15, 23, 42, 0.06);
+            overflow: hidden;
+        }
+
+        .report-card-top {
+            padding: 20px;
+            border-bottom: 1px solid var(--line);
+        }
+
+        .course-code {
+            display: inline-flex;
+            padding: 6px 10px;
+            border-radius: 999px;
+            background: #e0f2fe;
+            color: #0369a1;
+            font-size: 0.78rem;
+            font-weight: 800;
+        }
+
+        .report-card h2 {
+            margin: 12px 0 0;
+            font-size: 1.2rem;
+            font-weight: 800;
+        }
+
+        .report-card-body {
+            padding: 20px;
+            display: grid;
+            gap: 12px;
+        }
+
+        .row-item {
+            display: flex;
+            justify-content: space-between;
+            gap: 18px;
+            color: var(--muted);
+            font-size: 0.9rem;
+        }
+
+        .row-item strong {
+            color: var(--ink);
+            text-align: right;
+        }
+
+        .card-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            padding: 0 20px 20px;
+        }
+
+        .status-badge {
+            padding: 8px 12px;
+            border-radius: 999px;
+            background: #dcfce7;
+            color: #166534;
+            font-weight: 800;
+            font-size: 0.8rem;
+        }
+
+        .btn-download {
+            min-height: 42px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 0 16px;
+            border-radius: 12px;
+            background: var(--ink);
+            color: white;
+            text-decoration: none;
+            font-weight: 800;
+        }
+
+        .empty-state {
+            padding: 44px;
+            border: 1px dashed #cbd5e1;
+            border-radius: 20px;
+            background: rgba(255, 255, 255, 0.78);
+            text-align: center;
+            color: var(--muted);
+        }
+
+        @@media (max-width: 900px) {
+            .hero,
+            .report-grid,
+            .student-strip {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+</head>
+<body class="with-portal-chrome">
+    @await Html.PartialAsync("_PortalHeader")
+    <nav class="report-nav">
+        <div class="report-shell py-3 d-flex align-items-center justify-content-between">
+            <a asp-controller="Student" asp-action="StudentDashboard" class="btn btn-light rounded-pill fw-bold">
+                <i class="fa fa-arrow-left me-2"></i>Dashboard
+            </a>
+            <span class="fw-bold text-muted small">Attendance Report</span>
+        </div>
+    </nav>
+
+    <main class="report-shell">
+        <section class="hero">
+            <div>
+                <h1>Class Attendance Report</h1>
+                <p>Review every class you have attended and download a signed-style PDF record for each class.</p>
+            </div>
+            <div class="stat-card">
+                <strong>@attendanceCount</strong>
+                <span>Attended Classes</span>
+            </div>
+        </section>
+
+        <section class="student-strip">
+            <div class="info-pill">
+                <p class="label">Student</p>
+                <p class="value">@Model.StudentName</p>
+            </div>
+            <div class="info-pill">
+                <p class="label">Matric Number</p>
+                <p class="value">@Model.MatricNumber</p>
+            </div>
+            <div class="info-pill">
+                <p class="label">Department</p>
+                <p class="value">@Model.Department</p>
+            </div>
+            <div class="info-pill">
+                <p class="label">Level</p>
+                <p class="value">@Model.Level</p>
+            </div>
+        </section>
+
+        @if (Model.Records.Any())
+        {
+            <section class="report-grid">
+                @foreach (var record in Model.Records)
+                {
+                    <article class="report-card">
+                        <div class="report-card-top">
+                            <span class="course-code">#@record.CourseCode</span>
+                            <h2>@record.CourseName</h2>
+                        </div>
+                        <div class="report-card-body">
+                            <div class="row-item">
+                                <span>Instructor</span>
+                                <strong>@record.InstructorName</strong>
+                            </div>
+                            <div class="row-item">
+                                <span>Class Time</span>
+                                <strong>@record.SessionStartTime.ToLocalTime().ToString("MMM dd, hh:mm tt") - @record.SessionEndTime.ToLocalTime().ToString("hh:mm tt")</strong>
+                            </div>
+                            <div class="row-item">
+                                <span>Scan Time</span>
+                                <strong>@record.ScanTime.ToLocalTime().ToString("MMM dd, yyyy hh:mm tt")</strong>
+                            </div>
+                        </div>
+                        <div class="card-actions">
+                            <span class="status-badge">@record.Status</span>
+                            <a asp-controller="Student" asp-action="AttendanceReportPdf" asp-route-sessionId="@record.SessionId" class="btn-download">
+                                <i class="fa fa-file-pdf"></i>
+                                Download PDF
+                            </a>
+                        </div>
+                    </article>
+                }
+            </section>
+        }
+        else
+        {
+            <div class="empty-state">
+                <i class="fa fa-file-circle-xmark fa-2x mb-3"></i>
+                <div class="fw-bold text-dark mb-1">No attended classes yet</div>
+                <div>Your full attendance report will appear here after you scan a class QR code.</div>
+            </div>
+        }
+    </main>
+    @await Html.PartialAsync("_PortalFooter")
+</body>
+</html>

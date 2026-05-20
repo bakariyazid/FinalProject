@@ -11,14 +11,14 @@ namespace QRCodeAttendance.Contract.Services
     public interface IIdentityService
     {
         string GenerateSalt();
-        string GetUserIdentity();
+        string? GetUserIdentity();
         string GetClaimValue(string type);
         string GenerateToken(User user, IEnumerable<string> roles);
-        public IEnumerable<Claim> ValidateToken(string jwtToken);
-        JwtSecurityToken GetClaims(string token);
-        public string GetPasswordHash(string password, string salt = null);
+        public IEnumerable<Claim>? ValidateToken(string jwtToken);
+        JwtSecurityToken? GetClaims(string token);
+        public string GetPasswordHash(string password, string? salt = null);
         Task<User> FindByNameAsync(string userName);
-        Task<User> FindUserAsync(string UserName);
+        Task<User?> FindUserAsync(string UserName);
         // bool CheckPasswordAsync(User user, string password);
         public Task<User> GetLoggedInUser();
 

@@ -23,7 +23,8 @@ namespace QRCodeAttendance.Implementation.Repositories
                 return await _qrCodeDbContext.Attendances
                     .Include(a => a.Student)
                     .Include(a => a.ClassSession)
-                    .Where(a => a.ClassSession.CourseCode == courseCode 
+                    .Where(a => a.ClassSession != null
+                            && a.ClassSession.CourseCode == courseCode 
                             && a.ClassSession.InstructorId == instructorId)
                     .ToListAsync();
             }
@@ -32,6 +33,7 @@ namespace QRCodeAttendance.Implementation.Repositories
                 return await _qrCodeDbContext.Attendances
                     .AsNoTracking()
                     .Include(a => a.ClassSession)
+                        .ThenInclude(s => s!.Instructor)
                     .Where(a => a.StudentId == studentId)
                     .OrderByDescending(a => a.ScanTime)
                     .ToListAsync();
@@ -74,7 +76,7 @@ namespace QRCodeAttendance.Implementation.Repositories
         public async Task<IReadOnlyList<Attendance>> GetAttendanceByInstructor(Guid instructorId)
         {
             return await _qrCodeDbContext.Attendances
-                .Where(a => a.ClassSession.InstructorId == instructorId)
+                .Where(a => a.ClassSession != null && a.ClassSession.InstructorId == instructorId)
                 .Include(a => a.ClassSession)
                 .AsNoTracking()
                 .ToListAsync();

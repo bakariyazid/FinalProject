@@ -49,7 +49,7 @@ namespace QRCodeAttendance.Identity
             _qrCodeDbContext.Dispose();
         }
 
-        public async Task<Role> FindByIdAsync(string roleId, CancellationToken cancellationToken)
+        public async Task<Role?> FindByIdAsync(string roleId, CancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();
             if (string.IsNullOrEmpty(roleId))
@@ -59,7 +59,7 @@ namespace QRCodeAttendance.Identity
             return await _qrCodeDbContext.Set<Role>().FindAsync(new object[] { Guid.Parse(roleId) }, cancellationToken);
         }
 
-        public async Task<Role> FindByNameAsync(string normalizedRoleName, CancellationToken cancellationToken)
+        public async Task<Role?> FindByNameAsync(string normalizedRoleName, CancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();
             if (string.IsNullOrEmpty(normalizedRoleName))
@@ -69,14 +69,14 @@ namespace QRCodeAttendance.Identity
             return await _qrCodeDbContext.Set<Role>().FirstOrDefaultAsync(u => u.Name == normalizedRoleName, cancellationToken);
         }
 
-        public Task<string> GetNormalizedRoleNameAsync(Role role, CancellationToken cancellationToken)
+        public Task<string?> GetNormalizedRoleNameAsync(Role role, CancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();
             if (role == null)
             {
                 throw new ArgumentNullException(nameof(role));
             }
-            return Task.FromResult(role.Name.ToUpper());
+            return Task.FromResult<string?>(role.Name.ToUpper());
         }
 
         public Task<string> GetRoleIdAsync(Role role, CancellationToken cancellationToken)
@@ -89,35 +89,35 @@ namespace QRCodeAttendance.Identity
             return Task.FromResult(role.Id.ToString());
         }
 
-        public Task<string> GetRoleNameAsync(Role role, CancellationToken cancellationToken)
+        public Task<string?> GetRoleNameAsync(Role role, CancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();
             if (role == null)
             {
                 throw new ArgumentNullException(nameof(role));
             }
-            return Task.FromResult(role.Name.ToUpper());
+            return Task.FromResult<string?>(role.Name.ToUpper());
         }
 
-        public Task SetNormalizedRoleNameAsync(Role role, string normalizedName, CancellationToken cancellationToken)
+        public Task SetNormalizedRoleNameAsync(Role role, string? normalizedName, CancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();
             if (role == null)
             {
                 throw new ArgumentNullException(nameof(role));
             }
-            role.Name = normalizedName.ToUpper();
+            role.Name = (normalizedName ?? string.Empty).ToUpper();
             return Task.CompletedTask;
         }
 
-        public Task SetRoleNameAsync(Role role, string roleName, CancellationToken cancellationToken)
+        public Task SetRoleNameAsync(Role role, string? roleName, CancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();
             if (role == null)
             {
                 throw new ArgumentNullException(nameof(role));
             }
-            role.Name = roleName.ToUpper();
+            role.Name = (roleName ?? string.Empty).ToUpper();
             return Task.CompletedTask;
         }
 

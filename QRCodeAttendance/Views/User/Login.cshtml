@@ -31,13 +31,14 @@
             background-size: cover;
             background-position: center;
             background-attachment: fixed; /* Ensures it shows on every screen/scroll */
-            height: 100vh;
+            min-height: 100vh;
             margin: 0;
             display: flex;
             align-items: center;
             justify-content: center;
             font-family: 'Plus Jakarta Sans', sans-serif;
-            overflow: hidden;
+            overflow-x: hidden;
+            overflow-y: auto;
         }
 
         .login-wrapper {
@@ -171,9 +172,11 @@
             body { overflow-y: auto; }
         }
     </style>
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
 </head>
 
-<body>
+<body class="with-portal-chrome">
+    @await Html.PartialAsync("_PortalHeader")
     <div class="login-wrapper">
         <i class="fas fa-qrcode glass-bg-icon"></i>
         
@@ -244,5 +247,6 @@
             this.classList.toggle('fa-eye-slash');
         });
     </script>
+    @await Html.PartialAsync("_PortalFooter")
 </body>
 </html>
