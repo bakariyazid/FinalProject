@@ -5,13 +5,21 @@
 
     string levelTheme = Model.Level.ToString() switch
     {
-        "OneHundred" => "theme-100",
-        "TwoHundred" => "theme-200",
+        "HundredLevel" => "theme-100",
+        "TwoHundredLevel" => "theme-200",
         _ => "theme-100"
     };
 
-    string localExpiry = Model.QRCodeExpiry.ToLocalTime().ToString("O");
-    string localSessionEnd = Model.SessionEndTime.ToLocalTime().ToString("O");
+    var qrCodeExpiryUtc = Model.QRCodeExpiry.Kind == DateTimeKind.Unspecified
+        ? DateTime.SpecifyKind(Model.QRCodeExpiry, DateTimeKind.Utc)
+        : Model.QRCodeExpiry.ToUniversalTime();
+
+    var sessionEndUtc = Model.SessionEndTime.Kind == DateTimeKind.Unspecified
+        ? DateTime.SpecifyKind(Model.SessionEndTime, DateTimeKind.Utc)
+        : Model.SessionEndTime.ToUniversalTime();
+
+    long qrCodeExpiryUnixMs = new DateTimeOffset(qrCodeExpiryUtc).ToUnixTimeMilliseconds();
+    long sessionEndUnixMs = new DateTimeOffset(sessionEndUtc).ToUnixTimeMilliseconds();
 }
 
 <style>
@@ -70,6 +78,35 @@
         justify-content: space-between;
         gap: 1rem;
         margin-bottom: 1.25rem;
+    }
+
+    .session-topbar-actions {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+    }
+
+    .btn-details {
+        min-height: 2.6rem;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        padding: 0 1rem;
+        border: 1px solid rgba(15, 23, 42, 0.12);
+        border-radius: 999px;
+        background: #0f172a;
+        color: #ffffff;
+        font-weight: 800;
+        text-decoration: none;
+        box-shadow: 0 14px 34px rgba(15, 23, 42, 0.14);
+    }
+
+    .btn-details:hover {
+        color: #ffffff;
+        background: #1e293b;
     }
 
     .session-title {
@@ -354,6 +391,11 @@
             flex-direction: column;
         }
 
+        .session-topbar-actions,
+        .btn-details {
+            width: 100%;
+        }
+
         .qr-hero-grid {
             grid-template-columns: 1fr;
         }
@@ -386,13 +428,19 @@
                 <h1 class="session-title">Live Session</h1>
                 <p class="session-subtitle">
                     @Model.CourseName
-                    <span class="level-badge">@Model.Level</span>
+                    <span class="level-badge">@Model.Level.GetDescription()</span>
                     <span class="course-code-badge">#@Model.CourseCode</span>
                 </p>
             </div>
-            <div class="live-indicator">
-                <span class="pulse-dot"></span>
-                LIVE SESSION
+            <div class="session-topbar-actions">
+                <a asp-action="Details" asp-controller="Session" class="btn-details">
+                    <i class="fas fa-arrow-left"></i>
+                    Details
+                </a>
+                <div class="live-indicator">
+                    <span class="pulse-dot"></span>
+                    LIVE SESSION
+                </div>
             </div>
         </div>
 
@@ -458,11 +506,12 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script>
-    let currentExpiry = new Date('@localExpiry').getTime();
-    const sessionEndTime = new Date('@localSessionEnd').getTime();
+    let currentExpiry = @qrCodeExpiryUnixMs;
+    const sessionEndTime = @sessionEndUnixMs;
     let token = "@Model.QRCodeToken";
     let qrObj = null;
     let isRefreshing = false;
+    let isReloading = false;
     let lastSeenAttendanceId = null;
     let toastTimer = null;
 
@@ -525,12 +574,18 @@
             const diff = currentExpiry - now;
 
             if (diff <= 0) {
-                setTimerText("ROTATING");
-                rotationStatus.innerText = "Generating a fresh QR Code...";
+                if (isReloading) {
+                    return;
+                }
+
+                isReloading = true;
+                clearInterval(interval);
+                setTimerText("RELOADING");
+                rotationStatus.innerText = "Loading the latest QR Code...";
                 qrWrapper.classList.add("is-rotating");
-                await refreshToken();
-                qrWrapper.classList.remove("is-rotating");
-                rotationStatus.innerText = "Automatic refresh is active.";
+                window.setTimeout(() => {
+                    window.location.reload();
+                }, 1200);
                 return;
             }
 

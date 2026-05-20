@@ -84,6 +84,7 @@ body.with-portal-chrome .page-wrapper {
 
 .app-shell-brand {
   min-width: 0;
+  flex: 1 1 auto;
   display: inline-flex;
   align-items: center;
   gap: 0.75rem;
@@ -121,6 +122,8 @@ body.with-portal-chrome .page-wrapper {
   font-size: 1rem;
   color: var(--portal-ink);
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .app-shell-brand__subtitle {
@@ -141,6 +144,29 @@ body.with-portal-chrome .page-wrapper {
   flex-wrap: wrap;
 }
 
+.app-shell-nav-toggle {
+  display: none;
+  flex: 0 0 auto;
+  width: 42px;
+  height: 42px;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 5px;
+  border: 1px solid var(--portal-line);
+  border-radius: 12px;
+  background: #ffffff;
+  color: var(--portal-ink);
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
+}
+
+.app-shell-nav-toggle__bar {
+  width: 18px;
+  height: 2px;
+  border-radius: 999px;
+  background: currentColor;
+}
+
 .app-shell-nav a {
   min-height: 38px;
   display: inline-flex;
@@ -159,6 +185,16 @@ body.with-portal-chrome .page-wrapper {
 .app-shell-nav a:focus-visible {
   background: rgba(15, 159, 110, 0.1);
   color: var(--portal-accent);
+}
+
+@keyframes schoolNameMarquee {
+  0%, 12% {
+    transform: translateX(0);
+  }
+
+  88%, 100% {
+    transform: translateX(calc(-100% + var(--school-marquee-width, 100%)));
+  }
 }
 
 .app-shell-footer {
@@ -224,6 +260,17 @@ body.with-portal-chrome select,
 body.with-portal-chrome input,
 body.with-portal-chrome textarea {
   max-width: 100%;
+}
+
+body.with-portal-chrome.login-page {
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  padding: calc(var(--portal-header-height) + 24px) 24px calc(var(--portal-footer-height) + 24px);
+}
+
+body.with-portal-chrome.login-page .login-wrapper {
+  margin: 0 auto;
 }
 
 @media (max-width: 991.98px) {
@@ -297,7 +344,7 @@ body.with-portal-chrome textarea {
   }
 
   body.with-portal-chrome .student-nav .container > .d-flex:last-child {
-    width: 100%;
+    width: auto;
     justify-content: space-between;
     flex-wrap: wrap;
   }
@@ -359,11 +406,21 @@ body.with-portal-chrome textarea {
 
   .app-shell-header__inner {
     width: min(100% - 24px, 1180px);
-    align-items: flex-start;
-    justify-content: center;
-    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    flex-direction: row;
+    flex-wrap: nowrap;
     gap: 0.55rem;
     padding: 0.7rem 0;
+  }
+
+  .app-shell-brand {
+    max-width: calc(100% - 54px);
+  }
+
+  .app-shell-brand__text {
+    max-width: 100%;
+    overflow: hidden;
   }
 
   .app-shell-brand__mark {
@@ -372,7 +429,25 @@ body.with-portal-chrome textarea {
   }
 
   .app-shell-brand__title {
-    font-size: 0.96rem;
+    font-size: clamp(0.8rem, 3.7vw, 0.96rem);
+    width: var(--school-marquee-width, calc(100vw - 104px));
+    display: block;
+    overflow: hidden;
+    text-overflow: clip;
+    color: transparent;
+    position: relative;
+  }
+
+  .app-shell-brand__title::before {
+    content: attr(data-marquee);
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: max-content;
+    color: var(--portal-ink);
+    white-space: nowrap;
+    animation: schoolNameMarquee 12s linear infinite;
+    will-change: transform;
   }
 
   .app-shell-brand__subtitle {
@@ -380,9 +455,28 @@ body.with-portal-chrome textarea {
   }
 
   .app-shell-nav {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 12px;
+    right: 12px;
     width: 100%;
-    justify-content: space-between;
+    justify-content: stretch;
     gap: 0.25rem;
+    padding: 0.65rem;
+    border: 1px solid var(--portal-line);
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.98);
+    box-shadow: 0 18px 34px rgba(15, 23, 42, 0.12);
+  }
+
+  .app-shell-nav.is-open {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .app-shell-nav-toggle {
+    display: inline-flex;
   }
 
   .app-shell-nav a {
@@ -519,11 +613,6 @@ body.with-portal-chrome textarea {
     padding-bottom: calc(var(--portal-footer-height) + env(safe-area-inset-bottom, 0px));
   }
 
-  body.with-portal-chrome .app-shell-nav {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
   body.with-portal-chrome .logo-box,
   body.with-portal-chrome .d-flex.align-items-center.gap-3,
   body.with-portal-chrome .d-flex.justify-content-center.gap-3,
@@ -557,4 +646,237 @@ body.with-portal-chrome textarea {
 
 .form-floating > .form-control-plaintext:focus::placeholder, .form-floating > .form-control:focus::placeholder {
   text-align: start;
+}
+
+.instructor-dashboard-page .dashboard-menu-toggle {
+  display: none;
+}
+
+@media (max-width: 720px) {
+  body.with-portal-chrome.instructor-dashboard-page {
+    padding-bottom: calc(var(--portal-footer-height) + 24px);
+  }
+
+  body.with-portal-chrome.instructor-dashboard-page .sidebar {
+    position: relative !important;
+    top: auto !important;
+    left: auto !important;
+    right: auto !important;
+    bottom: auto !important;
+    width: min(100% - 24px, 680px) !important;
+    height: auto !important;
+    min-height: 0 !important;
+    margin: 12px auto 0 !important;
+    padding: 0.75rem !important;
+    z-index: 50 !important;
+    border-radius: 18px !important;
+  }
+
+  body.with-portal-chrome.instructor-dashboard-page .dashboard-menu-toggle {
+    display: flex;
+    width: 100%;
+    min-height: 46px;
+    align-items: center;
+    justify-content: center;
+    gap: 0.6rem;
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.1);
+    color: #ffffff;
+    font-weight: 800;
+  }
+
+  body.with-portal-chrome.instructor-dashboard-page .brand-box {
+    display: none !important;
+  }
+
+  body.with-portal-chrome.instructor-dashboard-page .btn-create-session-sidebar {
+    display: flex !important;
+    width: 100%;
+    min-height: 48px;
+    margin: 0.75rem 0 0 !important;
+  }
+
+  body.with-portal-chrome.instructor-dashboard-page .sidebar .nav {
+    display: none !important;
+    height: auto !important;
+    margin-top: 0.75rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.12);
+  }
+
+  body.with-portal-chrome.instructor-dashboard-page .sidebar .nav.is-open {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 0.5rem;
+  }
+
+  body.with-portal-chrome.instructor-dashboard-page .sidebar .nav-item {
+    flex: 1 1 auto !important;
+    width: 100%;
+  }
+
+  body.with-portal-chrome.instructor-dashboard-page .sidebar .nav-link {
+    min-height: 48px !important;
+    width: 100%;
+    justify-content: flex-start !important;
+    margin: 0 !important;
+    padding: 0.8rem 1rem !important;
+  }
+
+  body.with-portal-chrome.instructor-dashboard-page .sidebar .nav-link span,
+  body.with-portal-chrome.instructor-dashboard-page .sidebar .fa-chevron-down {
+    display: inline !important;
+  }
+
+  body.with-portal-chrome.instructor-dashboard-page #studentsDropdown {
+    position: static !important;
+    display: none;
+    width: 100% !important;
+    margin: 0.25rem 0 0 !important;
+    padding: 0 !important;
+    background: transparent !important;
+    border: 0 !important;
+  }
+
+  body.with-portal-chrome.instructor-dashboard-page #studentsDropdown.show {
+    display: block !important;
+  }
+
+  body.with-portal-chrome.instructor-dashboard-page #studentsDropdown .d-grid {
+    padding-left: 0 !important;
+    gap: 0.5rem !important;
+  }
+
+  body.with-portal-chrome.instructor-dashboard-page .main-content {
+    width: min(100% - 24px, 680px);
+    margin: 12px auto 0 !important;
+    padding: 0 !important;
+  }
+
+  body.with-portal-chrome.instructor-dashboard-page .header-section {
+    flex-direction: column;
+    align-items: flex-start !important;
+    margin-bottom: 1rem;
+    overflow: hidden;
+  }
+
+  body.with-portal-chrome.instructor-dashboard-page .header-section h1 {
+    overflow-wrap: anywhere;
+  }
+
+  body.with-portal-chrome.instructor-dashboard-page .header-section h3 {
+    font-size: 0.88rem;
+    line-height: 1.45;
+  }
+
+  body.with-portal-chrome.instructor-dashboard-page .row.g-4 {
+    --bs-gutter-y: 1rem;
+  }
+}
+
+@media (max-width: 420px) {
+  body.with-portal-chrome.instructor-dashboard-page .sidebar .nav.is-open {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 991.98px) {
+  body.with-portal-chrome.student-dashboard-page .student-nav .container {
+    width: min(100% - 24px, 1180px) !important;
+    max-width: none !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    align-items: center !important;
+    flex-direction: row !important;
+    text-align: left !important;
+  }
+
+  body.with-portal-chrome.student-dashboard-page .student-nav .container > .d-flex:last-child {
+    width: auto;
+    justify-content: flex-end;
+  }
+}
+
+body.with-portal-chrome.student-profile-page .profile-page-shell {
+  min-height: calc(100dvh - var(--portal-header-height) - var(--portal-footer-height));
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1rem;
+}
+
+body.with-portal-chrome.student-profile-page .student-portal {
+  width: min(100% - 32px, 1200px) !important;
+  max-width: 1200px !important;
+  min-height: 0 !important;
+  margin: 0 auto !important;
+}
+
+body.with-portal-chrome.student-profile-page .student-portal > .sidebar {
+  height: auto !important;
+  min-height: 0 !important;
+  position: relative !important;
+  top: auto !important;
+}
+
+body.with-portal-chrome.student-profile-page .profile-side-nav {
+  position: static !important;
+  width: 100% !important;
+  margin-top: 1.5rem !important;
+  padding: 0 !important;
+}
+
+body.with-portal-chrome.student-profile-page .profile-side-nav .nav-link-custom {
+  width: 100%;
+  min-height: 46px;
+}
+
+@media (max-width: 991.98px) {
+  body.with-portal-chrome.student-profile-page .profile-page-shell {
+    align-items: flex-start;
+    padding: 1rem 0;
+  }
+
+  body.with-portal-chrome.student-profile-page .student-portal {
+    width: min(100% - 24px, 760px) !important;
+    flex-direction: column !important;
+  }
+
+  body.with-portal-chrome.student-profile-page .student-portal > .sidebar,
+  body.with-portal-chrome.student-profile-page .student-portal > .main-content {
+    width: 100% !important;
+    padding: clamp(1.25rem, 5vw, 2rem) !important;
+  }
+
+  body.with-portal-chrome.student-profile-page .student-portal > .sidebar {
+    height: auto !important;
+    min-height: 0 !important;
+    border-right: 0 !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.14) !important;
+  }
+
+  body.with-portal-chrome.student-profile-page .profile-side-nav {
+    display: grid;
+    gap: 0.5rem;
+  }
+
+  body.with-portal-chrome.student-profile-page .header-meta {
+    display: block !important;
+  }
+
+  body.with-portal-chrome.student-profile-page .header-meta .text-end {
+    text-align: left !important;
+    margin-top: 1rem;
+  }
+}
+
+@media (max-width: 575.98px) {
+  body.with-portal-chrome.student-profile-page .profile-page-shell {
+    padding: 0.75rem 0;
+  }
+
+  body.with-portal-chrome.student-profile-page .student-portal {
+    width: min(100% - 20px, 420px) !important;
+  }
 }

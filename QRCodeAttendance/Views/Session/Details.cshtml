@@ -470,6 +470,7 @@
 
         .action-area {
             min-width: 0;
+            padding-bottom: 6px;
         }
     }
 </style>
@@ -499,9 +500,9 @@
         // Capture local time once for the entire list evaluation
         var now = DateTime.UtcNow.ToLocalTime();
 
-        // Sorting: Active sessions (ready or ongoing) first, then by date
+        // Sorting: Active sessions first, then by date
         var sortedSessions = Model.OrderByDescending(s => 
-            now >= s.SessionStartTime.ToLocalTime().AddMinutes(-5) && 
+            now >= s.SessionStartTime.ToLocalTime() &&
             now <= s.SessionEndTime.ToLocalTime())
             .ThenByDescending(s => s.SessionStartTime);
     }
@@ -514,7 +515,7 @@
 
         // 2. Define business logic thresholds
         var qrExpirationTime = sessionEndLocal.AddMinutes(-10);
-        var readyThreshold = sessionStartLocal.AddMinutes(-5);
+        var readyThreshold = sessionStartLocal;
 
         // 3. Evaluate state
         bool isExpired = now > qrExpirationTime; 
@@ -523,8 +524,8 @@
         bool isWithinActiveWindow = now >= readyThreshold && now <= qrExpirationTime;
 
         string levelTheme = session.Level.ToString() switch {
-            "OneHundred" => "theme-100",
-            "TwoHundred" => "theme-200",
+            "HundredLevel" => "theme-100",
+            "TwoHundredLevel" => "theme-200",
             _ => "theme-100" 
         };
 
@@ -532,7 +533,7 @@
             <div class="course-info">
                 <div class="course-title">
                     <h5>@session.CourseName</h5>
-                    <span class="level-badge">@session.Level</span>
+                    <span class="level-badge">@session.Level.GetDescription()</span>
                     <span class="course-code">#@session.CourseCode</span>
 
                     <span class="meta-chip">

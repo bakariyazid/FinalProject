@@ -99,22 +99,27 @@
 
     /* Action Button Glow */
     .btn-action {
-        width: 38px;
-        height: 38px;
+        min-height: 38px;
         display: flex;
         align-items: center;
         justify-content: center;
-        background: rgba(255, 255, 255, 0.05);
-        border: 1px solid var(--glass-border);
-        color: white;
+        gap: 8px;
+        padding: 0 16px;
+        background: var(--accent-color);
+        border: 1px solid rgba(74, 222, 128, 0.55);
+        color: #052e16;
         border-radius: 12px;
         transition: all 0.3s;
+        text-decoration: none;
+        font-weight: 900;
+        white-space: nowrap;
+        box-shadow: 0 10px 22px rgba(74, 222, 128, 0.25);
     }
 
     .btn-action:hover {
-        background: var(--accent-color);
-        color: #0f172a;
-        box-shadow: 0 0 15px rgba(74, 222, 128, 0.4);
+        background: #86efac;
+        color: #052e16;
+        box-shadow: 0 0 20px rgba(74, 222, 128, 0.5);
         transform: translateY(-2px);
     }
 
@@ -138,6 +143,90 @@
     @@keyframes fadeInUp {
         from { opacity: 0; transform: translateY(20px); }
         to { opacity: 1; transform: translateY(0); }
+    }
+
+    @@media (max-width: 768px) {
+        .pro-glass-card {
+            padding: 1rem !important;
+        }
+
+        .table-container,
+        .table-responsive {
+            overflow: visible;
+            background: transparent;
+        }
+
+        .clean-table {
+            min-width: 0 !important;
+        }
+
+        .clean-table thead {
+            display: none;
+        }
+
+        .clean-table,
+        .clean-table tbody,
+        .clean-table tr,
+        .clean-table td {
+            display: block;
+            width: 100%;
+        }
+
+        .clean-table tbody tr {
+            margin-bottom: 1rem;
+            border: 1px solid var(--glass-border);
+            border-radius: 18px;
+            background: rgba(255, 255, 255, 0.06);
+            overflow: hidden;
+        }
+
+        .clean-table tbody tr:hover {
+            transform: none;
+        }
+
+        .clean-table td {
+            display: flex;
+            justify-content: space-between;
+            gap: 1rem;
+            padding: 0.85rem 1rem;
+            text-align: right;
+        }
+
+        .clean-table td::before {
+            content: attr(data-label);
+            color: rgba(255, 255, 255, 0.58);
+            font-size: 0.72rem;
+            font-weight: 800;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            text-align: left;
+        }
+
+        .clean-table td:first-child {
+            display: block;
+            text-align: left;
+        }
+
+        .clean-table td:first-child::before {
+            display: block;
+            margin-bottom: 0.65rem;
+        }
+
+        .clean-table td:last-child {
+            text-align: left;
+        }
+
+        .clean-table td:last-child .d-flex,
+        .btn-action {
+            width: 100%;
+            justify-content: center;
+        }
+
+        .btn-back {
+            display: inline-flex;
+            width: 100%;
+            justify-content: center;
+        }
     }
 </style>
 
@@ -180,7 +269,7 @@
                             foreach (var student in Model)
                             {
                                 <tr>
-                                    <td>
+                                    <td data-label="Student">
                                         <div class="d-flex align-items-center">
                                             <div class="rounded-circle bg-primary d-flex align-items-center justify-content-center me-3" style="width: 35px; height: 35px; background: linear-gradient(45deg, #4ade80, #3b82f6) !important; font-size: 0.8rem; font-weight: bold;">
                                                 @student.FullName.Substring(0, 1)
@@ -188,16 +277,17 @@
                                             <span class="fw-semibold">@student.FullName</span>
                                         </div>
                                     </td>
-                                    <td class="fw-semibold">@student.MatricNumber<span class="form-control-plaintext"></span></td>
-                                    <td class="fw-semibold">@student.Gender</td>
-                                    <td>
-                                        <span class="level-badge fw-semibold">@student.StudentLevel</span>
+                                    <td class="fw-semibold" data-label="Matric">@student.MatricNumber<span class="form-control-plaintext"></span></td>
+                                    <td class="fw-semibold" data-label="Gender">@student.Gender</td>
+                                    <td data-label="Level">
+                                        <span class="level-badge fw-semibold">@student.StudentLevel.GetDescription()</span>
                                     </td>
-                                    <td class="text-center">
+                                    <td class="text-center" data-label="Report">
                                         <div class="d-flex justify-content-center">
-                                            <a asp-controller="Attendance" asp-action="StudentReport" asp-route-id="@student.StudentId" 
+                                            <a asp-controller="Student" asp-action="AttendanceReport" asp-route-id="@student.StudentId" 
                                                class="btn-action" title="View Full Report">
-                                                <i class="fas fa-arrow-right"> View Report </i> 
+                                                <i class="fas fa-arrow-right"></i>
+                                                <span>View Report</span>
                                             </a>
                                         </div>
                                     </td>

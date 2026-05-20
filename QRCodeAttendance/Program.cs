@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using QRCodeAttendance.Identity;
+using QRCodeAttendance.Implementation.BackgroundJobs;
 using QRCodeAttendance.Implementation.Repositories;
 using QRCodeAttendance.Implementation.Services;
 using QRCodeAttendance.Interface.Repositories;
@@ -45,6 +46,7 @@ builder.Services.AddDbContext<QRCodeDbContext>(options =>
 // builder.Services.AddScoped<IAttendanceRepository, AttendanceRepository>();
 // builder.Services.AddScoped<IAttendanceService, AttendanceService>();
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
+builder.Services.AddHostedService<QrCodeRotationWorker>();
 // builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
 // builder.Services.AddControllersWithViews();
 

@@ -186,7 +186,7 @@ namespace QRCodeAttendance.Controllers
         }
 
         [HttpGet("Student/AttendanceReport")]
-        public async Task<IActionResult> AttendanceReport()
+        public async Task<IActionResult> AttendanceReport(Guid? id)
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (string.IsNullOrEmpty(userId) || !Guid.TryParse(userId, out var studentUserId))
@@ -194,13 +194,16 @@ namespace QRCodeAttendance.Controllers
                 return RedirectToAction("Login", "User");
             }
 
-            var response = await _studentService.GetAttendanceReport(studentUserId);
+            var response = id.HasValue
+                ? await _studentService.GetAttendanceReportByStudentId(id.Value)
+                : await _studentService.GetAttendanceReport(studentUserId);
+
             if (!response.Status)
             {
                 ViewBag.ErrorMessage = response.Message;
             }
 
-            return View(response.Data);
+            return View(response.Data ?? new StudentAttendanceReportDto());
         }
 
         [HttpGet("Student/AttendanceReportPdf/{sessionId}")]

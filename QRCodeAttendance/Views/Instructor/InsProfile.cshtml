@@ -306,7 +306,10 @@
                     <i class="fas fa-book"></i> Assigned Courses
                 </li>
                 <li class="nav-item">
-                    <i class="fas fa-qrcode"></i> Attendance Reports
+                    <a asp-controller="Instructor" asp-action="Report" class="nav-item">
+                         <i class="fas fa-file-alt"></i> Attendance Reports 
+                        @* <i class="fas fa-qrcode"></i> Attendance Reports *@
+                    </a>
                 </li>
                 <li class="nav-item">
                     <i class="fas fa-cog"></i> Account Settings

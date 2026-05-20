@@ -6,6 +6,7 @@ using QRCodeAttendance.Models.DTOs.Instructor;
 using QRCodeAttendance.Models.DTOs.Reports;
 using QRCodeAttendance.Models.DTOs.Session;
 using QRCodeAttendance.Models.Enums;
+using QRCodeAttendance.Models.Extensions;
 
 namespace QRCodeAttendance.Controllers
 {
@@ -129,7 +130,7 @@ namespace QRCodeAttendance.Controllers
                     ViewBag.ErrorMessage = response.Message;
                 }
 
-                ViewBag.Level = level.ToString();
+                ViewBag.Level = level.GetDescription();
                 ViewBag.Department = instructor.Data.Department.ToString();
 
                 return View(response.Data);

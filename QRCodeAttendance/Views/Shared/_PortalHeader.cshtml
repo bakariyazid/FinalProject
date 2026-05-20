@@ -3,12 +3,19 @@
         <a class="app-shell-brand" asp-controller="Home" asp-action="Index" aria-label="QRCode Attendance home">
             <span class="app-shell-brand__mark">QR</span>
             <span class="app-shell-brand__text">
-                <span class="app-shell-brand__title">QR Code Attendance</span>
-                <span class="app-shell-brand__subtitle">Masroor International Technical College</span>
+                <span class="app-shell-brand__title" data-marquee="Masroor International Technical College">Masroor International Technical College</span>
+                <span class="app-shell-brand__subtitle">QR Code Attendance</span>
             </span>
         </a>
 
-        <nav class="app-shell-nav" aria-label="Primary navigation">
+        <button class="app-shell-nav-toggle" type="button" aria-controls="appShellNav" aria-expanded="false">
+            <span class="app-shell-nav-toggle__bar"></span>
+            <span class="app-shell-nav-toggle__bar"></span>
+            <span class="app-shell-nav-toggle__bar"></span>
+            <span class="visually-hidden">Toggle navigation</span>
+        </button>
+
+        <nav class="app-shell-nav" id="appShellNav" aria-label="Primary navigation">
             <a asp-controller="Home" asp-action="Index">Home</a>
             <a asp-controller="User" asp-action="Login">Login</a>
             <a asp-controller="Student" asp-action="RegisterStudent">Student</a>
@@ -16,3 +23,19 @@
         </nav>
     </div>
 </header>
+
+<script>
+    (() => {
+        const toggle = document.querySelector(".app-shell-nav-toggle");
+        const nav = document.getElementById("appShellNav");
+
+        if (!toggle || !nav) {
+            return;
+        }
+
+        toggle.addEventListener("click", () => {
+            const isOpen = nav.classList.toggle("is-open");
+            toggle.setAttribute("aria-expanded", isOpen.toString());
+        });
+    })();
+</script>

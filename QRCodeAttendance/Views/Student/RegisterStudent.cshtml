@@ -1,5 +1,6 @@
-@using QRCodeAttendance.Models.Enums
+@using QRCodeAttendance.Models.Enums;
 @model QRCodeAttendance.Models.DTOs.Student.CreateStudentRequestModel
+
 @{
     ViewData["Title"] = "Student Enrollment";
     Layout = null;
@@ -32,12 +33,16 @@
             background-position: center;
             background-attachment: fixed;
             min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
             font-family: 'Inter', sans-serif;
             color: var(--text-main);
             padding: 2rem 1rem;
+        }
+
+        .student-register-shell {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            width: 100%;
         }
 
         .glass-card {
@@ -49,6 +54,7 @@
             width: 100%;
             max-width: 850px;
             padding: 3.5rem;
+            margin: 2rem auto;
             box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
             animation: fadeIn 0.8s ease-out;
         }
@@ -199,107 +205,115 @@
 
 <body class="with-portal-chrome">
     @await Html.PartialAsync("_PortalHeader")
-    <div class="glass-card">
-        <div class="header-section">
-            <div class="brand-logo">
-                <i class="fas fa-graduation-cap"></i>
-            </div>
-            <h2 class="fw-800">Student Enrollment</h2>
-            <p class="text-muted">Register your details for QRCodeAttendance</p>
-        </div>
-        @if (TempData["Alert"] != null)
+    <main class="student-register-shell">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-xl-8 col-lg-9 col-md-11">
+                    <div class="glass-card">
+                        <div class="header-section">
+                            <div class="brand-logo">
+                                <i class="fas fa-graduation-cap"></i>
+                            </div>
+                            <h2 class="fw-800">Student Enrollment</h2>
+                            <p class="text-muted">Register your details for QRCodeAttendance</p>
+                        </div>
+                        @if (TempData["Alert"] != null)
                         {
                             <div class="alert alert-custom text-center mb-4">
                                 @TempData["Alert"]
                             </div>
                         }
-        <form asp-controller="Student" asp-action="RegisterStudent" method="post">
-            @Html.AntiForgeryToken()
-            <div class="form-grid">
-                <div class="input-field">
-                    <input asp-for="FirstName" placeholder=" " required />
-                    <label>First Name</label>
-                </div>
+                        <form asp-controller="Student" asp-action="RegisterStudent" method="post">
+                            @Html.AntiForgeryToken()
+                            <div class="form-grid">
+                                <div class="input-field">
+                                    <input asp-for="FirstName" placeholder=" " required />
+                                    <label>First Name</label>
+                                </div>
 
-                <div class="input-field">
-                    <input asp-for="LastName" placeholder=" " required />
-                    <label>Last Name</label>
-                </div>
-                
-                <div class="input-field">
-                    <input asp-for="MatricNumber" placeholder=" " required />
-                    <label>Matric Number</label>
-                </div>
+                                <div class="input-field">
+                                    <input asp-for="LastName" placeholder=" " required />
+                                    <label>Last Name</label>
+                                </div>
+                                
+                                <div class="input-field">
+                                    <input asp-for="MatricNumber" placeholder=" " required />
+                                    <label>Matric Number</label>
+                                </div>
 
-                <div class="input-field">
-                    <input asp-for="DateOfBirth" type="date" required />
-                    <label>Date of Birth</label>
-                </div>
+                                <div class="input-field">
+                                    <input asp-for="DateOfBirth" type="date" required />
+                                    <label>Date of Birth</label>
+                                </div>
 
-                <div class="input-field full-width">
-                    <input asp-for="Address" placeholder=" " required />
-                    <label>Residential Address</label>
-                </div>
+                                <div class="input-field full-width">
+                                    <input asp-for="Address" placeholder=" " required />
+                                    <label>Residential Address</label>
+                                </div>
 
-                <div class="input-field">
-                    <select asp-for="Gender" asp-items="@Html.GetEnumSelectList<Gender>()" required>
-                        <option value="" disabled selected></option>
-                    </select>
-                    <label>Gender</label>
-                </div>
+                                <div class="input-field">
+                                    <select asp-for="Gender" asp-items="@Html.GetEnumSelectList<Gender>()" required>
+                                        <option value="" disabled selected></option>
+                                    </select>
+                                    <label>Gender</label>
+                                </div>
 
-                <div class="input-field">
-                    <select asp-for="Department" asp-items="@Html.GetEnumSelectList<Departments>()" required>
-                        <option value="" disabled selected></option>
-                    </select>
-                    <label>Department</label>
-                </div>
+                                <div class="input-field">
+                                    <select asp-for="Department" asp-items="@Html.GetEnumSelectList<Departments>()" required>
+                                        <option value="" disabled selected></option>
+                                    </select>
+                                    <label>Department</label>
+                                </div>
 
-                <div class="input-field">
-                    <select asp-for="StudentLevel" asp-items="@Html.GetEnumSelectList<StudentLevel>()" required>
-                        <option value="" disabled selected></option>
-                    </select>
-                    <label>Level</label>
-                </div>
+                                <div class="input-field">
+                                    <select asp-for="StudentLevel" asp-items="@Html.GetEnumSelectList<StudentLevel>()" required>
+                                        <option value="" disabled selected></option>
+                                    </select>
+                                    <label>Level</label>
+                                </div>
 
-                <div class="input-field">
-                    <input asp-for="PhoneNumber" placeholder=" " required />
-                    <label>Phone Number</label>
-                </div>
+                                <div class="input-field">
+                                    <input asp-for="PhoneNumber" placeholder=" " required />
+                                    <label>Phone Number</label>
+                                </div>
 
-                <div class="input-field full-width">
-                    <input asp-for="Email" type="email" placeholder=" " required />
-                    <label>Email Address</label>
-                </div>
+                                <div class="input-field full-width">
+                                    <input asp-for="Email" type="email" placeholder=" " required />
+                                    <label>Email Address</label>
+                                </div>
 
-                <div class="input-field">
-                    <input asp-for="PasswordHash" type="password" placeholder=" " required />
-                    <label>Password</label>
-                </div>
-                
-                <div class="input-field">
-                    <input asp-for="ConfirmPassword" type="password" placeholder=" " required />
-                    <label>Confirm Password</label>
-                </div>
-            </div>
+                                <div class="input-field">
+                                    <input asp-for="PasswordHash" type="password" placeholder=" " required />
+                                    <label>Password</label>
+                                </div>
+                                
+                                <div class="input-field">
+                                    <input asp-for="ConfirmPassword" type="password" placeholder=" " required />
+                                    <label>Confirm Password</label>
+                                </div>
+                            </div>
 
-            <button type="submit" class="btn-submit">
-                <span>Enroll Now</span>
-                <i class="fas fa-arrow-right"></i>
-            </button>
-        </form>
+                            <button type="submit" class="btn-submit">
+                                <span>Enroll Now</span>
+                                <i class="fas fa-arrow-right"></i>
+                            </button>
+                        </form>
 
-        <div class="footer-action">
-            <div class="mb-2">
-                <span class="small opacity-50">Not a Student?</span> 
-                <a href="/Instructor/RegisterInstructor" class="slide-link ms-2">Instructor Portal <i class="fas fa-chevron-right small"></i></a>
-            </div>
-            <div>
-                <span class="small opacity-50">Already enrolled?</span> 
-                <a href="/User/Login" class="slide-link ms-2">Login Here <i class="fas fa-chevron-right small"></i></a>
+                        <div class="footer-action">
+                            <div class="mb-2">
+                                <span class="small opacity-50">Not a Student?</span> 
+                                <a href="/Instructor/RegisterInstructor" class="slide-link ms-2">Instructor Portal <i class="fas fa-chevron-right small"></i></a>
+                            </div>
+                            <div>
+                                <span class="small opacity-50">Already enrolled?</span> 
+                                <a href="/User/Login" class="slide-link ms-2">Login Here <i class="fas fa-chevron-right small"></i></a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
-    </div>
+    </main>
     @await Html.PartialAsync("_PortalFooter")
 </body>
 </html>

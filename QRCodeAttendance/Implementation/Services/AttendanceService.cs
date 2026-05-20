@@ -53,21 +53,32 @@ namespace QRCodeAttendance.Implementation.Services
 
             var now = DateTime.UtcNow.ToUniversalTime();
 
-            if (now > session.SessionEndTime.AddMinutes(-10))
+            var qrHardExpiry = session.SessionEndTime.AddMinutes(-10);
+
+            if (now >= qrHardExpiry)
+            {
+                session.IsActive = false;
+                session.QRCodeToken = null;
+                session.QRCodeExpiry = now;
+
+                _sessionRepository.Update(session);
+                await _unitOfWork.SaveChangesAsync();
+
                 return new BaseResponse<bool>
                 {
                     Status = false,
-                    Message = "The class has been end"
+                    Message = "Attendance has closed"
                 };
+            }
 
-            if (!session.IsActive || now < session.SessionStartTime.AddMinutes(-5))
+            if (!session.IsActive || now < session.SessionStartTime)
                 return new BaseResponse<bool>
                 {
                     Status = false,
-                    Message = "This QR Code is not for a live attendance session"
+                    Message = "Attendance is not open yet. Please wait until the class start time."
                 };
 
-            if (now > session.QRCodeExpiry)
+            if (string.IsNullOrWhiteSpace(session.QRCodeToken) || now >= session.QRCodeExpiry)
                 return new BaseResponse<bool>
                 {
                     Status = false,
@@ -81,16 +92,10 @@ namespace QRCodeAttendance.Implementation.Services
                     Message = "Invalid or expired QR Code" 
                 };
 
-            var qrHardExpiry = session.SessionEndTime.AddMinutes(-10);
-            if (now > qrHardExpiry)
-                return new BaseResponse<bool> 
-                { 
-                    Status = false,
-                    Message = "Attendance closed (Class ending soon)" 
-                };
-
-            var lateThreshold = session.SessionStartTime.AddMinutes(30);
-            AttendanceStatus autoStatus = (now <= lateThreshold) ? AttendanceStatus.Present : AttendanceStatus.Absent;
+            var lateThreshold = session.SessionStartTime.AddMinutes(45);
+            AttendanceStatus autoStatus = now <= lateThreshold
+                ? AttendanceStatus.Present
+                : AttendanceStatus.Late;
 
             
             var alreadyMarked = await _attendanceRepository.HasStudentMarkedAttendance(studentId, sessionId);

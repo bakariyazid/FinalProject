@@ -105,66 +105,150 @@ namespace QRCodeAttendance.Implementation.Services
 
         public async Task<BaseResponse<SessionDto>> GenerateSessionQrCode(Guid sessionId)
             {
-                var response = new BaseResponse<SessionDto>();
                 var session = await _sessionRepository.Get<Session>(s => s.Id == sessionId);
 
                 if (session == null)
                 {
-                    response.Status = false;
-                    response.Message = "Session not found";
-                    return response;
+                    return new BaseResponse<SessionDto>
+                    {
+                        Status = false,
+                        Message = "Session not found"
+                    };
                 }
 
                 var now = DateTime.UtcNow;
-
-        if (now < session.SessionStartTime.AddMinutes(-5)) 
-        {
-            return new BaseResponse<SessionDto>
-             { Status = false, Message = "Too early to generate QR code." };
-        }
-                
                 var hardCutoff = session.SessionEndTime.AddMinutes(-10);
+
+                if (now < session.SessionStartTime)
+                {
+                    return new BaseResponse<SessionDto>
+                    {
+                        Status = false,
+                        Message = "Too early to generate QR code. Wait until the class start time."
+                    };
+                }
 
                 if (now >= hardCutoff)
                 {
-                    return new BaseResponse<SessionDto> 
-                    { 
-                        Status = false, 
-                        Message = "Cannot generate QR code: Less than 10 minutes remaining in session." 
+                    session.IsActive = false;
+                    session.QRCodeToken = null;
+                    session.QRCodeExpiry = now;
+                    session.UpdatedDate = now;
+
+                    _sessionRepository.Update(session);
+                    await _unitOfWork.SaveChangesAsync();
+
+                    return new BaseResponse<SessionDto>
+                    {
+                        Status = false,
+                        Message = "Attendance has closed. QR Code has expired.",
+                        Data = MapSessionToDto(session)
+                    };
+                }
+
+                if (!string.IsNullOrWhiteSpace(session.QRCodeToken) && now < session.QRCodeExpiry)
+                {
+                    return new BaseResponse<SessionDto>
+                    {
+                        Status = true,
+                        Message = "Current QR Code is still valid",
+                        Data = MapSessionToDto(session)
                     };
                 }
 
                 var standardExpiry = now.AddMinutes(5);
                 session.QRCodeExpiry = standardExpiry > hardCutoff ? hardCutoff : standardExpiry;
-           
-                session.QRCodeToken = Guid.NewGuid().ToString().Replace("-", "");
+                session.QRCodeToken = Guid.NewGuid().ToString("N");
+                session.IsActive = true;
+                session.UpdatedDate = now;
 
-                    session.IsActive = true;
-
-                 _sessionRepository.Update(session);
+                _sessionRepository.Update(session);
                 await _unitOfWork.SaveChangesAsync();
 
-                response.Status = true;
-                response.Message = "QR Code updated successfully";
-                response.Data = new SessionDto
+                return new BaseResponse<SessionDto>
                 {
-                    Id = session.Id,
-                    InstructorId = session.InstructorId,
-                    CourseName = session.CourseName,
-                    CourseCode = session.CourseCode,
-                    Level = session.Level,
-                    Department = session.Department,
-                    SessionStartTime = session.SessionStartTime,
-                    SessionEndTime = session.SessionEndTime,
-                    IsActive = session.IsActive,
-                    QRCodeToken = session.QRCodeToken,
-                    QRCodeExpiry = session.QRCodeExpiry,
-                    CreatedDate = session.CreatedDate,
-                    UpdatedDate = session.UpdatedDate
+                    Status = true,
+                    Message = "QR Code rotated successfully",
+                    Data = MapSessionToDto(session)
                 };
-
-                return response;
             }
+
+        public async Task<int> RotateDueQrCodesAsync()
+        {
+            var now = DateTime.UtcNow;
+            var sessions = await _sessionRepository.GetAll<Session>();
+            var changedCount = 0;
+
+            foreach (var session in sessions)
+            {
+                var hardCutoff = session.SessionEndTime.AddMinutes(-10);
+
+                if (now < session.SessionStartTime)
+                {
+                    continue;
+                }
+
+                if (now >= hardCutoff)
+                {
+                    if (session.IsActive || !string.IsNullOrWhiteSpace(session.QRCodeToken))
+                    {
+                        session.IsActive = false;
+                        session.QRCodeToken = null;
+                        session.QRCodeExpiry = now;
+                        session.UpdatedDate = now;
+
+                        _sessionRepository.Update(session);
+                        changedCount++;
+                    }
+
+                    continue;
+                }
+
+                var qrIsMissing = string.IsNullOrWhiteSpace(session.QRCodeToken);
+                var qrIsExpired = now >= session.QRCodeExpiry;
+
+                if (!qrIsMissing && !qrIsExpired)
+                {
+                    continue;
+                }
+
+                var standardExpiry = now.AddMinutes(5);
+                session.QRCodeToken = Guid.NewGuid().ToString("N");
+                session.QRCodeExpiry = standardExpiry > hardCutoff ? hardCutoff : standardExpiry;
+                session.IsActive = true;
+                session.UpdatedDate = now;
+
+                _sessionRepository.Update(session);
+                changedCount++;
+            }
+
+            if (changedCount > 0)
+            {
+                await _unitOfWork.SaveChangesAsync();
+            }
+
+            return changedCount;
+        }
+
+        private static SessionDto MapSessionToDto(Session session)
+        {
+            return new SessionDto
+            {
+                Id = session.Id,
+                InstructorId = session.InstructorId,
+                CourseName = session.CourseName,
+                CourseCode = session.CourseCode,
+                Level = session.Level,
+                Department = session.Department,
+                SessionStartTime = session.SessionStartTime,
+                SessionEndTime = session.SessionEndTime,
+                IsActive = session.IsActive,
+                QRCodeToken = session.QRCodeToken,
+                QRCodeExpiry = session.QRCodeExpiry,
+                CreatedDate = session.CreatedDate,
+                UpdatedDate = session.UpdatedDate
+            };
+        }
 
         public async Task<BaseResponse<SessionDto>> GetSessionById(Guid sessionId)
         {

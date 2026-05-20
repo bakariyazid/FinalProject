@@ -36,11 +36,68 @@
         .student-nav {
             background: rgba(255, 255, 255, 0.85);
             backdrop-filter: blur(15px);
-            padding: 0.75rem 2rem;
+            padding: 0.75rem 0;
             border-bottom: 1px solid rgba(0,0,0,0.05);
             position: sticky;
             top: 0;
             z-index: 1000;
+        }
+
+        .student-nav-inner {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+        }
+
+        .student-nav-brand,
+        .student-nav-actions {
+            display: flex;
+            align-items: center;
+            min-width: 0;
+        }
+
+        .student-nav-brand {
+            gap: 0.5rem;
+            flex: 0 0 auto;
+        }
+
+        .student-nav-actions {
+            justify-content: flex-end;
+            gap: 1rem;
+            flex: 1 1 auto;
+        }
+
+        .student-user-summary {
+            min-width: 0;
+            max-width: 220px;
+            text-align: right;
+        }
+
+        .student-user-summary p,
+        .student-user-summary span {
+            display: block;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .student-nav-divider {
+            width: 1px;
+            min-height: 36px;
+            background: rgba(15, 23, 42, 0.16);
+        }
+
+        .student-nav .nav-link {
+            min-height: 38px;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            padding: 0;
+        }
+
+        .student-nav form {
+            margin: 0;
         }
 
         .welcome-banner {
@@ -97,35 +154,142 @@
             border-radius: 20px; border: 1px solid #e2e8f0;
             z-index: 999;
         }
+
+        .scan-success-toast {
+            position: fixed;
+            top: calc(var(--portal-header-height, 76px) + 1rem);
+            right: 1rem;
+            z-index: 2500;
+            width: min(92vw, 420px);
+            display: flex;
+            align-items: center;
+            gap: 0.85rem;
+            padding: 1rem 1.1rem;
+            border: 1px solid rgba(34, 197, 94, 0.24);
+            border-radius: 18px;
+            background: rgba(240, 253, 244, 0.96);
+            color: #064e3b;
+            box-shadow: 0 24px 60px rgba(15, 23, 42, 0.18);
+            animation: toastIn 0.28s ease-out;
+        }
+
+        .scan-success-toast.hide {
+            opacity: 0;
+            transform: translateY(-0.75rem);
+            transition: opacity 0.25s ease, transform 0.25s ease;
+        }
+
+        .scan-success-toast__icon {
+            width: 2.4rem;
+            height: 2.4rem;
+            flex: 0 0 auto;
+            display: grid;
+            place-items: center;
+            border-radius: 999px;
+            background: #22c55e;
+            color: #ffffff;
+        }
+
+        .scan-success-toast p {
+            margin: 0;
+        }
+
+        .scan-success-toast__title {
+            font-weight: 900;
+        }
+
+        .scan-success-toast__text {
+            color: #047857;
+            font-size: 0.9rem;
+        }
+
+        @@keyframes toastIn {
+            from {
+                opacity: 0;
+                transform: translateY(-0.75rem);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @@media (max-width: 720px) {
+            .student-nav-inner {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 0.75rem;
+            }
+
+            .student-nav-brand {
+                justify-content: center;
+            }
+
+            .student-nav-actions {
+                justify-content: center;
+                flex-wrap: wrap;
+                gap: 0.65rem 0.85rem;
+            }
+
+            .student-user-summary {
+                flex: 1 1 100%;
+                max-width: 100%;
+                text-align: center;
+            }
+
+            .student-nav-divider {
+                display: none;
+            }
+
+            .student-nav .btn {
+                min-height: 40px;
+                padding-left: 1.25rem;
+                padding-right: 1.25rem;
+            }
+        }
     </style>
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
 </head>
-<body class="with-portal-chrome">
+<body class="with-portal-chrome student-dashboard-page">
     @await Html.PartialAsync("_PortalHeader")
 
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="scan-success-toast" id="scan-success-toast" role="status" aria-live="polite">
+            <div class="scan-success-toast__icon">
+                <i class="fa fa-check"></i>
+            </div>
+            <div>
+                <p class="scan-success-toast__title">Scan successful</p>
+                <p class="scan-success-toast__text">@TempData["SuccessMessage"]</p>
+            </div>
+        </div>
+    }
+
     <nav class="student-nav">
-        <div class="container d-flex justify-content-between align-items-center">
-            <div class="d-flex align-items-center gap-2">
+        <div class="container student-nav-inner">
+            <div class="student-nav-brand">
                 <div class="bg-primary text-white p-2 rounded-3 shadow-sm"><i class="fa fa-qrcode"></i></div>
                 <span class="fw-bold fs-4">AttendancePro</span>
             </div>
 
-           <div class="d-flex align-items-center gap-3">
-                <div class="text-end d-none d-md-block">
+           <div class="student-nav-actions">
+                <div class="student-user-summary">
                     <p class="mb-0 fw-bold small">@Model.UserName</p>
                     <span class="text-muted" style="font-size: 0.75rem;">@studentDept</span>
                 </div>
 
-                <div class="vr mx-2 d-none d-md-block"></div>
+                <div class="student-nav-divider"></div>
 
-                <div class="d-none d-md-block">
+                <div>
                     <a asp-controller="Student" asp-action="StdProfile" 
                     class="nav-link text-muted small @(ViewContext.RouteData.Values["Action"]?.ToString() == "StdProfile" ? "active fw-bold text-primary" : "")">
                         <i class="fa fa-user-circle"></i> <span>My Profile</span>
                     </a>
                 </div>
 
-                <div class="vr mx-2 d-none d-md-block"></div>
+                <div class="student-nav-divider"></div>
                 <form asp-controller="User" asp-action="Logout" method="post">
                     @Html.AntiForgeryToken()
                     <button type="submit" class="btn btn-outline-danger btn-sm rounded-pill px-4 fw-bold">Logout</button>
@@ -140,7 +304,7 @@
                 <div class="col-md-8">
                     <div class="badge bg-primary mb-3 px-3 py-2 rounded-pill">@studentDept</div>
                     <h1 class="display-5 fw-bold">Hello, @Model.UserName</h1>
-                    <p class="fs-5 opacity-75">Level @Model.Level • @Model.MatricNumber</p>
+                    <p class="fs-5 opacity-75">@Model.Level.GetDescription() • @Model.MatricNumber</p>
                 </div>
             </div>
         </div>
@@ -182,7 +346,7 @@
                     {
                         <div class="text-center py-5 border rounded-5 bg-white opacity-75 mb-4">
                             <i class="fa fa-calendar-xmark fa-2x text-muted mb-2"></i>
-                            <p class="text-muted mb-0">No active classes for Level @Model.Level.</p>
+                            <p class="text-muted mb-0">No active classes for @Model.Level.GetDescription().</p>
                         </div>
                     }
                 </div>
@@ -254,8 +418,8 @@
                     </div>
                     <hr class="my-4 opacity-50">
                     <div class="row text-start g-2">
-                        <div class="col-6"><small class="text-muted d-block">Attended</small><strong>@Model.TotalSessionsAttended</strong></div>
-                        <div class="col-6"><small class="text-muted d-block">Available</small><strong>@Model.TotalSessionsAvailable</strong></div>
+                        <div class="col-6"><small class="text-muted d-block">Attended Sessions</small><strong>@Model.TotalSessionsAttended</strong></div>
+                        <div class="col-6"><small class="text-muted d-block">Total Sessions</small><strong>@Model.TotalSessionsAvailable</strong></div>
                     </div>
                 </div>
             </div>
@@ -267,6 +431,20 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        (() => {
+            const toast = document.getElementById("scan-success-toast");
+            if (!toast) {
+                return;
+            }
+
+            setTimeout(() => {
+                toast.classList.add("hide");
+                setTimeout(() => toast.remove(), 300);
+            }, 4500);
+        })();
+    </script>
 
     @section Scripts {
     <script>

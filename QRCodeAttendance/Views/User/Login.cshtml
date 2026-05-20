@@ -43,8 +43,9 @@
 
         .login-wrapper {
             display: flex;
-            width: 1000px;
-            height: 600px;
+            width: min(1000px, calc(100vw - 48px));
+            height: min(600px, calc(100dvh - var(--portal-header-height) - var(--portal-footer-height) - 48px));
+            min-height: 520px;
             background: var(--glass);
             backdrop-filter: blur(20px) saturate(160%);
             -webkit-backdrop-filter: blur(20px) saturate(160%);
@@ -154,6 +155,25 @@
             text-decoration: underline;
         }
 
+        .login-error-alert {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 1.25rem;
+            padding: 0.9rem 1rem;
+            border: 1px solid rgba(248, 113, 113, 0.32);
+            border-radius: 14px;
+            background: rgba(127, 29, 29, 0.42);
+            color: #fecaca;
+            font-weight: 700;
+            box-shadow: 0 16px 34px rgba(127, 29, 29, 0.22);
+        }
+
+        .login-error-alert i {
+            color: #f87171;
+            flex: 0 0 auto;
+        }
+
         /* Decorative "QR" element for the glass background */
         .glass-bg-icon {
             position: absolute;
@@ -166,7 +186,7 @@
         }
 
         @@media (max-width: 992px) {
-            .login-wrapper { width: 95%; height: auto; flex-direction: column; margin: 20px; }
+            .login-wrapper { width: 95%; height: auto; min-height: 0; flex-direction: column; margin: 20px; }
             .brand-side { padding: 2.5rem; border-right: none; border-bottom: 1px solid var(--border); }
             .form-side { padding: 3rem 1.5rem; }
             body { overflow-y: auto; }
@@ -175,7 +195,7 @@
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
 </head>
 
-<body class="with-portal-chrome">
+<body class="with-portal-chrome login-page">
     @await Html.PartialAsync("_PortalHeader")
     <div class="login-wrapper">
         <i class="fas fa-qrcode glass-bg-icon"></i>
@@ -197,6 +217,14 @@
                 <h2 class="fw-800 text-white mb-1">Login</h2>
                 <p style="color: var(--text-muted)">Enter your institutional credentials</p>
             </div>
+
+            @if (ViewBag.ErrorMessage != null)
+            {
+                <div class="login-error-alert" role="alert">
+                    <i class="fas fa-circle-exclamation"></i>
+                    <span>@ViewBag.ErrorMessage</span>
+                </div>
+            }
 
             <form asp-action="Login" method="post">
                 @Html.AntiForgeryToken()

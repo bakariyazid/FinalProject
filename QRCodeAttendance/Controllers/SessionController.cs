@@ -99,7 +99,7 @@ namespace QRCodeAttendance.Controllers
         var response = await _sessionService.GetSessionById(id);
         if (response == null || !response.Status) return NotFound();
 
-        if (string.IsNullOrEmpty(response.Data.QRCodeToken))
+        if (string.IsNullOrEmpty(response.Data.QRCodeToken) || DateTime.UtcNow >= response.Data.QRCodeExpiry)
         {
             var genResult = await _sessionService.GenerateSessionQrCode(id);
             

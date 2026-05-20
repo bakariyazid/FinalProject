@@ -40,8 +40,17 @@
             color: var(--text-primary);
         }
 
+        .profile-page-shell {
+            min-height: calc(100dvh - var(--portal-header-height, 0px) - var(--portal-footer-height, 0px));
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem 1rem;
+        }
+
         .student-portal {
-            width: 95%;
+            width: min(100%, 1200px);
             max-width: 1200px;
             min-height: 80vh;
             background: var(--glass);
@@ -52,7 +61,7 @@
             display: flex;
             overflow: hidden;
             box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-            margin: 20px;
+            margin: 0 auto;
         }
 
         /* --- Sidebar Section --- */
@@ -94,7 +103,7 @@
             box-shadow: 0 0 15px var(--accent-glow);
         }
 
-        .student-nav {
+        .profile-side-nav {
             width: 100%;
             margin-top: 2rem;
         }
@@ -181,22 +190,103 @@
 
         /* Mobile Optimization */
         @@media (max-width: 992px) {
-            .student-portal { flex-direction: column; height: auto; }
-            .sidebar { width: 100%; border-right: none; border-bottom: 1px solid var(--glass-border); }
-            .main-content { padding: 2rem; }
+            .profile-page-shell {
+                align-items: flex-start;
+                padding: 1rem;
+            }
+
+            .student-portal {
+                width: min(100%, 760px);
+                min-height: 0;
+                flex-direction: column;
+                height: auto;
+                border-radius: 24px;
+                overflow: visible;
+            }
+
+            .sidebar {
+                width: 100%;
+                padding: 2rem 1.25rem;
+                border-right: none;
+                border-bottom: 1px solid var(--glass-border);
+            }
+
+            .main-content {
+                padding: 2rem 1.25rem;
+                overflow: visible;
+            }
+
+            .header-meta {
+                display: block !important;
+                margin-bottom: 1.5rem;
+            }
+
+            .header-meta .text-end {
+                text-align: left !important;
+                margin-top: 1rem;
+            }
+
+            .matric-pill {
+                display: inline-flex;
+                max-width: 100%;
+                overflow-wrap: anywhere;
+            }
+
+            .data-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .footer-timestamps {
+                flex-direction: column;
+                gap: 1rem;
+                margin-top: 2rem;
+            }
+        }
+
+        @@media (max-width: 575.98px) {
+            .profile-page-shell {
+                padding: 0.75rem;
+            }
+
+            .student-portal {
+                border-radius: 18px;
+            }
+
+            .profile-hex {
+                width: 112px;
+                height: 112px;
+            }
+
+            .sidebar,
+            .main-content {
+                padding: 1.25rem;
+            }
+
+            .nav-link-custom {
+                padding: 0.8rem 1rem;
+            }
+
+            .data-card {
+                padding: 1.15rem;
+            }
+
+            .value {
+                overflow-wrap: anywhere;
+            }
         }
     </style>
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
 </head>
-<body class="with-portal-chrome">
+<body class="with-portal-chrome student-profile-page">
     @await Html.PartialAsync("_PortalHeader")
 
+    <main class="profile-page-shell">
     <div class="student-portal">
         <div class="sidebar">
             <div class="profile-hex">
                 <img src="https://ui-avatars.com/api/?name=@Model.FirstName+@Model.LastName&background=06b6d4&color=fff&size=200" alt="Student">
             </div>
-            <div class="level-badge">@Model.StudentLevel Level</div>
+            <div class="level-badge">@Model.StudentLevel.GetDescription()</div>
             <h4 class="mb-0 fw-bold">@Model.FirstName @Model.LastName</h4>
             <p class="small text-secondary mb-4">@Model.Department</p>
 
@@ -205,7 +295,7 @@
                 <i class="fas fa-user-edit me-2"></i> Edit Profile
             </a>
 
-            <nav class="student-nav">
+            <nav class="profile-side-nav">
                 <a asp-controller="Student" asp-action="StudentDashboard" class="nav-link-custom"><i class="fa-solid fa-gauge-high"></i> Dashboard</a>
                 <a asp-controller="Student" asp-action="StdProfile" class="nav-link-custom active"><i class="fa-solid fa-id-card"></i> Profile Overview</a>
                 <a asp-controller="Student" asp-action="MyAttendances" class="nav-link-custom"><i class="fa-solid fa-qrcode"></i> My Attendances</a>
@@ -295,6 +385,7 @@
             </div>
         </div>
     </div>
+    </main>
 
     @await Html.PartialAsync("_PortalFooter")
 </body>

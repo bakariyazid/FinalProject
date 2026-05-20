@@ -22,93 +22,53 @@
 
     <style>
         :root {
-            --primary: #6366f1;
-            --primary-dark: #4338ca;
-            --sidebar-bg: rgba(15, 23, 42, 0.74);
-            --body-bg: #eef4ff;
-            --glass-bg: rgba(255, 255, 255, 0.62);
-            --glass-border: rgba(255, 255, 255, 0.72);
-            --text-main: #172033;
-            --text-soft: #64748b;
-            --card-shadow: 0 24px 70px rgba(15, 23, 42, 0.12);
-            --transition: all 0.32s cubic-bezier(0.4, 0, 0.2, 1);
-            --accent-green: #4ade80;
-            --accent-cyan: #22d3ee;
-            --accent-rose: #fb7185;
+            --primary: #4f46e5;
+            --primary-dark: #3730a3;
+            --sidebar-bg: #0f172a;
+            --body-bg: #f8fafc;
+            --card-bg: #ffffff;
+            --card-border: #e2e8f0;
+            --text-main: #0f172a;
+            --text-soft: #475569;
+            --card-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+            --transition: all 0.2s ease-in-out;
+            --accent-green: #10b981;
+            --accent-cyan: #06b6d4;
+            --accent-rose: #f43f5e;
         }
 
         * {
             box-sizing: border-box;
         }
 
-        html {
+        html, body {
             min-height: 100%;
+            margin: 0;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: var(--body-bg);
+            color: var(--text-main);
         }
 
         body {
-            min-height: 100vh;
-            background:
-                radial-gradient(circle at 10% 10%, rgba(34, 211, 238, 0.24), transparent 28rem),
-                radial-gradient(circle at 92% 6%, rgba(251, 113, 133, 0.18), transparent 26rem),
-                linear-gradient(135deg, #eef4ff 0%, #f8fbff 46%, #eff6ff 100%);
-            font-family: 'Plus Jakarta Sans', sans-serif;
-            color: var(--text-main);
-            margin: 0;
             display: flex;
             overflow-x: hidden;
         }
 
-        body::before,
-        body::after {
-            content: "";
-            position: fixed;
-            width: 22rem;
-            height: 22rem;
-            border-radius: 999px;
-            filter: blur(12px);
-            opacity: 0.36;
-            pointer-events: none;
-            z-index: 0;
-            animation: ambientFloat 12s ease-in-out infinite alternate;
-        }
-
-        body::before {
-            left: 20rem;
-            top: -9rem;
-            background: rgba(99, 102, 241, 0.22);
-        }
-
-        body::after {
-            right: -7rem;
-            bottom: -7rem;
-            background: rgba(74, 222, 128, 0.18);
-            animation-delay: -4s;
-        }
-
-        .sidebar,
-        .main-content {
-            position: relative;
-            z-index: 1;
-        }
-
+        /* --- Sidebar Navigation Frame --- */
         .sidebar {
-            width: 280px;
-            height: calc(100vh - 32px);
-            background: linear-gradient(160deg, rgba(15, 23, 42, 0.88), rgba(30, 41, 59, 0.68));
+            width: 260px;
+            height: 100vh;
+            background-color: var(--sidebar-bg);
             position: fixed;
-            left: 16px;
-            top: 16px;
+            left: 0;
+            top: 0;
             padding: 2rem 1.25rem;
-            color: white;
+            color: #ffffff;
             z-index: 1000;
             display: flex;
             flex-direction: column;
-            border: 1px solid rgba(255, 255, 255, 0.14);
-            border-radius: 28px;
-            box-shadow: 0 28px 80px rgba(15, 23, 42, 0.28);
-            backdrop-filter: blur(24px);
-            -webkit-backdrop-filter: blur(24px);
-            animation: slideInLeft 0.7s ease both;
+            border-right: 1px solid #1e293b;
+            transition: var(--transition);
         }
 
         .brand-box {
@@ -122,52 +82,65 @@
 
         .brand-box i {
             color: var(--accent-cyan);
-            filter: drop-shadow(0 8px 18px rgba(34, 211, 238, 0.28));
         }
 
         .brand-box h2 {
-            font-size: 1.18rem;
+            font-size: 1.15rem;
             white-space: nowrap;
             margin: 0;
-            letter-spacing: 0;
+            color: #ffffff;
+        }
+
+        .dashboard-menu-toggle {
+            display: none;
+            background: #1e293b;
+            border: 1px solid #334155;
+            color: #ffffff;
+            padding: 10px 16px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: 1rem;
         }
 
         .btn-create-session-sidebar {
-            background: linear-gradient(135deg, var(--accent-green), #86efac);
-            color: #0f172a !important;
-            min-height: 50px;
-            padding: 14px;
-            border-radius: 16px;
-            margin-bottom: 2.25rem;
+            background-color: var(--accent-green);
+            color: #ffffff !important;
+            min-height: 46px;
+            padding: 12px;
+            border-radius: 10px;
+            margin-bottom: 2rem;
             text-decoration: none !important;
             display: flex;
             align-items: center;
             justify-content: center;
             gap: 10px;
-            font-weight: 800;
-            font-size: 0.92rem;
+            font-weight: 600;
+            font-size: 0.9rem;
             transition: var(--transition);
-            box-shadow: 0 18px 36px rgba(74, 222, 128, 0.25);
         }
 
         .btn-create-session-sidebar:hover {
-            transform: translateY(-3px) scale(1.01);
-            background: linear-gradient(135deg, #ffffff, #dcfce7);
-            box-shadow: 0 22px 42px rgba(255, 255, 255, 0.14);
+            background-color: #059669;
+            transform: translateY(-1px);
         }
 
         .nav-link {
-            color: rgba(255, 255, 255, 0.68) !important;
-            min-height: 46px;
-            padding: 12px 16px !important;
-            border-radius: 15px;
-            margin-bottom: 8px;
+            color: #94a3b8 !important;
+            min-height: 44px;
+            padding: 10px 14px !important;
+            border-radius: 8px;
+            margin-bottom: 4px;
             display: flex;
             align-items: center;
             gap: 12px;
             text-decoration: none !important;
             transition: var(--transition);
             border: 1px solid transparent;
+            font-size: 0.95rem;
         }
 
         .nav-link i {
@@ -177,315 +150,292 @@
 
         .nav-link:hover,
         .nav-link.active {
-            background: rgba(255, 255, 255, 0.12);
-            border-color: rgba(255, 255, 255, 0.12);
-            color: white !important;
-            transform: translateX(3px);
+            background-color: #1e293b;
+            color: #ffffff !important;
         }
 
         .nav-link.active {
-            background: linear-gradient(135deg, rgba(99, 102, 241, 0.94), rgba(34, 211, 238, 0.36)) !important;
-            box-shadow: 0 16px 34px rgba(99, 102, 241, 0.28);
+            background-color: var(--primary);
+            color: #ffffff !important;
         }
 
+        /* --- Main Layout Frame --- */
         .main-content {
             flex: 1;
-            margin-left: 312px;
+            margin-left: 260px;
             padding: 2.5rem;
             min-width: 0;
-            animation: fadeRise 0.72s ease 0.08s both;
+            transition: var(--transition);
         }
 
+        /* --- Clean Solid Containers --- */
         .header-section {
             display: flex;
             justify-content: space-between;
             align-items: center;
             gap: 1.25rem;
-            margin-bottom: 2.25rem;
+            margin-bottom: 2rem;
             padding: 1.5rem;
-            background: rgba(255, 255, 255, 0.48);
-            border: 1px solid var(--glass-border);
-            border-radius: 24px;
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
             box-shadow: var(--card-shadow);
-            backdrop-filter: blur(22px);
-            -webkit-backdrop-filter: blur(22px);
         }
 
         .header-section h1 {
-            font-size: clamp(1.45rem, 2vw, 2rem);
-            letter-spacing: 0;
+            font-size: 1.5rem;
+            color: var(--text-main);
         }
 
         .header-section h3 {
             color: var(--text-soft);
-            font-size: 0.98rem;
-            font-weight: 600;
+            font-size: 0.95rem;
+            font-weight: 500;
             margin-left: 0 !important;
         }
 
         .header-section .bg-white {
-            background: rgba(255, 255, 255, 0.7) !important;
-            border: 1px solid rgba(255, 255, 255, 0.78);
-            box-shadow: 0 12px 28px rgba(99, 102, 241, 0.12) !important;
+            background: #f1f5f9 !important;
+            border: 1px solid var(--card-border);
         }
 
         .stat-card {
-            min-height: 138px;
-            background: var(--glass-bg);
-            border-radius: 24px;
+            min-height: 110px;
+            background: var(--card-bg);
+            border-radius: 12px;
             padding: 1.5rem;
             box-shadow: var(--card-shadow);
             display: flex;
             align-items: center;
             gap: 20px;
-            border: 1px solid var(--glass-border);
-            backdrop-filter: blur(22px);
-            -webkit-backdrop-filter: blur(22px);
+            border: 1px solid var(--card-border);
             transition: var(--transition);
-            animation: fadeRise 0.74s ease both;
-        }
-
-        .row .col-md-6:nth-child(2) .stat-card {
-            animation-delay: 0.12s;
         }
 
         .stat-card:hover {
-            transform: translateY(-6px);
-            box-shadow: 0 30px 80px rgba(15, 23, 42, 0.16);
-            border-color: rgba(99, 102, 241, 0.28);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05);
+            border-color: #cbd5e1;
         }
 
         .stat-card h6 {
             color: var(--text-soft) !important;
-            font-weight: 800;
-            letter-spacing: 0.08em;
+            font-weight: 600;
+            letter-spacing: 0.05em;
             text-transform: uppercase;
         }
 
         .stat-card h2 {
-            color: #0f172a;
-            font-size: clamp(2rem, 5vw, 2.75rem);
+            color: var(--text-main);
+            font-size: 2rem;
             line-height: 1;
+            margin-top: 4px;
         }
 
         .icon-box {
-            width: 62px;
-            height: 62px;
-            border-radius: 19px;
+            width: 52px;
+            height: 52px;
+            border-radius: 10px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.45rem;
+            font-size: 1.3rem;
             flex: 0 0 auto;
-            transition: var(--transition);
-        }
-
-        .stat-card:hover .icon-box {
-            transform: rotate(-4deg) scale(1.05);
         }
 
         .icon-blue {
-            background: linear-gradient(135deg, rgba(99, 102, 241, 0.16), rgba(34, 211, 238, 0.18));
-            color: var(--primary-dark);
-            box-shadow: inset 0 0 0 1px rgba(99, 102, 241, 0.12);
+            background: #e0e7ff;
+            color: var(--primary);
         }
 
         .icon-purple {
-            background: linear-gradient(135deg, rgba(244, 114, 182, 0.16), rgba(168, 85, 247, 0.16));
+            background: #f3e8ff;
             color: #7e22ce;
-            box-shadow: inset 0 0 0 1px rgba(168, 85, 247, 0.12);
         }
 
         .analytics-container,
         .table-container {
-            background: var(--glass-bg);
-            border-radius: 24px;
-            padding: 2rem;
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 1.75rem;
             box-shadow: var(--card-shadow);
             margin-bottom: 2rem;
-            border: 1px solid var(--glass-border);
-            backdrop-filter: blur(22px);
-            -webkit-backdrop-filter: blur(22px);
+            border: 1px solid var(--card-border);
         }
 
         .qr-card {
-            background: linear-gradient(135deg, rgba(99, 102, 241, 0.9), rgba(168, 85, 247, 0.82));
-            color: white;
-            border-radius: 24px;
+            background: #0f172a;
+            color: #ffffff;
+            border-radius: 12px;
             padding: 2rem;
             text-align: center;
-            box-shadow: 0 24px 70px rgba(99, 102, 241, 0.24);
-            border: 1px solid rgba(255, 255, 255, 0.24);
-            backdrop-filter: blur(22px);
-            -webkit-backdrop-filter: blur(22px);
+            box-shadow: var(--card-shadow);
+            border: 1px solid #1e293b;
         }
 
         .qr-placeholder {
-            background: rgba(255, 255, 255, 0.9);
+            background: #ffffff;
             padding: 15px;
-            border-radius: 20px;
+            border-radius: 12px;
             display: inline-block;
             margin: 1.5rem 0;
-            box-shadow: 0 18px 42px rgba(15, 23, 42, 0.16);
+            border: 1px solid var(--card-border);
         }
 
         .badge-active,
         .badge-closed {
-            padding: 6px 12px;
-            border-radius: 999px;
-            font-weight: 700;
-            font-size: 0.85rem;
+            padding: 5px 12px;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 0.8rem;
+            display: inline-block;
         }
 
         .badge-active {
-            background: rgba(220, 252, 231, 0.82);
-            color: #166534;
+            background: #dcfce7;
+            color: #15803d;
         }
 
         .badge-closed {
-            background: rgba(254, 226, 226, 0.82);
-            color: #991b1b;
+            background: #fee2e2;
+            color: #b91c1c;
         }
 
-        @@keyframes fadeRise {
-            from {
-                opacity: 0;
-                transform: translateY(18px);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateY(0);
+        /* --- Fluid Responsive Adaptations --- */
+        @@media (max-width: 1200px) {
+            .main-content {
+                padding: 1.5rem;
             }
         }
 
-        @@keyframes slideInLeft {
-            from {
-                opacity: 0;
-                transform: translateX(-20px);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateX(0);
-            }
-        }
-
-        @@keyframes ambientFloat {
-            from {
-                transform: translate3d(0, 0, 0) scale(1);
-            }
-
-            to {
-                transform: translate3d(20px, 16px, 0) scale(1.08);
-            }
-        }
-
-        @@media (prefers-reduced-motion: reduce) {
-            *,
-            *::before,
-            *::after {
-                animation-duration: 0.01ms !important;
-                animation-iteration-count: 1 !important;
-                scroll-behavior: auto !important;
-                transition-duration: 0.01ms !important;
-            }
-        }
-
-        @@media (max-width: 1024px) {
+        @@media (max-width: 992px) {
             .sidebar {
-                width: 86px;
-                padding: 1.75rem 0.8rem;
+                width: 80px;
+                padding: 1.5rem 0.5rem;
+                align-items: center;
             }
 
             .sidebar span,
             .brand-box h2,
-            .btn-create-session-sidebar span {
-                display: none;
+            .btn-create-session-sidebar span,
+            .sidebar .fa-chevron-down {
+                display: none !important;
             }
 
             .brand-box,
             .btn-create-session-sidebar,
             .nav-link {
                 justify-content: center;
+                width: 100%;
+            }
+
+            .btn-create-session-sidebar {
+                margin-bottom: 1.5rem;
+                padding: 12px 0;
             }
 
             .main-content {
-                margin-left: 112px;
-                padding: 2rem 1.25rem;
+                margin-left: 80px;
+                padding: 1.5rem;
+            }
+            
+            #studentsDropdown {
+                position: absolute;
+                left: 85px;
+                background: var(--sidebar-bg);
+                border: 1px solid #334155;
+                border-radius: 8px;
+                padding: 0.5rem;
+                width: 180px;
             }
         }
 
-        @@media (max-width: 720px) {
+        @@media (max-width: 768px) {
             body {
-                display: block;
-                padding-bottom: 6rem;
+                flex-direction: column;
             }
 
             .sidebar {
-                width: calc(100% - 24px);
+                position: relative;
+                width: min(100% - 24px, 680px);
                 height: auto;
-                min-height: 74px;
-                top: auto;
-                left: 12px;
-                right: 12px;
-                bottom: 12px;
-                padding: 0.75rem;
-                border-radius: 22px;
+                min-height: 0;
+                margin: 1rem auto;
+                padding: 1rem;
+                border-right: none;
+                border-bottom: 1px solid #1e293b;
+                border-radius: 18px;
             }
 
-            .brand-box,
+            .brand-box {
+                margin-bottom: 1rem;
+            }
+
+            .dashboard-menu-toggle {
+                display: flex;
+            }
+
             .btn-create-session-sidebar {
-                display: none;
+                display: flex;
+                margin-bottom: 1rem;
+            }
+            
+            .btn-create-session-sidebar span {
+                display: inline !important;
             }
 
             .sidebar .nav {
-                flex-direction: row !important;
-                align-items: center;
-                justify-content: space-between;
-                gap: 0.35rem;
-                height: auto !important;
-            }
-
-            .sidebar .nav-item {
-                margin: 0 !important;
-                flex: 1 1 0;
-            }
-
-            .sidebar .nav-link {
-                min-height: 48px;
-                margin: 0;
-                padding: 0.7rem !important;
-                justify-content: center;
-            }
-
-            .sidebar span,
-            .sidebar .fa-chevron-down,
-            #studentsDropdown {
                 display: none !important;
+                flex-direction: column !important;
+                width: 100%;
+            }
+
+            .sidebar .nav.is-open {
+                display: flex !important;
+            }
+
+            .sidebar span {
+                display: inline !important;
+            }
+
+            .sidebar .fa-chevron-down {
+                display: inline !important;
             }
 
             .main-content {
                 margin-left: 0;
-                padding: 1rem;
+                width: min(100% - 24px, 680px);
+                margin-right: auto;
+                margin-bottom: 1.5rem;
+                padding: 0;
             }
 
             .header-section {
+                flex-direction: column;
                 align-items: flex-start;
-                border-radius: 20px;
-                padding: 1.15rem;
+                gap: 1rem;
+                padding: 1.25rem;
+                margin-bottom: 1rem;
             }
 
-            .stat-card {
-                min-height: 120px;
-                padding: 1.2rem;
+            .header-section .d-flex {
+                width: 100%;
+                justify-content: flex-start;
+            }
+            
+            #studentsDropdown {
+                position: static;
+                width: 100%;
+                background: transparent;
+                border: none;
+                padding: 0 0 0 1rem;
             }
         }
     </style>
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
 </head>
 
-<body class="with-portal-chrome">
+<body class="with-portal-chrome instructor-dashboard-page">
     @await Html.PartialAsync("_PortalHeader")
 
     <nav class="sidebar">
@@ -494,11 +444,16 @@
             <h2 class="fw-bold">QR Attendance</h2>
         </div>
 
+        <button class="dashboard-menu-toggle" type="button" aria-expanded="false" aria-controls="instructorDashboardNav">
+            <i class="fa fa-bars"></i>
+            <span>Dashboard Menu</span>
+        </button>
+
         <a asp-controller="Session" asp-action="CreateSession" class="btn-create-session-sidebar">
             <i class="fa fa-plus-circle"></i> <span>New Session</span>
         </a>
         
-        <ul class="nav flex-column h-100">
+        <ul class="nav flex-column h-100" id="instructorDashboardNav">
             <li class="nav-item"><a class="nav-link active" href="#"><i class="fa fa-th-large"></i> <span>Dashboard</span></a></li>
             <li class="nav-item">
                  <a class="nav-link" data-bs-toggle="collapse" href="#studentsDropdown" role="button" aria-expanded="false" 
@@ -506,38 +461,40 @@
                     <i class="fa fa-user-graduate"></i> 
                     <span>Students</span>
                     <i class="fa fa-chevron-down ms-auto small opacity-50"></i>
-                </a></li>
+                </a>
+            </li>
 
-    <div class="collapse" id="studentsDropdown">
-        <div class="d-grid gap-1 ps-4 mt-1">
-            <a asp-action="ViewMyStudents" 
-               asp-route-level="@((int)StudentLevel.HundredLevel)" 
-               class="nav-link py-2" 
-               style="font-size: 0.85rem;">
-                <i class="fa fa-circle-notch fa-xs"></i> <span>View 100 Level</span>
-            </a>
-            
-            <a asp-action="ViewMyStudents" 
-               asp-route-level="@((int)StudentLevel.TwoHundredLevel)" 
-               class="nav-link py-2" 
-               style="font-size: 0.85rem;">
-                <i class="fa fa-circle-notch fa-xs"></i> <span> View 200 Level</span>
-            </a>
-        </div>
-    </div>
-</li>   
+            <div class="collapse" id="studentsDropdown">
+                <div class="d-grid gap-1 ps-4 mt-1">
+                    <a asp-action="ViewMyStudents" 
+                       asp-route-level="@((int)StudentLevel.HundredLevel)" 
+                       class="nav-link py-2" 
+                       style="font-size: 0.85rem;">
+                        <i class="fa fa-circle-notch fa-xs"></i> <span>View 100 Level</span>
+                    </a>
+                    
+                    <a asp-action="ViewMyStudents" 
+                       asp-route-level="@((int)StudentLevel.TwoHundredLevel)" 
+                       class="nav-link py-2" 
+                       style="font-size: 0.85rem;">
+                        <i class="fa fa-circle-notch fa-xs"></i> <span> View 200 Level</span>
+                    </a>
+                </div>
+            </div>
    
-  <li class="nav-item"><a asp-controller="Instructor" asp-action="InsProfile" class="nav-link @(ViewContext.RouteData.Values["Action"]?.ToString() == "InsProfile" ? "active" : "")">
-                <i class="fa fa-user-circle"></i> <span>My Profile</span> </a> </li>
+            <li class="nav-item">
+                <a asp-controller="Instructor" asp-action="InsProfile" class="nav-link @(ViewContext.RouteData.Values["Action"]?.ToString() == "InsProfile" ? "active" : "")">
+                <i class="fa fa-user-circle"></i> <span>My Profile</span> </a> 
+            </li>
             <li class="nav-item"><a class="nav-link" asp-controller="Session" asp-action="Details"><i class="fa fa-calendar-check"></i> <span>Sessions</span></a></li>
             <li class="nav-item"><a class="nav-link" asp-controller="Instructor" asp-action="Report"><i class="fa fa-file-invoice"></i> <span>Reports</span></a></li>
             <li class="nav-item mt-auto mb-4">
-    <form asp-controller="User" asp-action="Logout" method="post" id="logoutForm">
-        <a href="#" class="nav-link text-danger" onclick="document.getElementById('logoutForm').submit(); return false;">
-            <i class="fa fa-power-off text-danger"></i> <span>Logout</span>
-        </a>
-    </form>
-</li>
+                <form asp-controller="User" asp-action="Logout" method="post" id="logoutForm">
+                    <a href="#" class="nav-link text-danger" onclick="document.getElementById('logoutForm').submit(); return false;">
+                        <i class="fa fa-power-off text-danger"></i> <span>Logout</span>
+                    </a>
+                </form>
+            </li>
         </ul>
     </nav>
 
@@ -557,7 +514,7 @@
         </header>
 
         <div class="row g-4 mb-4">
-            <div class="col-md-6 col-xl-4">
+            <div class="col-md-6 col-xl-6">
                 <div class="stat-card">
                     <div class="icon-box icon-blue"><i class="fa fa-layer-group"></i></div>
                     <div>
@@ -566,7 +523,7 @@
                     </div>
                 </div>
             </div>
-            <div class="col-md-6 col-xl-4">
+            <div class="col-md-6 col-xl-6">
                 <div class="stat-card">
                     <div class="icon-box icon-purple"><i class="fa fa-users-check"></i></div>
                     <div>
@@ -576,82 +533,82 @@
                 </div>
             </div>
         </div>
-</main>
-        @*<div class="row g-4">
-             <div class="col-lg-8">
-                <div class="analytics-container h-100">
-                    <h5 class="fw-bold mb-4">Attendance Overview</h5>
-                    <div style="height: 300px;">
-                        <canvas id="attendanceChart"></canvas>
-                    </div>
-                </div>
-            </div> *@
+    </main>
 
-            @* <div class="col-lg-4">
-                <div class="qr-card h-100">
-                    <h5 class="fw-bold mb-3">QR Generator</h5>
-                    <div class="d-grid gap-2 mb-3">
-                        @foreach (var session in sessions.Where(s => s.IsActive)) {
-                            <button class="btn btn-light btn-sm fw-bold rounded-3" 
-                                    onclick="generateQR('@session.QRCodeToken', '@session.QRCodeExpiry')">
-                                <i class="fa fa-play-circle me-2"></i>@session.CourseCode
-                            </button>
-                        }
-                        @if(!sessions.Any(s => s.IsActive)){
-                            <div class="small py-3 border border-white border-opacity-25 border-dashed rounded-3">No Active Sessions</div>
-                        }
-                    </div>
-                    <div class="qr-placeholder" id="qrcode">
-                        <i class="fa fa-qrcode fa-5x text-dark opacity-10"></i>
-                    </div>
-                    <div id="timer" class="mt-2 fw-bold fs-4">00:00</div>
+    @*<div class="row g-4">
+         <div class="col-lg-8">
+            <div class="analytics-container h-100">
+                <h5 class="fw-bold mb-4">Attendance Overview</h5>
+                <div style="height: 300px;">
+                    <canvas id="attendanceChart"></canvas>
                 </div>
-            </div> *@
+            </div>
+        </div> *@
 
-            @* <div class="col-12">
-                <div class="table-container">
-                    <h5 class="fw-bold mb-4">Recent Sessions</h5>
-                    <div class="table-responsive">
-                        <table class="table align-middle">
-                            <thead class="table-light">
+        @* <div class="col-lg-4">
+            <div class="qr-card h-100">
+                <h5 class="fw-bold mb-3">QR Generator</h5>
+                <div class="d-grid gap-2 mb-3">
+                    @foreach (var session in sessions.Where(s => s.IsActive)) {
+                        <button class="btn btn-light btn-sm fw-bold rounded-3" 
+                                onclick="generateQR('@session.QRCodeToken', '@session.QRCodeExpiry')">
+                            <i class="fa fa-play-circle me-2"></i>@session.CourseCode
+                        </button>
+                    }
+                    @if(!sessions.Any(s => s.IsActive)){
+                        <div class="small py-3 border border-white border-opacity-25 border-dashed rounded-3">No Active Sessions</div>
+                    }
+                </div>
+                <div class="qr-placeholder" id="qrcode">
+                    <i class="fa fa-qrcode fa-5x text-dark opacity-10"></i>
+                </div>
+                <div id="timer" class="mt-2 fw-bold fs-4">00:00</div>
+            </div>
+        </div> *@
+
+        @* <div class="col-12">
+            <div class="table-container">
+                <h5 class="fw-bold mb-4">Recent Sessions</h5>
+                <div class="table-responsive">
+                    <table class="table align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>CourseName</th>
+                                <th>CourseCode</th>
+                                <th>SessionStartTime</th>
+                                <th>Status</th>
+                                <th>Date</th>
+                            </tr>
+                        </thead>
+                       <tbody>
+                            @foreach (var session in sessions) {
                                 <tr>
-                                    <th>CourseName</th>
-                                    <th>CourseCode</th>
-                                    <th>SessionStartTime</th>
-                                    <th>Status</th>
-                                    <th>Date</th>
-                                </tr>
-                            </thead>
-                           <tbody>
-                                @foreach (var session in sessions) {
-                                    <tr>
-                                        <td>
-                                            <div class="fw-bold">@session.CourseName</div>
-                                            <div class="text-muted small">@session.CourseCode</div>
-                                        </td>
-                                        <td>@session.SessionStartTime.ToString("hh:mm tt") - @session.SessionEndTime.ToString("hh:mm tt")</td>
-                                        <td>
-                                            <span class="@(session.IsActive ? "badge-active" : "badge-closed")">
-                                                @(session.IsActive ? "● Active" : "Closed")
-                                            </span>
-                                        </td>
-                                        <td class="text-muted">@session.CreatedDate.ToUniversalTime().ToShortDateString()</td>
-                                        <td class="text-muted">@session.UpdatedDate.ToUniversalTime().ToShortDateString()</td>
-                                        <td>
-                                            <a asp-controller="Session" asp-action="Details" asp-route-id="@session.Id" class="btn btn-sm btn-outline-primary">
-                                                <i class="fa fa-eye"></i> View
-                                            </a>
-                                        </td>
+                                    <td>
+                                        <div class="fw-bold">@session.CourseName</div>
+                                        <div class="text-muted small">@session.CourseCode</div>
+                                    </td>
+                                    <td>@session.SessionStartTime.ToString("hh:mm tt") - @session.SessionEndTime.ToString("hh:mm tt")</td>
+                                    <td>
+                                        <span class="@(session.IsActive ? "badge-active" : "badge-closed")">
+                                            @(session.IsActive ? "● Active" : "Closed")
+                                        </span>
+                                    </td>
+                                    <td class="text-muted">@session.CreatedDate.ToUniversalTime().ToShortDateString()</td>
+                                    <td class="text-muted">@session.UpdatedDate.ToUniversalTime().ToShortDateString()</td>
+                                    <td>
+                                        <a asp-controller="Session" asp-action="Details" asp-route-id="@session.Id" class="btn btn-sm btn-outline-primary">
+                                            <i class="fa fa-eye"></i> View
+                                        </a>
+                                    </td>
 
-                                    </tr>
-                                }
-                            </tbody>
-                        </table>
-                    </div>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
                 </div>
-            </div> 
-        </div>*@
-    
+            </div>
+        </div> 
+    </div>*@
 
     <script>
         // Chart Implementation
@@ -664,7 +621,6 @@
                     labels: @Html.Raw(Json.Serialize(sessions.Select(s => s.CourseCode))),
                     datasets: [{
                         label: 'Students Present',
-                        // USE THE NEW STATS PROPERTY HERE
                         data: @Html.Raw(Json.Serialize(Model?.AttendanceStats ?? new List<int>())),
                         borderColor: '#6366f1',
                         tension: 0.4,
@@ -717,6 +673,21 @@
                 document.getElementById("timer").innerText = `${m}m ${s}s`;
             }, 1000);
         }
+    </script>
+    <script>
+        (() => {
+            const toggle = document.querySelector(".dashboard-menu-toggle");
+            const nav = document.getElementById("instructorDashboardNav");
+
+            if (!toggle || !nav) {
+                return;
+            }
+
+            toggle.addEventListener("click", () => {
+                const isOpen = nav.classList.toggle("is-open");
+                toggle.setAttribute("aria-expanded", isOpen.toString());
+            });
+        })();
     </script>
     @await Html.PartialAsync("_PortalFooter")
 </body>

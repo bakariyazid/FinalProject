@@ -47,7 +47,9 @@ namespace QRCodeAttendance.Controllers
 
             if (!loginResponse.Status)
             {
-                ViewBag.ErrorMessage = loginResponse.Message;
+                ViewBag.ErrorMessage = loginResponse.Message == "Invalid credentials"
+                    ? "Invalid credential kindly check input"
+                    : loginResponse.Message;
                 return View(model);
             }
 

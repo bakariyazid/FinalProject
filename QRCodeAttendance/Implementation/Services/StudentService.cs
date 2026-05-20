@@ -171,7 +171,7 @@ namespace QRCodeAttendance.Implementation.Services
                         TotalSessionsAvailable = sessions.Count(s => s.SessionEndTime <= now),
 
                         ActiveSessions = sessions
-                            .Where(s => s.IsActive == true && now >= s.SessionStartTime.AddMinutes(-5) && now <= s.SessionEndTime)
+                            .Where(s => s.IsActive == true && now >= s.SessionStartTime && now <= s.SessionEndTime)
                             .Select(s => new ActiveSessionDto
                             {
                                 Id = s.Id,
@@ -231,6 +231,40 @@ namespace QRCodeAttendance.Implementation.Services
         public async Task<BaseResponse<StudentAttendanceReportDto>> GetAttendanceReport(Guid userId)
         {
             var student = await _studentRepository.Get<Student>(s => s.UserId == userId);
+            if (student == null)
+            {
+                return new BaseResponse<StudentAttendanceReportDto>
+                {
+                    Status = false,
+                    Message = "Student record not found."
+                };
+            }
+
+            var attendances = await _attendanceRepository.GetByStudentId(student.Id);
+            var records = attendances
+                .OrderByDescending(a => a.ScanTime)
+                .Select(a => ToStudentAttendanceReportItem(student, a))
+                .ToList();
+
+            return new BaseResponse<StudentAttendanceReportDto>
+            {
+                Status = true,
+                Message = "Attendance report retrieved successfully.",
+                Data = new StudentAttendanceReportDto
+                {
+                    StudentName = student.FullName(),
+                    MatricNumber = student.MatricNumber,
+                    Department = student.Department,
+                    Level = student.StudentLevel,
+                    TotalAttended = records.Count,
+                    Records = records
+                }
+            };
+        }
+
+        public async Task<BaseResponse<StudentAttendanceReportDto>> GetAttendanceReportByStudentId(Guid studentId)
+        {
+            var student = await _studentRepository.Get<Student>(s => s.Id == studentId);
             if (student == null)
             {
                 return new BaseResponse<StudentAttendanceReportDto>
@@ -341,7 +375,8 @@ namespace QRCodeAttendance.Implementation.Services
                 }
 
                 int attendedCount = await _attendanceRepository.Count<Attendance>(a => 
-                    a.StudentId == student.Id && a.Status == AttendanceStatus.Present);
+                    a.StudentId == student.Id &&
+                    (a.Status == AttendanceStatus.Present || a.Status == AttendanceStatus.Late));
 
                 double percentage = ((double)attendedCount / totalSessions) * 100;
 

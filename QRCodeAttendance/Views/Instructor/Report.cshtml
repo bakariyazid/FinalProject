@@ -78,6 +78,47 @@
     .status-late { background: #fef3c7; color: #92400e; }
     .status-absent { background: #fee2e2; color: #991b1b; }
 
+    .report-toolbar {
+        gap: 0.75rem;
+    }
+
+    .btn-dashboard {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        min-height: 42px;
+        padding: 0 1rem;
+        border-radius: 999px;
+        background: #0f172a;
+        color: #ffffff;
+        font-weight: 800;
+        text-decoration: none;
+        box-shadow: 0 12px 28px rgba(15, 23, 42, 0.14);
+    }
+
+    .btn-dashboard:hover {
+        color: #ffffff;
+        background: #1e293b;
+    }
+
+    @@media (max-width: 768px) {
+        .report-toolbar {
+            align-items: stretch !important;
+            flex-direction: column;
+        }
+
+        .report-actions {
+            display: grid !important;
+            grid-template-columns: 1fr;
+        }
+
+        .btn-dashboard,
+        .report-actions .btn {
+            width: 100%;
+        }
+    }
+
     @@media print {
         .no-print { display: none; }
         .glass-panel { border: 1px solid #ccc; box-shadow: none; }
@@ -85,11 +126,12 @@
 </style>
 
 <div class="container report-container">
-    <div class="d-flex justify-content-between align-items-center mb-4 no-print">
-        <a asp-action="InstructorDashboard" asp-controller="Instructor" class="btn btn-link w-100 mt-3 text-white-50 text-decoration-none small">
-                 Back to Dashboard
+    <div class="report-toolbar d-flex justify-content-between align-items-center mb-4 no-print">
+        <a asp-action="InstructorDashboard" asp-controller="Instructor" class="btn-dashboard">
+            <i class="fas fa-arrow-left"></i>
+            Dashboard
         </a>
-        <div class="d-flex gap-2">
+        <div class="report-actions d-flex gap-2">
             <button class="btn btn-white border shadow-sm rounded-pill px-4" onclick="window.print()">
                 <i class="fas fa-print me-2 text-dark"></i> Print Report
             </button>

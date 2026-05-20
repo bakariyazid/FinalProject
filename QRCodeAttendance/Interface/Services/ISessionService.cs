@@ -20,6 +20,7 @@ namespace QRCodeAttendance.Interface.Services
         Task<BaseResponse<IReadOnlyList<SessionDto>>> GetSessionsByInstructor(Guid instructorId);
         Task<BaseResponse<IReadOnlyList<SessionDto>>> GetSessionsByDate(DateTime date);
         Task<BaseResponse<SessionDto>> GenerateSessionQrCode(Guid sessionId);
+        Task<int> RotateDueQrCodesAsync();
         // Task<BaseResponse<bool>> ValidateSessionQrCode(Guid sessionId, string qrCode);
 
    }

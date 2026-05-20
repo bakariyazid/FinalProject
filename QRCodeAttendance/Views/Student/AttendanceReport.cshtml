@@ -4,6 +4,7 @@
     ViewData["Title"] = "Attendance Report";
     Layout = null;
     var attendanceCount = Model?.TotalAttended ?? 0;
+    var records = Model?.Records ?? new List<QRCodeAttendance.Models.DTOs.Student.StudentAttendanceReportItemDto>();
 }
 
 <!DOCTYPE html>
@@ -249,26 +250,26 @@
         <section class="student-strip">
             <div class="info-pill">
                 <p class="label">Student</p>
-                <p class="value">@Model.StudentName</p>
+                <p class="value">@(Model?.StudentName ?? "Student")</p>
             </div>
             <div class="info-pill">
                 <p class="label">Matric Number</p>
-                <p class="value">@Model.MatricNumber</p>
+                <p class="value">@(Model?.MatricNumber ?? "N/A")</p>
             </div>
             <div class="info-pill">
                 <p class="label">Department</p>
-                <p class="value">@Model.Department</p>
+                <p class="value">@(Model?.Department.ToString() ?? "N/A")</p>
             </div>
             <div class="info-pill">
                 <p class="label">Level</p>
-                <p class="value">@Model.Level</p>
+                <p class="value">@(Model?.Level.GetDescription() ?? "N/A")</p>
             </div>
         </section>
 
-        @if (Model.Records.Any())
+        @if (records.Any())
         {
             <section class="report-grid">
-                @foreach (var record in Model.Records)
+                @foreach (var record in records)
                 {
                     <article class="report-card">
                         <div class="report-card-top">

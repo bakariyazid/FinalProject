@@ -46,7 +46,7 @@ namespace QRCodeAttendance.Controllers
                 return View(); 
             }
 
-            TempData["SuccessMessage"] = "Attendance marked successfully!";
+            TempData["SuccessMessage"] = "QR Code scanned successfully. Attendance marked.";
             return RedirectToAction("StudentDashboard", "Student");
         }
 

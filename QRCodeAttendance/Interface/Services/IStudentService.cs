@@ -21,6 +21,7 @@ namespace QRCodeAttendance.Interface.Services
         // Task<BaseResponse<bool>> MarkAttendanceWithQr(Guid studentId, string qrCode);
         Task<BaseResponse<StudentDashboardDto>> GetDashboard(Guid studentId);
         Task<BaseResponse<StudentAttendanceReportDto>> GetAttendanceReport(Guid userId);
+        Task<BaseResponse<StudentAttendanceReportDto>> GetAttendanceReportByStudentId(Guid studentId);
         Task<BaseResponse<StudentAttendanceReportItemDto>> GetAttendanceReportItem(Guid userId, Guid sessionId);
     }
 }
