@@ -89,8 +89,8 @@ for details on configuring this project to bundle and minify static web assets. 
     width: 100%;
     z-index: 1000;
     background: var(--surface-glass);
-    backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
+    backdrop-filter: blur(20px);
     border-top: 1px solid var(--border-glass);
     padding: 1.25rem 2rem;
 }
