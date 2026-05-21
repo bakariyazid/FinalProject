@@ -434,24 +434,36 @@
     @@media (max-width: 768px) {
         .session-shell {
             width: min(100% - 20px, 680px);
-            padding-top: 24px;
+            padding-top: 18px;
+            padding-bottom: 32px;
         }
 
         .session-hero,
         .session-row {
             border-radius: 20px;
-            padding: 20px;
+            padding: 18px;
         }
 
         .session-hero,
         .session-row {
             grid-template-columns: 1fr;
             align-items: stretch;
+            gap: 16px;
         }
 
         .session-hero {
             flex-direction: column;
             align-items: flex-start;
+        }
+
+        .session-hero h1 {
+            font-size: clamp(1.85rem, 12vw, 2.65rem) !important;
+            line-height: 1.04;
+        }
+
+        .session-hero p {
+            font-size: 0.94rem;
+            line-height: 1.6;
         }
 
         .session-actions,
@@ -460,17 +472,106 @@
             justify-content: stretch;
         }
 
+        .session-actions {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 10px;
+        }
+
+        .course-title {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 9px;
+        }
+
+        .course-title h5 {
+            line-height: 1.28;
+            overflow-wrap: anywhere;
+        }
+
+        .level-badge,
+        .course-code,
+        .meta-chip {
+            width: 100%;
+            justify-content: flex-start;
+            border-radius: 14px;
+            line-height: 1.35;
+            white-space: normal;
+        }
+
+        .session-meta {
+            display: block;
+        }
+
+        .history-meta {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 10px;
+            margin-top: 14px;
+        }
+
+        .history-item {
+            align-items: flex-start;
+            flex-direction: column;
+            gap: 4px;
+            padding: 10px 12px;
+            border-radius: 14px;
+            background: rgba(255, 255, 255, 0.06);
+        }
+
+        .history-item span {
+            overflow-wrap: anywhere;
+        }
+
+        .action-area {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 10px;
+        }
+
+        .row-controls {
+            width: 100%;
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 10px;
+            margin-right: 0;
+        }
+
+        .icon-btn {
+            width: 100%;
+            min-height: 44px;
+        }
+
         .glass-link,
         .btn-new-session,
         .btn-qr-launch,
         .btn-past,
         .countdown-box {
             width: 100%;
+            min-height: 48px;
+            border-radius: 14px;
         }
 
         .action-area {
             min-width: 0;
             padding-bottom: 6px;
+        }
+    }
+
+    @@media (max-width: 420px) {
+        .session-shell {
+            width: min(100% - 16px, 420px);
+        }
+
+        .session-kicker {
+            width: 100%;
+            justify-content: center;
+            text-align: center;
+        }
+
+        .session-hero,
+        .session-row {
+            padding: 16px;
         }
     }
 </style>

@@ -20,425 +20,531 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
-    <style>
-        :root {
-            --primary: #4f46e5;
-            --primary-dark: #3730a3;
-            --sidebar-bg: #0f172a;
-            --body-bg: #f8fafc;
-            --card-bg: #ffffff;
-            --card-border: #e2e8f0;
-            --text-main: #0f172a;
-            --text-soft: #475569;
-            --card-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
-            --transition: all 0.2s ease-in-out;
-            --accent-green: #10b981;
-            --accent-cyan: #06b6d4;
-            --accent-rose: #f43f5e;
-        }
+<style>
+    :root {
+        --primary: #4f46e5;
+        --primary-dark: #3730a3;
+        --sidebar-bg: #0f172a;
+        --body-bg: #f8fafc;
+        --card-bg: #ffffff;
+        --card-border: #e2e8f0;
+        --text-main: #0f172a;
+        --text-soft: #475569;
+        --card-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+        --transition: all 0.2s ease-in-out;
+        --accent-green: #10b981;
+        --accent-cyan: #06b6d4;
+        --accent-rose: #f43f5e;
+    }
 
-        * {
-            box-sizing: border-box;
-        }
+    * {
+        box-sizing: border-box;
+    }
 
-        html, body {
-            min-height: 100%;
-            margin: 0;
-            font-family: 'Plus Jakarta Sans', sans-serif;
-            background-color: var(--body-bg);
-            color: var(--text-main);
-        }
+    html, body {
+        min-height: 100%;
+        margin: 0;
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        background-color: var(--body-bg);
+        color: var(--text-main);
+    }
 
-        body {
-            display: flex;
-            overflow-x: hidden;
-        }
+    body {
+        display: flex;
+        overflow-x: hidden;
+    }
 
-        /* --- Sidebar Navigation Frame --- */
-        .sidebar {
-            width: 260px;
-            height: 100vh;
-            background-color: var(--sidebar-bg);
-            position: fixed;
-            left: 0;
-            top: 0;
-            padding: 2rem 1.25rem;
-            color: #ffffff;
-            z-index: 1000;
-            display: flex;
-            flex-direction: column;
-            border-right: 1px solid #1e293b;
-            transition: var(--transition);
-        }
+    /* --- Sidebar Navigation Frame (Desktop Layout) --- */
+    .instructor-sidebar {
+        width: 280px;
+        height: calc(100vh - var(--portal-header-height, 76px) - var(--portal-footer-height, 56px) - 32px);
+        background-color: var(--sidebar-bg);
+        position: fixed;
+        left: 24px;
+        top: calc(var(--portal-header-height, 76px) + 16px);
+        padding: 2rem 1.25rem;
+        color: #ffffff;
+        z-index: 1000;
+        display: flex;
+        flex-direction: column;
+        overflow-y: auto;
+        overflow-x: hidden;
+        border-right: 1px solid #1e293b;
+        border-radius: 18px;
+        transition: var(--transition);
+    }
 
-        .brand-box {
-            display: flex;
+    .instructor-sidebar .nav {
+        flex: 1 1 auto;
+        min-height: 0;
+        overflow: visible;
+        padding-bottom: 1rem;
+        flex-direction: column !important;
+        flex-wrap: nowrap !important;
+    }
+
+    .instructor-sidebar .nav-item {
+        width: 100%;
+        display: block;
+    }
+
+    .instructor-sidebar .dashboard-logout {
+        margin-top: auto !important; 
+        margin-bottom: 0 !important;
+        width: 100%;
+    }
+
+    .brand-box {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 2rem;
+        padding: 0 0.5rem;
+        flex-shrink: 0;
+    }
+
+    .brand-box i {
+        color: var(--accent-cyan);
+    }
+
+    .brand-box h2 {
+        font-size: 1.15rem;
+        white-space: nowrap;
+        margin: 0;
+        color: #ffffff;
+    }
+
+    .dashboard-menu-toggle {
+        display: none;
+        background: #1e293b;
+        border: 1px solid #334155;
+        color: #ffffff;
+        padding: 10px 16px;
+        border-radius: 8px;
+        font-weight: 600;
+        font-size: 0.9rem;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        margin-bottom: 1rem;
+    }
+
+    .btn-create-session-sidebar {
+        background-color: var(--accent-green);
+        color: #ffffff !important;
+        min-height: 46px;
+        padding: 12px;
+        border-radius: 10px;
+        margin-bottom: 2rem;
+        text-decoration: none !important;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        font-weight: 600;
+        font-size: 0.9rem;
+        transition: var(--transition);
+    }
+
+    .btn-create-session-sidebar:hover {
+        background-color: #059669;
+        transform: translateY(-1px);
+    }
+
+    .nav-link {
+        color: #94a3b8 !important;
+        min-height: 44px;
+        padding: 10px 14px !important;
+        border-radius: 8px;
+        margin-bottom: 4px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        text-decoration: none !important;
+        transition: var(--transition);
+        border: 1px solid transparent;
+        font-size: 0.95rem;
+    }
+
+    .nav-link i {
+        width: 18px;
+        text-align: center;
+    }
+
+    .nav-link:hover,
+    .nav-link.active {
+        background-color: #1e293b;
+        color: #ffffff !important;
+    }
+
+    .nav-link.active {
+        background-color: var(--primary);
+        color: #ffffff !important;
+    }
+
+    /* --- Main Layout Frame (Desktop) --- */
+    .main-content {
+        flex: 1;
+        margin-left: 328px; /* Pushes content right of the fixed sidebar */
+        padding: 2.5rem;
+        min-width: 0;
+        transition: var(--transition);
+    }
+
+    /* --- UI Components --- */
+    .header-section {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 1.25rem;
+        margin-bottom: 2rem;
+        padding: 1.5rem;
+        background: var(--card-bg);
+        border: 1px solid var(--card-border);
+        border-radius: 12px;
+        box-shadow: var(--card-shadow);
+    }
+
+    .header-section h1 {
+        font-size: 1.5rem;
+        color: var(--text-main);
+    }
+
+    .header-section h3 {
+        display: block;
+        color: var(--text-soft);
+        font-size: 0.95rem;
+        font-weight: 500;
+        margin-left: 0 !important;
+        line-height: 1.45;
+        overflow-wrap: anywhere;
+    }
+
+    .welcome-name {
+        color: var(--text-main);
+        font-weight: 700;
+    }
+
+    .header-section .bg-white {
+        background: #f1f5f9 !important;
+        border: 1px solid var(--card-border);
+    }
+
+    .stat-card {
+        min-height: 110px;
+        background: var(--card-bg);
+        border-radius: 12px;
+        padding: 1.5rem;
+        box-shadow: var(--card-shadow);
+        display: flex;
+        align-items: center;
+        gap: 20px;
+        border: 1px solid var(--card-border);
+        transition: var(--transition);
+    }
+
+    .stat-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05);
+        border-color: #cbd5e1;
+    }
+
+    .stat-card h6 {
+        color: var(--text-soft) !important;
+        font-weight: 600;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+    }
+
+    .stat-card h2 {
+        color: var(--text-main);
+        font-size: 2rem;
+        line-height: 1;
+        margin-top: 4px;
+    }
+
+    .icon-box {
+        width: 52px;
+        height: 52px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.3rem;
+        flex: 0 0 auto;
+    }
+
+    .icon-blue {
+        background: #e0e7ff;
+        color: var(--primary);
+    }
+
+    .icon-purple {
+        background: #f3e8ff;
+        color: #7e22ce;
+    }
+
+    /* --- Fluid Responsive Adaptations (Tablet Sizes) --- */
+    @@media (max-width: 1200px) {
+        .main-content {
+            padding: 1.5rem;
+        }
+    }
+
+    @@media (max-width: 992px) {
+        .instructor-sidebar {
+            width: 84px;
+            left: 16px;
+            padding: 1.5rem 0.5rem;
             align-items: center;
-            gap: 12px;
-            margin-bottom: 2rem;
-            padding: 0 0.5rem;
-            flex-shrink: 0;
         }
 
-        .brand-box i {
-            color: var(--accent-cyan);
+        .instructor-sidebar span,
+        .brand-box h2,
+        .btn-create-session-sidebar span,
+        .instructor-sidebar .fa-chevron-down {
+            display: none !important;
         }
 
-        .brand-box h2 {
-            font-size: 1.15rem;
-            white-space: nowrap;
-            margin: 0;
-            color: #ffffff;
-        }
-
-        .dashboard-menu-toggle {
-            display: none;
-            background: #1e293b;
-            border: 1px solid #334155;
-            color: #ffffff;
-            padding: 10px 16px;
-            border-radius: 8px;
-            font-weight: 600;
-            font-size: 0.9rem;
-            align-items: center;
+        .brand-box,
+        .btn-create-session-sidebar,
+        .nav-link {
             justify-content: center;
-            gap: 8px;
-            margin-bottom: 1rem;
+            width: 100%;
         }
 
         .btn-create-session-sidebar {
-            background-color: var(--accent-green);
-            color: #ffffff !important;
-            min-height: 46px;
-            padding: 12px;
-            border-radius: 10px;
-            margin-bottom: 2rem;
-            text-decoration: none !important;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-            font-weight: 600;
-            font-size: 0.9rem;
-            transition: var(--transition);
+            margin-bottom: 1.5rem;
+            padding: 12px 0;
         }
 
-        .btn-create-session-sidebar:hover {
-            background-color: #059669;
-            transform: translateY(-1px);
-        }
-
-        .nav-link {
-            color: #94a3b8 !important;
-            min-height: 44px;
-            padding: 10px 14px !important;
-            border-radius: 8px;
-            margin-bottom: 4px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            text-decoration: none !important;
-            transition: var(--transition);
-            border: 1px solid transparent;
-            font-size: 0.95rem;
-        }
-
-        .nav-link i {
-            width: 18px;
-            text-align: center;
-        }
-
-        .nav-link:hover,
-        .nav-link.active {
-            background-color: #1e293b;
-            color: #ffffff !important;
-        }
-
-        .nav-link.active {
-            background-color: var(--primary);
-            color: #ffffff !important;
-        }
-
-        /* --- Main Layout Frame --- */
         .main-content {
-            flex: 1;
-            margin-left: 260px;
-            padding: 2.5rem;
-            min-width: 0;
-            transition: var(--transition);
+            margin-left: 116px;
+            padding: 1.5rem;
+        }
+        
+        #studentsDropdown {
+            position: absolute;
+            left: 94px;
+            background: var(--sidebar-bg);
+            border: 1px solid #334155;
+            border-radius: 8px;
+            padding: 0.5rem;
+            width: 180px;
+        }
+    }
+
+    /* --- True Smartphone Viewports (Restricted cleanly below 768px) --- */
+    @@media (max-width: 768px) {
+        body {
+            flex-direction: column;
         }
 
-        /* --- Clean Solid Containers --- */
+        .instructor-sidebar {
+            position: relative;
+            width: min(100% - 24px, 680px);
+            left: auto;
+            top: auto;
+            height: auto;
+            min-height: 0;
+            margin: 1rem auto;
+            padding: 1rem;
+            border-right: none;
+            border-bottom: 1px solid #1e293b;
+            border-radius: 18px;
+        }
+
+        .brand-box {
+            margin-bottom: 1rem;
+        }
+
+        .dashboard-menu-toggle {
+            display: flex;
+        }
+
+        .btn-create-session-sidebar {
+            display: flex;
+            margin-bottom: 1rem;
+        }
+        
+        .btn-create-session-sidebar span {
+            display: inline !important;
+        }
+
+        .instructor-sidebar .nav {
+            display: none !important;
+            flex-direction: column !important;
+            width: 100%;
+        }
+
+        .instructor-sidebar .nav.is-open {
+            display: flex !important;
+        }
+
+        .instructor-sidebar span {
+            display: inline !important;
+        }
+
+        .instructor-sidebar .fa-chevron-down {
+            display: inline !important;
+        }
+
+        .main-content {
+            margin-left: 0;
+            width: min(100% - 24px, 680px);
+            margin-right: auto;
+            margin-bottom: 1.5rem;
+            padding: 0;
+        }
+
         .header-section {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 1.25rem;
-            margin-bottom: 2rem;
-            padding: 1.5rem;
-            background: var(--card-bg);
-            border: 1px solid var(--card-border);
-            border-radius: 12px;
-            box-shadow: var(--card-shadow);
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 1rem;
+            padding: 1.25rem;
+            margin-bottom: 1rem;
         }
 
-        .header-section h1 {
-            font-size: 1.5rem;
-            color: var(--text-main);
+        .header-section .d-flex {
+            width: 100%;
+            justify-content: flex-start;
+        }
+        
+        #studentsDropdown {
+            position: static;
+            width: 100%;
+            background: transparent;
+            border: none;
+            padding: 0 0 0 1rem;
         }
 
-        .header-section h3 {
-            color: var(--text-soft);
-            font-size: 0.95rem;
-            font-weight: 500;
-            margin-left: 0 !important;
+        /* Enforce mobile parameters ONLY when actually layout resizing */
+        body.with-portal-chrome.instructor-dashboard-page .instructor-sidebar {
+            display: block !important;
+            width: min(100% - 24px, 680px) !important;
+            height: auto !important;
+            min-height: 0 !important;
+            margin: 12px auto 16px !important;
+            padding: 0.85rem !important;
+            overflow: visible !important;
         }
 
-        .header-section .bg-white {
-            background: #f1f5f9 !important;
-            border: 1px solid var(--card-border);
+        body.with-portal-chrome.instructor-dashboard-page .main-content {
+            width: min(100% - 24px, 680px) !important;
+            margin: 0 auto 1.5rem !important;
+            padding: 0 !important;
         }
 
-        .stat-card {
-            min-height: 110px;
-            background: var(--card-bg);
-            border-radius: 12px;
-            padding: 1.5rem;
-            box-shadow: var(--card-shadow);
-            display: flex;
-            align-items: center;
-            gap: 20px;
-            border: 1px solid var(--card-border);
-            transition: var(--transition);
+        body.with-portal-chrome.instructor-dashboard-page .instructor-sidebar .nav {
+            width: 100%;
+            height: auto !important;
+            min-height: 0 !important;
+            margin: 0 !important;
+            padding: 0.75rem 0 0 !important;
         }
 
-        .stat-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05);
-            border-color: #cbd5e1;
+        body.with-portal-chrome.instructor-dashboard-page .instructor-sidebar .nav.is-open {
+            display: flex !important;
+            position: static !important;
         }
 
-        .stat-card h6 {
+        body.with-portal-chrome.instructor-dashboard-page .instructor-sidebar .nav-item {
+            width: 100%;
+        }
+
+        body.with-portal-chrome.instructor-dashboard-page .instructor-sidebar .dashboard-logout {
+            margin-top: 0 !important;
+            margin-bottom: 0 !important;
+        }
+
+        body.with-portal-chrome.instructor-dashboard-page .instructor-sidebar .nav-link {
+            width: 100%;
+            min-height: 46px !important;
+            justify-content: flex-start !important;
+        }
+
+        body.with-portal-chrome.instructor-dashboard-page #studentsDropdown {
+            position: static !important;
+            width: 100% !important;
+            margin: 0.25rem 0 0.5rem !important;
+            padding: 0 !important;
+            background: transparent !important;
+            border: 0 !important;
+        }
+
+        body.with-portal-chrome.instructor-dashboard-page #studentsDropdown .d-grid {
+            padding-left: 0 !important;
+        }
+
+        body.with-portal-chrome.instructor-dashboard-page .header-section {
+            display: grid !important;
+            grid-template-columns: 1fr auto;
+            align-items: center !important;
+            gap: 0.9rem !important;
+            padding: 1.15rem !important;
+            margin-bottom: 1rem !important;
+            background: #ffffff !important;
+            color: var(--text-main) !important;
+            min-height: 0 !important;
+        }
+
+        body.with-portal-chrome.instructor-dashboard-page .header-section h1 {
+            color: var(--text-main) !important;
+            font-size: 1.25rem !important;
+            margin-bottom: 0.35rem !important;
+        }
+
+        body.with-portal-chrome.instructor-dashboard-page .header-section h3 {
+            display: block !important;
             color: var(--text-soft) !important;
-            font-weight: 600;
-            letter-spacing: 0.05em;
-            text-transform: uppercase;
+            font-size: 0.9rem !important;
+            margin: 0 !important;
         }
 
-        .stat-card h2 {
-            color: var(--text-main);
-            font-size: 2rem;
-            line-height: 1;
-            margin-top: 4px;
+        body.with-portal-chrome.instructor-dashboard-page .header-section .d-flex.align-items-center.gap-3 {
+            width: auto !important;
+            justify-content: flex-end !important;
+            flex-direction: row !important;
         }
 
-        .icon-box {
-            width: 52px;
-            height: 52px;
-            border-radius: 10px;
+        body.with-portal-chrome.instructor-dashboard-page .header-section .bg-white {
+            width: 48px;
+            height: 48px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.3rem;
-            flex: 0 0 auto;
+            padding: 0.35rem !important;
         }
 
-        .icon-blue {
-            background: #e0e7ff;
-            color: var(--primary);
+        body.with-portal-chrome.instructor-dashboard-page .row.g-4.mb-4 {
+            --bs-gutter-y: 1rem;
+            margin-bottom: 1rem !important;
         }
 
-        .icon-purple {
-            background: #f3e8ff;
-            color: #7e22ce;
+        body.with-portal-chrome.instructor-dashboard-page .stat-card {
+            min-height: 104px !important;
+            align-items: center !important;
+            flex-direction: row !important;
+            gap: 1rem !important;
         }
+    }
 
-        .analytics-container,
-        .table-container {
-            background: var(--card-bg);
-            border-radius: 12px;
-            padding: 1.75rem;
-            box-shadow: var(--card-shadow);
-            margin-bottom: 2rem;
-            border: 1px solid var(--card-border);
+    @@media (max-width: 380px) {
+        body.with-portal-chrome.instructor-dashboard-page .header-section {
+            grid-template-columns: 1fr;
         }
-
-        .qr-card {
-            background: #0f172a;
-            color: #ffffff;
-            border-radius: 12px;
-            padding: 2rem;
-            text-align: center;
-            box-shadow: var(--card-shadow);
-            border: 1px solid #1e293b;
+        body.with-portal-chrome.instructor-dashboard-page .header-section .d-flex.align-items-center.gap-3 {
+            justify-content: flex-start !important;
         }
-
-        .qr-placeholder {
-            background: #ffffff;
-            padding: 15px;
-            border-radius: 12px;
-            display: inline-block;
-            margin: 1.5rem 0;
-            border: 1px solid var(--card-border);
-        }
-
-        .badge-active,
-        .badge-closed {
-            padding: 5px 12px;
-            border-radius: 6px;
-            font-weight: 600;
-            font-size: 0.8rem;
-            display: inline-block;
-        }
-
-        .badge-active {
-            background: #dcfce7;
-            color: #15803d;
-        }
-
-        .badge-closed {
-            background: #fee2e2;
-            color: #b91c1c;
-        }
-
-        /* --- Fluid Responsive Adaptations --- */
-        @@media (max-width: 1200px) {
-            .main-content {
-                padding: 1.5rem;
-            }
-        }
-
-        @@media (max-width: 992px) {
-            .sidebar {
-                width: 80px;
-                padding: 1.5rem 0.5rem;
-                align-items: center;
-            }
-
-            .sidebar span,
-            .brand-box h2,
-            .btn-create-session-sidebar span,
-            .sidebar .fa-chevron-down {
-                display: none !important;
-            }
-
-            .brand-box,
-            .btn-create-session-sidebar,
-            .nav-link {
-                justify-content: center;
-                width: 100%;
-            }
-
-            .btn-create-session-sidebar {
-                margin-bottom: 1.5rem;
-                padding: 12px 0;
-            }
-
-            .main-content {
-                margin-left: 80px;
-                padding: 1.5rem;
-            }
-            
-            #studentsDropdown {
-                position: absolute;
-                left: 85px;
-                background: var(--sidebar-bg);
-                border: 1px solid #334155;
-                border-radius: 8px;
-                padding: 0.5rem;
-                width: 180px;
-            }
-        }
-
-        @@media (max-width: 768px) {
-            body {
-                flex-direction: column;
-            }
-
-            .sidebar {
-                position: relative;
-                width: min(100% - 24px, 680px);
-                height: auto;
-                min-height: 0;
-                margin: 1rem auto;
-                padding: 1rem;
-                border-right: none;
-                border-bottom: 1px solid #1e293b;
-                border-radius: 18px;
-            }
-
-            .brand-box {
-                margin-bottom: 1rem;
-            }
-
-            .dashboard-menu-toggle {
-                display: flex;
-            }
-
-            .btn-create-session-sidebar {
-                display: flex;
-                margin-bottom: 1rem;
-            }
-            
-            .btn-create-session-sidebar span {
-                display: inline !important;
-            }
-
-            .sidebar .nav {
-                display: none !important;
-                flex-direction: column !important;
-                width: 100%;
-            }
-
-            .sidebar .nav.is-open {
-                display: flex !important;
-            }
-
-            .sidebar span {
-                display: inline !important;
-            }
-
-            .sidebar .fa-chevron-down {
-                display: inline !important;
-            }
-
-            .main-content {
-                margin-left: 0;
-                width: min(100% - 24px, 680px);
-                margin-right: auto;
-                margin-bottom: 1.5rem;
-                padding: 0;
-            }
-
-            .header-section {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 1rem;
-                padding: 1.25rem;
-                margin-bottom: 1rem;
-            }
-
-            .header-section .d-flex {
-                width: 100%;
-                justify-content: flex-start;
-            }
-            
-            #studentsDropdown {
-                position: static;
-                width: 100%;
-                background: transparent;
-                border: none;
-                padding: 0 0 0 1rem;
-            }
-        }
-    </style>
+    }
+</style>
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
 </head>
 
 <body class="with-portal-chrome instructor-dashboard-page">
     @await Html.PartialAsync("_PortalHeader")
 
-    <nav class="sidebar">
+    <nav class="instructor-sidebar">
         <div class="brand-box">
             <i class="fa fa-qrcode fa-2x"></i>
             <h2 class="fw-bold">QR Attendance</h2>
@@ -455,32 +561,28 @@
         
         <ul class="nav flex-column h-100" id="instructorDashboardNav">
             <li class="nav-item"><a class="nav-link active" href="#"><i class="fa fa-th-large"></i> <span>Dashboard</span></a></li>
-            <li class="nav-item">
-                 <a class="nav-link" data-bs-toggle="collapse" href="#studentsDropdown" role="button" aria-expanded="false" 
-                aria-controls="studentsDropdown">
-                    <i class="fa fa-user-graduate"></i> 
-                    <span>Students</span>
-                    <i class="fa fa-chevron-down ms-auto small opacity-50"></i>
-                </a>
-            </li>
+                <li class="nav-item">
+                    <a class="nav-link" data-bs-toggle="collapse" href="#studentsDropdown" role="button"
+                       aria-expanded="false" aria-controls="studentsDropdown">
+                        <i class="fa fa-user-graduate"></i>
+                        <span>Students</span>
+                        <i class="fa fa-chevron-down ms-auto small opacity-50"></i>
+                    </a>
 
-            <div class="collapse" id="studentsDropdown">
-                <div class="d-grid gap-1 ps-4 mt-1">
-                    <a asp-action="ViewMyStudents" 
-                       asp-route-level="@((int)StudentLevel.HundredLevel)" 
-                       class="nav-link py-2" 
-                       style="font-size: 0.85rem;">
-                        <i class="fa fa-circle-notch fa-xs"></i> <span>View 100 Level</span>
-                    </a>
-                    
-                    <a asp-action="ViewMyStudents" 
-                       asp-route-level="@((int)StudentLevel.TwoHundredLevel)" 
-                       class="nav-link py-2" 
-                       style="font-size: 0.85rem;">
-                        <i class="fa fa-circle-notch fa-xs"></i> <span> View 200 Level</span>
-                    </a>
-                </div>
-            </div>
+                    <div class="collapse" id="studentsDropdown">
+                        <div class="d-grid gap-1 ps-4 mt-1">
+                            <a asp-action="ViewMyStudents" asp-route-level="@((int)StudentLevel.HundredLevel)"
+                               class="nav-link py-2" style="font-size: 0.85rem;">
+                                <i class="fa fa-circle-notch fa-xs"></i> <span>View 100 Level</span>
+                            </a>
+
+                            <a asp-action="ViewMyStudents" asp-route-level="@((int)StudentLevel.TwoHundredLevel)"
+                               class="nav-link py-2" style="font-size: 0.85rem;">
+                                <i class="fa fa-circle-notch fa-xs"></i> <span>View 200 Level</span>
+                            </a>
+                        </div>
+                    </div>
+                </li>
    
             <li class="nav-item">
                 <a asp-controller="Instructor" asp-action="InsProfile" class="nav-link @(ViewContext.RouteData.Values["Action"]?.ToString() == "InsProfile" ? "active" : "")">
@@ -488,7 +590,7 @@
             </li>
             <li class="nav-item"><a class="nav-link" asp-controller="Session" asp-action="Details"><i class="fa fa-calendar-check"></i> <span>Sessions</span></a></li>
             <li class="nav-item"><a class="nav-link" asp-controller="Instructor" asp-action="Report"><i class="fa fa-file-invoice"></i> <span>Reports</span></a></li>
-            <li class="nav-item mt-auto mb-4">
+            <li class="nav-item dashboard-logout">
                 <form asp-controller="User" asp-action="Logout" method="post" id="logoutForm">
                     <a href="#" class="nav-link text-danger" onclick="document.getElementById('logoutForm').submit(); return false;">
                         <i class="fa fa-power-off text-danger"></i> <span>Logout</span>
@@ -502,8 +604,8 @@
         <header class="header-section">
             <div>
                 <h1 class="h3 fw-bold mb-1">Instructor Dashboard</h1>
-                <h3 class="text-blue-50 mb-0 ms-4">
-                    Instructor: <span> Welcome, @User.Identity?.Name</span>
+                <h3 class="welcome-line mb-0">
+                    Instructor: <span class="welcome-name">Welcome, @User.Identity?.Name</span>
                 </h3>
             </div>
             <div class="d-flex align-items-center gap-3">

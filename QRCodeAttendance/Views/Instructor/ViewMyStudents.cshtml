@@ -146,8 +146,37 @@
     }
 
     @@media (max-width: 768px) {
+        .container {
+            width: min(100% - 18px, 420px);
+            padding-left: 0;
+            padding-right: 0;
+        }
+
         .pro-glass-card {
             padding: 1rem !important;
+        }
+
+        .row.align-items-center.mb-5 {
+            margin-bottom: 1.5rem !important;
+        }
+
+        .row.align-items-center.mb-5 > div {
+            width: 100%;
+        }
+
+        .d-flex.align-items-center.mb-2 {
+            align-items: flex-start !important;
+        }
+
+        h2.h3 {
+            font-size: 1.25rem;
+            line-height: 1.25;
+            overflow-wrap: anywhere;
+        }
+
+        p.text-white-50.mb-0.ms-4 {
+            margin-left: 0 !important;
+            line-height: 1.6;
         }
 
         .table-container,
@@ -156,8 +185,10 @@
             background: transparent;
         }
 
+        body.with-portal-chrome .clean-table,
         .clean-table {
             min-width: 0 !important;
+            width: 100% !important;
         }
 
         .clean-table thead {
@@ -178,6 +209,7 @@
             border-radius: 18px;
             background: rgba(255, 255, 255, 0.06);
             overflow: hidden;
+            box-shadow: 0 18px 35px rgba(0, 0, 0, 0.22);
         }
 
         .clean-table tbody tr:hover {
@@ -187,9 +219,11 @@
         .clean-table td {
             display: flex;
             justify-content: space-between;
+            align-items: flex-start;
             gap: 1rem;
             padding: 0.85rem 1rem;
             text-align: right;
+            overflow-wrap: anywhere;
         }
 
         .clean-table td::before {
@@ -222,10 +256,42 @@
             justify-content: center;
         }
 
+        .clean-table td[data-label="Level"] {
+            align-items: center;
+        }
+
+        .level-badge {
+            max-width: 100%;
+            text-align: right;
+            white-space: normal;
+        }
+
         .btn-back {
             display: inline-flex;
             width: 100%;
             justify-content: center;
+        }
+
+        .d-flex.justify-content-between.align-items-center.mt-4 {
+            align-items: flex-start !important;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+    }
+
+    @@media (max-width: 420px) {
+        .clean-table td {
+            display: block;
+            text-align: left;
+        }
+
+        .clean-table td::before {
+            display: block;
+            margin-bottom: 0.35rem;
+        }
+
+        .clean-table td[data-label="Student"] .d-flex {
+            align-items: flex-start !important;
         }
     }
 </style>
@@ -316,7 +382,7 @@
                 Showing <strong>@Model?.Count()</strong> results
             </div>
             <div class="text-white-50 small">
-                <i class="fas fa-clock me-1"></i> Last updated: @DateTime.UtcNow.ToUniversalTime().ToString("h:mm tt")
+                <i class="fas fa-clock me-1"></i> Last updated: @DateTime.UtcNow.ToLocalTime().ToString("MMM dd, yyyy - hh:mm tt")
             </div>
         </div>
     </div>

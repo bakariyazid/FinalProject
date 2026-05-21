@@ -155,6 +155,18 @@
             text-decoration: underline;
         }
 
+        .portal-choice {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 1rem;
+            text-align: center;
+        }
+
+        .portal-separator {
+            color: var(--border);
+        }
+
         .login-error-alert {
             display: flex;
             align-items: center;
@@ -190,6 +202,26 @@
             .brand-side { padding: 2.5rem; border-right: none; border-bottom: 1px solid var(--border); }
             .form-side { padding: 3rem 1.5rem; }
             body { overflow-y: auto; }
+        }
+
+        @@media (max-width: 576px) {
+            .portal-choice {
+                flex-direction: column;
+                gap: 0.8rem;
+                width: 100%;
+            }
+
+            .portal-choice .register-link {
+                width: 100%;
+                text-align: center;
+            }
+
+            .portal-separator {
+                width: min(160px, 70%);
+                height: 1px;
+                background: var(--border);
+                color: transparent;
+            }
         }
     </style>
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
@@ -255,9 +287,9 @@
 
             <div class="mt-5 text-center">
                 <p class="small" style="color: var(--text-muted)">New to the platform?</p>
-                <div class="d-flex justify-content-center gap-3 mt-2">
+                <div class="portal-choice mt-2">
                      <a href="/Student/RegisterStudent" class="register-link small">Student Portal</a>
-                    <span style="color: var(--border)">|</span>
+                    <span class="portal-separator">|</span>
                      <a href="/Instructor/RegisterInstructor" class="register-link small">Instructor Portal <i class="fas fa-chevron-right small ms-1"></i></a>
                 </div>
             </div>

@@ -37,6 +37,15 @@
             padding: 1.5rem;
         }
 
+        .student-edit-shell {
+            min-height: calc(100dvh - var(--portal-header-height, 76px) - var(--portal-footer-height, 56px));
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: clamp(1rem, 3vw, 2rem);
+        }
+
         .main-card {
             background: rgba(15, 23, 42, 0.6);
             backdrop-filter: blur(30px) saturate(200%);
@@ -166,8 +175,25 @@
         }
 
             @@media (max-width: 991px) {
+                .student-edit-shell { align-items: flex-start; }
                 .info-panel { border-right: none; border-bottom: 1px solid var(--glass-border); padding: 2rem; }
                 .form-panel { padding: 2rem; }
+            }
+
+            @@media (max-width: 576px) {
+                .btn-stack {
+                    flex-direction: column;
+                }
+
+                .btn-update {
+                    order: 1;
+                    width: 100%;
+                }
+
+                .btn-cancel {
+                    order: 2;
+                    width: 100%;
+                }
             }
     </style>
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
@@ -175,6 +201,7 @@
 <body class="with-portal-chrome">
     @await Html.PartialAsync("_PortalHeader")
 
+    <main class="student-edit-shell">
     <div class="main-card">
         <div class="row g-0">
             <!-- Left Side: Profile Identity -->
@@ -259,6 +286,7 @@
             </div>
         </div>
     </div>
+    </main>
 
     @await Html.PartialAsync("_PortalFooter")
 </body>

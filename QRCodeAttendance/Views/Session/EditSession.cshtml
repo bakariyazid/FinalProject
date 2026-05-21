@@ -28,9 +28,19 @@
                 color: #f8fafc;
             }
 
+            .edit-session-shell {
+                min-height: calc(100dvh - var(--portal-header-height, 76px) - var(--portal-footer-height, 56px));
+                width: 100%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                padding: clamp(1rem, 3vw, 2rem);
+            }
+
             .edit-container {
                 width: 100%;
                 max-width: 850px;
+                margin: 0 auto;
                 background: var(--glass-bg);
                 backdrop-filter: blur(25px) saturate(180%);
                 border: 1px solid var(--glass-border);
@@ -133,6 +143,12 @@
                 background: rgba(255, 255, 255, 0.1);
                 color: white;
             }
+
+            @@media (max-width: 768px) {
+                .edit-session-shell {
+                    align-items: flex-start;
+                }
+            }
     </style>
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
 </head>
@@ -140,6 +156,7 @@
 <body class="with-portal-chrome">
     @await Html.PartialAsync("_PortalHeader")
 
+    <main class="edit-session-shell">
     <div class="edit-container">
         <div class="form-header">
             <h2 class="mb-1">Edit Session</h2>
@@ -208,6 +225,7 @@
             </div>
         </form>
     </div>
+    </main>
 
     @await Html.PartialAsync("_PortalFooter")
 </body>
