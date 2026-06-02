@@ -35,6 +35,10 @@ public class CreateInstructorRequestModel
         [Required]
         [EmailAddress]
         public required string Email { get; set; }
+
+        [Required]
+        public required string InvitationCode { get; set; }
+
         [Required]
         public required string EmailConfirmed { get; set; }
        

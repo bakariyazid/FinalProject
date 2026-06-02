@@ -61,7 +61,7 @@ namespace QRCodeAttendance.Implementation.Services
             };
 
             report.TotalPresent = orderedAttendances.Count(a => a.Status == AttendanceStatus.Present);
-            report.TotalLate = orderedAttendances.Count(a => a.Status == AttendanceStatus.Late);
+            report.TotalLate = orderedAttendances.Count(a => a.Status == AttendanceStatus.Incomplete);
             report.TotalAbsent = orderedAttendances.Count(a => a.Status == AttendanceStatus.Absent);
 
             var totalScans = orderedAttendances.Count;
@@ -134,7 +134,7 @@ namespace QRCodeAttendance.Implementation.Services
                 foreach (var student in uniqueStudents)
                 {
                     int attendedCount = student.Attendances.Count(a => 
-                        a.Status == AttendanceStatus.Present || a.Status == AttendanceStatus.Late);
+                        a.Status == AttendanceStatus.Present);
                     
                     double studentRate = Math.Round(((double)attendedCount / report.TotalSessions) * 100, 1);
 
@@ -155,7 +155,7 @@ namespace QRCodeAttendance.Implementation.Services
                 .Select(s => new DailyStatDto
                 {
                     Date = s.SessionStartTime,
-                    Count = s.Attendances.Count(a => a.Status == AttendanceStatus.Present || a.Status == AttendanceStatus.Late)
+                    Count = s.Attendances.Count(a => a.Status == AttendanceStatus.Present)
                 }).ToList();
 
             return report;

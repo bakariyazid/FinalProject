@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="AlreadyHaveCode" xml:space="preserve"><value>Ị nwere koodu ugbua?</value></data>
+  <data name="AdminReviewed" xml:space="preserve"><value>Admin enyochala</value></data>
+  <data name="Department" xml:space="preserve"><value>Ngalaba</value></data>
+  <data name="FullName" xml:space="preserve"><value>Aha zuru ezu</value></data>
+  <data name="Home" xml:space="preserve"><value>Ụlọ</value></data>
+  <data name="Instructor" xml:space="preserve"><value>Onye nkuzi</value></data>
+  <data name="InstructorAccessDetails" xml:space="preserve"><value>Nkọwa ohere onye nkuzi</value></data>
+  <data name="InstructorAccessRequest" xml:space="preserve"><value>Arịrịọ ohere onye nkuzi</value></data>
+  <data name="InstructorEmail" xml:space="preserve"><value>Email onye nkuzi</value></data>
+  <data name="InstructorVerification" xml:space="preserve"><value>Nyocha onye nkuzi</value></data>
+  <data name="Login" xml:space="preserve"><value>Banye</value></data>
+  <data name="QrSessionsEnabled" xml:space="preserve"><value>Oge QR arụ ọrụ</value></data>
+  <data name="RequestAccessHero" xml:space="preserve"><value>Rịọ ohere ịkụzi site na attendance QR.</value></data>
+  <data name="RequestAccessIntro" xml:space="preserve"><value>Tinye aha gị, email, nọmba WhatsApp, na ngalaba. Admin ga-enyocha arịrịọ ahụ ma kesaa koodu ndebanye echekwara nye ndị nkuzi akwadoro.</value></data>
+  <data name="RequestFormHint" xml:space="preserve"><value>Jiri otu email ahụ ị ga-eji debanye akaụntụ onye nkuzi gị.</value></data>
+  <data name="RequestInstructorAccess" xml:space="preserve"><value>Rịọ ohere onye nkuzi</value></data>
+  <data name="SelectDepartment" xml:space="preserve"><value>Họrọ ngalaba</value></data>
+  <data name="Student" xml:space="preserve"><value>Nwa akwụkwọ</value></data>
+  <data name="SubmitRequest" xml:space="preserve"><value>Ziga arịrịọ</value></data>
+  <data name="ToggleNavigation" xml:space="preserve"><value>Gbanwee navigation</value></data>
+  <data name="WhatsAppCodeIssued" xml:space="preserve"><value>E nyere koodu WhatsApp</value></data>
+  <data name="WhatsAppNumber" xml:space="preserve"><value>Nọmba WhatsApp</value></data>
+</root>

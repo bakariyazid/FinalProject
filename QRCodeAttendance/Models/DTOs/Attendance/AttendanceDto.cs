@@ -14,6 +14,8 @@ namespace QRCodeAttendance.Models.DTOs.Attendance
         public string CourseName {get; set;} = string.Empty;
         public string CourseCode {get; set;} = string.Empty;
         public DateTime ScanTime {get; set;}
+        public DateTime? FirstScanTime {get; set;}
+        public DateTime? SecondScanTime {get; set;}
         public AttendanceStatus Status {get; set;}
         public string StudentName {get; set;} = string.Empty;
         public DateTime CreatedDate {get; set;}

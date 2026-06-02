@@ -4,7 +4,7 @@
 }
 
 <!DOCTYPE html>
-<html lang="en">
+<html lang="@System.Globalization.CultureInfo.CurrentUICulture.Name">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -241,7 +241,7 @@
                     <i class="fas fa-user-circle"></i> Login
                 </a>
 
-                <a asp-controller="Instructor" asp-action="RegisterInstructor" class="btn-portal">
+                <a asp-controller="Instructor" asp-action="RequestInstructorAccess" class="btn-portal">
                     <i class="fas fa-chalkboard-teacher"></i> Register as Instructor
                 </a>
 
@@ -252,7 +252,7 @@
 
             <div class="portal-footer">
                 <div>&copy; @DateTime.Now.Year MITC QRCode Attendance.</div>
-                <div class="mt-1">Built with heart <span class="heart-pulse">❤️‍🔥❤️‍🔥❤️‍🔥❤️‍🔥❤️‍🔥</span> by BAKARI Yazid Akanni <span class="heart-pulse">❤️‍🔥❤️‍🔥❤️‍🔥❤️‍🔥❤️‍🔥</span>.</div>
+                <div class="mt-1">Built with heart <span class="heart-pulse">❤️‍🔥❤️‍🔥❤️‍🔥</span> by BAKARI Yazid Akanni <span class="heart-pulse">❤️‍🔥❤️‍🔥❤️‍🔥</span>.</div>
             </div>
 
         </div>

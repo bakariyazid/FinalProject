@@ -32,7 +32,6 @@ namespace QRCodeAttendance.Implementation.Services
 
         public async Task<BaseResponse<bool>> MarkAttendance(Guid sessionId, string qrCode)
         {
-
             var student = await _studentRepository.Get<Student>(s => s.UserId == _currentUserService.UserId);
             if (student == null)
                 return new BaseResponse<bool>
@@ -52,10 +51,14 @@ namespace QRCodeAttendance.Implementation.Services
                 };
 
             var now = DateTime.UtcNow.ToUniversalTime();
+            var firstScanStart = session.SessionStartTime;
+            var firstScanEnd = session.SessionStartTime.AddMinutes(25);
+            var secondScanStart = session.SessionEndTime.AddMinutes(-20);
+            var secondScanEnd = session.SessionEndTime.AddMinutes(-10);
+            var isFirstScanWindow = now >= firstScanStart && now <= firstScanEnd;
+            var isSecondScanWindow = now >= secondScanStart && now < secondScanEnd;
 
-            var qrHardExpiry = session.SessionEndTime.AddMinutes(-10);
-
-            if (now >= qrHardExpiry)
+            if (now >= secondScanEnd)
             {
                 session.IsActive = false;
                 session.QRCodeToken = null;
@@ -78,6 +81,13 @@ namespace QRCodeAttendance.Implementation.Services
                     Message = "Attendance is not open yet. Please wait until the class start time."
                 };
 
+            if (!isFirstScanWindow && !isSecondScanWindow)
+                return new BaseResponse<bool>
+                {
+                    Status = false,
+                    Message = $"No scan is active now. First scan is open for the first 25 minutes. Second scan opens from {secondScanStart.ToLocalTime():hh:mm tt} to {secondScanEnd.ToLocalTime():hh:mm tt}."
+                };
+
             if (string.IsNullOrWhiteSpace(session.QRCodeToken) || now >= session.QRCodeExpiry)
                 return new BaseResponse<bool>
                 {
@@ -92,38 +102,104 @@ namespace QRCodeAttendance.Implementation.Services
                     Message = "Invalid or expired QR Code" 
                 };
 
-            var lateThreshold = session.SessionStartTime.AddMinutes(45);
-            AttendanceStatus autoStatus = now <= lateThreshold
-                ? AttendanceStatus.Present
-                : AttendanceStatus.Late;
+            var attendance = await _attendanceRepository.Get<Attendance>(a => a.StudentId == studentId && a.SessionId == sessionId);
 
-            
-            var alreadyMarked = await _attendanceRepository.HasStudentMarkedAttendance(studentId, sessionId);
-            if (alreadyMarked)
-                return new BaseResponse<bool> { Status = false, Message = "You have already marked attendance" };
+            if (isFirstScanWindow)
+            {
+                if (attendance != null)
+                {
+                    if (attendance.FirstScanTime.HasValue)
+                        return new BaseResponse<bool>
+                        {
+                            Status = false,
+                            Message = attendance.SecondScanTime.HasValue
+                                ? "You have already completed both scans for this class."
+                                : "You have already completed the first scan. Wait for the second scan window."
+                        };
 
-            
-            var attendance = new Attendance
+                    attendance.FirstScanTime = now;
+                    attendance.ScanTime = now;
+                    attendance.Status = AttendanceStatus.Incomplete;
+                    attendance.UpdatedDate = now;
+                    _attendanceRepository.Update(attendance);
+                }
+                else
+                {
+                    attendance = CreateAttendance(student, session, now, AttendanceStatus.Incomplete);
+                    attendance.FirstScanTime = now;
+                    await _attendanceRepository.Add(attendance);
+                }
+
+                await _unitOfWork.SaveChangesAsync();
+
+                return new BaseResponse<bool>
+                {
+                    Status = true,
+                    Message = "First scan recorded. You must complete the second scan when it opens to be fully present.",
+                    Data = true
+                };
+            }
+
+            if (attendance == null || !attendance.FirstScanTime.HasValue || attendance.Status == AttendanceStatus.Absent)
+            {
+                if (attendance == null)
+                {
+                    attendance = CreateAttendance(student, session, now, AttendanceStatus.Absent);
+                    await _attendanceRepository.Add(attendance);
+                }
+                else
+                {
+                    attendance.Status = AttendanceStatus.Absent;
+                    attendance.ScanTime = now;
+                    attendance.UpdatedDate = now;
+                    _attendanceRepository.Update(attendance);
+                }
+
+                await _unitOfWork.SaveChangesAsync();
+
+                return new BaseResponse<bool>
+                {
+                    Status = false,
+                    Message = "Second scan rejected because you did not complete the first scan. You have been marked absent for this class."
+                };
+            }
+
+            if (attendance.SecondScanTime.HasValue)
+                return new BaseResponse<bool>
+                {
+                    Status = false,
+                    Message = "You have already completed both scans for this class."
+                };
+
+            attendance.SecondScanTime = now;
+            attendance.ScanTime = now;
+            attendance.Status = AttendanceStatus.Present;
+            attendance.UpdatedDate = now;
+            _attendanceRepository.Update(attendance);
+            await _unitOfWork.SaveChangesAsync();
+
+            return new BaseResponse<bool>
+            {
+                Status = true,
+                Message = "Second scan recorded. You are fully present for this class.",
+                Data = true
+            };
+        }
+
+        private static Attendance CreateAttendance(Student student, Session session, DateTime scanTime, AttendanceStatus status)
+        {
+            return new Attendance
             {
                 Id = Guid.NewGuid(),
-                StudentId = studentId,
-                SessionId = sessionId,
-                StudentName = student.FullName(), 
+                StudentId = student.Id,
+                SessionId = session.Id,
+                StudentName = student.FullName(),
                 CourseName = session.CourseName,
                 CourseCode = session.CourseCode,
-                ScanTime = DateTime.UtcNow.ToUniversalTime(),
-                Status = autoStatus,
-                CreatedDate = DateTime.UtcNow.ToUniversalTime()
-            };
-
-            await _attendanceRepository.Add(attendance);
-            await _unitOfWork.SaveChangesAsync(); 
-
-            return new BaseResponse<bool> 
-            { 
-                Status = true, 
-                Message = $"Successfully marked as {autoStatus}",
-                Data = true 
+                ScanTime = scanTime,
+                Status = status,
+                CreatedDate = scanTime,
+                UpdatedDate = scanTime
             };
         }
 
@@ -141,6 +217,9 @@ namespace QRCodeAttendance.Implementation.Services
                 CourseName = a.CourseName,
                 CourseCode = a.CourseCode,
                 Status = a.Status
+                ,
+                FirstScanTime = a.FirstScanTime,
+                SecondScanTime = a.SecondScanTime
             }).ToList();
         }
 
@@ -157,7 +236,9 @@ namespace QRCodeAttendance.Implementation.Services
                 CourseName = a.CourseName,
                 CourseCode = a.CourseCode,
                 ScanTime = a.ScanTime,
-                Status = a.Status
+                Status = a.Status,
+                FirstScanTime = a.FirstScanTime,
+                SecondScanTime = a.SecondScanTime
             }).ToList();
         }
 
@@ -174,7 +255,9 @@ namespace QRCodeAttendance.Implementation.Services
                 CourseName = a.CourseName,
                 CourseCode = a.CourseCode,
                 ScanTime = a.ScanTime,
-                Status = a.Status
+                Status = a.Status,
+                FirstScanTime = a.FirstScanTime,
+                SecondScanTime = a.SecondScanTime
             }).ToList();
         }
 
@@ -194,7 +277,9 @@ namespace QRCodeAttendance.Implementation.Services
                 CourseName = attendance.CourseName,
                 CourseCode = attendance.CourseCode,
                 ScanTime = attendance.ScanTime,
-                Status = attendance.Status
+                Status = attendance.Status,
+                FirstScanTime = attendance.FirstScanTime,
+                SecondScanTime = attendance.SecondScanTime
             };
         }
     
@@ -223,7 +308,9 @@ namespace QRCodeAttendance.Implementation.Services
                     CourseCode = a.ClassSession?.CourseCode ?? "Unknown",
                     SessionId = a.SessionId,
                     ScanTime = a.ScanTime,
-                    Status = a.Status
+                    Status = a.Status,
+                    FirstScanTime = a.FirstScanTime,
+                    SecondScanTime = a.SecondScanTime
                 }).ToList();
             }
             
@@ -268,7 +355,9 @@ namespace QRCodeAttendance.Implementation.Services
                 CourseCode = a.CourseCode,
                 SessionId = a.SessionId,
                 ScanTime = a.ScanTime,
-                Status = a.Status
+                Status = a.Status,
+                FirstScanTime = a.FirstScanTime,
+                SecondScanTime = a.SecondScanTime
             }).ToList();
 
             return result;

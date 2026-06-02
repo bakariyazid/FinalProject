@@ -1,0 +1,428 @@
+@model QRCodeAttendance.Models.DTOs.Admin.AdminInvitationDashboardDto
+
+@{
+    ViewData["Title"] = "Admin Dashboard";
+    var pendingCount = Model.PendingRequests.Count;
+    var activeCount = Model.RecentInvitations.Count(i => !i.IsUsed && i.ExpiryDate > DateTime.UtcNow && i.Status.ToString() == "Approved");
+    var usedCount = Model.RecentInvitations.Count(i => i.IsUsed);
+}
+
+<style>
+    .admin-invitation-shell {
+        width: 100vw;
+        min-height: calc(100dvh - var(--portal-header-height) - var(--portal-footer-height));
+        margin-left: calc(50% - 50vw);
+        margin-right: calc(50% - 50vw);
+        padding: clamp(1rem, 3vw, 2rem);
+        background:
+            linear-gradient(135deg, rgba(3, 7, 18, 0.9), rgba(15, 23, 42, 0.72)),
+            url('/images/attendance-portal-bg.svg') center/cover fixed;
+        color: #0f172a;
+    }
+
+    .admin-dashboard {
+        width: min(1180px, 100%);
+        margin: 0 auto;
+    }
+
+    .admin-hero {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        align-items: end;
+        gap: 1rem;
+        margin-bottom: 1rem;
+        color: #ffffff;
+    }
+
+    .admin-kicker {
+        margin: 0 0 0.35rem;
+        color: #a7f3d0;
+        font-size: 0.78rem;
+        font-weight: 800;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+    }
+
+    .admin-title {
+        margin: 0;
+        font-size: clamp(1.8rem, 5vw, 3.35rem);
+        font-weight: 900;
+        line-height: 1.04;
+        letter-spacing: 0;
+    }
+
+    .admin-subtitle {
+        max-width: 760px;
+        margin: 0.75rem 0 0;
+        color: rgba(255, 255, 255, 0.76);
+        font-size: clamp(0.95rem, 2vw, 1.05rem);
+        line-height: 1.65;
+    }
+
+    .admin-logout {
+        min-height: 44px;
+        border: 1px solid rgba(255, 255, 255, 0.28);
+        border-radius: 8px;
+        color: #ffffff;
+        background: rgba(255, 255, 255, 0.1);
+        font-weight: 800;
+        padding: 0 1rem;
+        backdrop-filter: blur(14px);
+    }
+
+    .admin-logout:hover {
+        color: #0f172a;
+        background: #ffffff;
+    }
+
+    .admin-stats {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 0.75rem;
+        margin-bottom: 1rem;
+    }
+
+    .admin-stat,
+    .admin-panel {
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.94);
+        box-shadow: 0 24px 70px rgba(2, 6, 23, 0.28);
+    }
+
+    .admin-stat {
+        padding: 1rem;
+    }
+
+    .admin-stat span {
+        display: block;
+        color: #64748b;
+        font-size: 0.78rem;
+        font-weight: 800;
+        text-transform: uppercase;
+    }
+
+    .admin-stat strong {
+        display: block;
+        margin-top: 0.25rem;
+        color: #0f172a;
+        font-size: 1.8rem;
+        line-height: 1;
+    }
+
+    .admin-grid {
+        display: block;
+    }
+
+    .admin-panel-header {
+        padding: 1rem 1rem 0.85rem;
+        border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+    }
+
+    .admin-panel-header h2 {
+        margin: 0;
+        font-size: 1rem;
+        font-weight: 900;
+    }
+
+    .admin-panel-header p {
+        margin: 0.35rem 0 0;
+        color: #64748b;
+        font-size: 0.88rem;
+        line-height: 1.5;
+    }
+
+    .admin-panel-body {
+        padding: 1rem;
+    }
+
+    .admin-control {
+        min-height: 48px;
+        border-radius: 8px;
+        border: 1px solid rgba(15, 23, 42, 0.14);
+    }
+
+    .admin-primary-btn {
+        min-height: 48px;
+        border: 0;
+        border-radius: 8px;
+        background: #0f766e;
+        color: #ffffff;
+        font-weight: 900;
+    }
+
+    .admin-primary-btn:hover {
+        background: #115e59;
+        color: #ffffff;
+    }
+
+    .admin-table {
+        margin: 0;
+    }
+
+    .admin-table th {
+        color: #475569;
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        white-space: nowrap;
+    }
+
+    .admin-table td {
+        vertical-align: middle;
+    }
+
+    .admin-code {
+        display: inline-flex;
+        min-height: 34px;
+        align-items: center;
+        border-radius: 8px;
+        background: #ecfeff;
+        color: #0f766e;
+        font-weight: 900;
+        padding: 0 0.65rem;
+    }
+
+    .admin-whatsapp-btn {
+        display: inline-flex;
+        min-height: 34px;
+        align-items: center;
+        justify-content: center;
+        border-radius: 8px;
+        background: #16a34a;
+        color: #ffffff;
+        font-size: 0.82rem;
+        font-weight: 900;
+        padding: 0 0.75rem;
+        text-decoration: none;
+        white-space: nowrap;
+    }
+
+    .admin-whatsapp-btn:hover {
+        background: #15803d;
+        color: #ffffff;
+    }
+
+    .admin-empty {
+        padding: 2rem 1rem;
+        color: #64748b;
+        text-align: center;
+    }
+
+    .admin-action-row {
+        display: flex;
+        justify-content: flex-end;
+        gap: 0.5rem;
+    }
+
+    .admin-action-row .btn {
+        border-radius: 8px;
+        font-weight: 800;
+    }
+
+    .admin-recent {
+        margin-top: 1rem;
+    }
+
+    @@media (max-width: 991.98px) {
+        .admin-hero {
+            grid-template-columns: 1fr;
+        }
+
+        .admin-logout {
+            width: 100%;
+        }
+    }
+
+    @@media (max-width: 720px) {
+        .admin-invitation-shell {
+            padding: 1rem 0.75rem;
+            background-attachment: scroll;
+        }
+
+        .admin-stats {
+            grid-template-columns: 1fr;
+        }
+
+        .admin-panel-header,
+        .admin-panel-body {
+            padding: 0.9rem;
+        }
+
+        .admin-action-row {
+            justify-content: stretch;
+            flex-direction: column;
+        }
+
+        .admin-action-row form,
+        .admin-action-row .btn {
+            width: 100%;
+        }
+    }
+</style>
+
+<section class="admin-invitation-shell">
+    <div class="admin-dashboard">
+        <div class="admin-hero">
+            <div>
+                <p class="admin-kicker">Admin Control</p>
+                <h1 class="admin-title">Instructor Invitations</h1>
+                <p class="admin-subtitle">Review instructor access requests, approve verified applicants, and issue registration codes for the QR attendance portal.</p>
+            </div>
+            <form asp-controller="User" asp-action="Logout" method="post">
+                @Html.AntiForgeryToken()
+                <button type="submit" class="admin-logout">Logout</button>
+            </form>
+        </div>
+
+        @if (TempData["Alert"] != null)
+        {
+            var alertType = TempData["AlertType"]?.ToString() ?? "info";
+            <div class="alert alert-@alertType border-0 shadow-sm">
+                @TempData["Alert"]
+            </div>
+        }
+
+        <div class="admin-stats">
+            <div class="admin-stat">
+                <span>Pending Review</span>
+                <strong>@pendingCount</strong>
+            </div>
+            <div class="admin-stat">
+                <span>Active Codes</span>
+                <strong>@activeCount</strong>
+            </div>
+            <div class="admin-stat">
+                <span>Used Codes</span>
+                <strong>@usedCount</strong>
+            </div>
+        </div>
+
+        <div class="admin-grid">
+            <section class="admin-panel">
+                <div class="admin-panel-header">
+                    <h2>Pending Instructor Requests</h2>
+                    <p>Approve only applicants you have confirmed as instructors.</p>
+                </div>
+
+                @if (Model.PendingRequests.Any())
+                {
+                    <div class="table-responsive">
+                        <table class="table admin-table align-middle">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Email</th>
+                                    <th>WhatsApp</th>
+                                    <th>Department</th>
+                                    <th class="text-end">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var request in Model.PendingRequests)
+                                {
+                                    <tr>
+                                        <td class="fw-bold">@request.FullName</td>
+                                        <td>@request.InstructorEmail</td>
+                                        <td>@request.WhatsAppNumber</td>
+                                        <td>@request.Department</td>
+                                        <td>
+                                            <div class="admin-action-row">
+                                                <form asp-controller="Admin" asp-action="ApproveInstructorRequest" method="post">
+                                                    @Html.AntiForgeryToken()
+                                                    <input type="hidden" name="id" value="@request.Id" />
+                                                    <button type="submit" class="btn btn-sm btn-success">Approve</button>
+                                                </form>
+                                                <form asp-controller="Admin" asp-action="RejectInstructorRequest" method="post">
+                                                    @Html.AntiForgeryToken()
+                                                    <input type="hidden" name="id" value="@request.Id" />
+                                                    <input type="hidden" name="reason" value="The applicant could not be verified as an instructor." />
+                                                    <button type="submit" class="btn btn-sm btn-outline-danger">Reject</button>
+                                                </form>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+                else
+                {
+                    <div class="admin-empty">No instructor access requests are waiting for review.</div>
+                }
+            </section>
+        </div>
+
+        <section class="admin-panel admin-recent">
+            <div class="admin-panel-header">
+                <h2>Recent Invitations</h2>
+                <p>Codes are tied to instructor email addresses and expire after one day.</p>
+            </div>
+
+            @if (Model.RecentInvitations.Any())
+            {
+                <div class="table-responsive">
+                    <table class="table admin-table align-middle">
+                        <thead>
+                            <tr>
+                                <th>Email</th>
+                                <th>WhatsApp</th>
+                                <th>Code</th>
+                                <th>Expires</th>
+                                <th>Status</th>
+                                <th class="text-end">Share</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var invitation in Model.RecentInvitations)
+                            {
+                                var expired = invitation.ExpiryDate <= DateTime.UtcNow;
+                                var badgeClass = invitation.Status.ToString() == "Rejected" ? "bg-danger" : invitation.IsUsed ? "bg-secondary" : expired ? "bg-warning text-dark" : "bg-success";
+                                var status = invitation.Status.ToString() == "Rejected" ? "Rejected" : invitation.IsUsed ? "Used" : expired ? "Expired" : invitation.Status.ToString();
+                                var instructorName = string.IsNullOrWhiteSpace(invitation.FullName) ? string.Empty : $" {invitation.FullName.Trim()}";
+                                var whatsappMessage = $"Hi Instructor{instructorName}, welcome to MITC QRCode Attendance. Your instructor registration code is {invitation.InvitationCode}";
+                                var whatsappNumber = new string((invitation.WhatsAppNumber ?? string.Empty).Where(char.IsDigit).ToArray());
+                                var whatsappUrl = $"https://wa.me/{whatsappNumber}?text={Uri.EscapeDataString(whatsappMessage)}";
+
+                                <tr>
+                                    <td class="fw-bold">@invitation.InstructorEmail</td>
+                                    <td>@invitation.WhatsAppNumber</td>
+                                    <td>
+                                        @if (!string.IsNullOrWhiteSpace(invitation.InvitationCode))
+                                        {
+                                            <span class="admin-code">@invitation.InvitationCode</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">Not issued</span>
+                                        }
+                                    </td>
+                                    <td>@invitation.ExpiryDate.ToLocalTime().ToString("MMM dd, yyyy h:mm tt")</td>
+                                    <td><span class="badge @badgeClass rounded-pill px-3">@status</span></td>
+                                    <td class="text-end">
+                                        @if (!string.IsNullOrWhiteSpace(invitation.InvitationCode) && !string.IsNullOrWhiteSpace(whatsappNumber) && invitation.Status.ToString() == "Approved")
+                                        {
+                                            <a class="admin-whatsapp-btn" href="@whatsappUrl" target="_blank" rel="noopener">WhatsApp</a>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">Unavailable</span>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <div class="admin-empty">No instructor invitation codes have been generated yet.</div>
+            }
+        </section>
+    </div>
+</section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

@@ -258,22 +258,7 @@ namespace QRCodeAttendance.Controllers
 
         
 
-        // GET: /Session
-        public async Task<IActionResult> ByDate(DateTime date)
-        {
-            var response = await _sessionService.GetSessionsByDate(date);
-
-            if (!response.Status)
-            {
-                _logger.LogError(response.Message);
-                return View("Error", response.Message);
-            }
-
-            return View("Index", response.Data);
-        }
-
-
-        [HttpGet]
+         [HttpGet]
         public async Task<IActionResult> Sessions()
         {
             try

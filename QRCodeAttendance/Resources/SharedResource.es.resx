@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="AlreadyHaveCode" xml:space="preserve"><value>¿Ya tienes un código?</value></data>
+  <data name="AdminReviewed" xml:space="preserve"><value>Revisado por el administrador</value></data>
+  <data name="Department" xml:space="preserve"><value>Departamento</value></data>
+  <data name="FullName" xml:space="preserve"><value>Nombre completo</value></data>
+  <data name="Home" xml:space="preserve"><value>Inicio</value></data>
+  <data name="Instructor" xml:space="preserve"><value>Instructor</value></data>
+  <data name="InstructorAccessDetails" xml:space="preserve"><value>Detalles de acceso del instructor</value></data>
+  <data name="InstructorAccessRequest" xml:space="preserve"><value>Solicitud de acceso del instructor</value></data>
+  <data name="InstructorEmail" xml:space="preserve"><value>Email del instructor</value></data>
+  <data name="InstructorVerification" xml:space="preserve"><value>Verificación del instructor</value></data>
+  <data name="Login" xml:space="preserve"><value>Iniciar sesión</value></data>
+  <data name="QrSessionsEnabled" xml:space="preserve"><value>Sesiones QR activadas</value></data>
+  <data name="RequestAccessHero" xml:space="preserve"><value>Solicita acceso para enseñar con asistencia por QR.</value></data>
+  <data name="RequestAccessIntro" xml:space="preserve"><value>Envía tu nombre, email, número de WhatsApp y departamento. Un administrador revisa la solicitud y comparte un código de registro seguro con los instructores aprobados.</value></data>
+  <data name="RequestFormHint" xml:space="preserve"><value>Usa el mismo email que usarás al registrar tu cuenta de instructor.</value></data>
+  <data name="RequestInstructorAccess" xml:space="preserve"><value>Solicitar acceso de instructor</value></data>
+  <data name="SelectDepartment" xml:space="preserve"><value>Selecciona departamento</value></data>
+  <data name="Student" xml:space="preserve"><value>Estudiante</value></data>
+  <data name="SubmitRequest" xml:space="preserve"><value>Enviar solicitud</value></data>
+  <data name="ToggleNavigation" xml:space="preserve"><value>Alternar navegación</value></data>
+  <data name="WhatsAppCodeIssued" xml:space="preserve"><value>Código enviado por WhatsApp</value></data>
+  <data name="WhatsAppNumber" xml:space="preserve"><value>Número de WhatsApp</value></data>
+</root>

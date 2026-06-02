@@ -27,10 +27,10 @@ namespace QRCodeAttendance.Identity
             if (user == null)
                 throw new ArgumentNullException(nameof(user));
 
+            var normalizedRoleName = roleName.Trim().ToLower();
             var role = await _qrCodeDbContext.Set<Role>()
-                .SingleAsync(r => r.Name == roleName, cancellationToken);
+                .SingleAsync(r => r.Name.ToLower() == normalizedRoleName, cancellationToken);
 
-            // Assign role to user
             user.RoleId = role.Id;
 
             _qrCodeDbContext.Update(user);

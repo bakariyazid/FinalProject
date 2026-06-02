@@ -22,6 +22,72 @@ namespace QRCodeAttendance.Migrations
 
             MySqlModelBuilderExtensions.AutoIncrementColumns(modelBuilder);
 
+            modelBuilder.Entity("QRCodeAttendance.Models.Entities.Admin", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("char(36)");
+
+                    b.Property<string>("Address")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<DateTime>("DateOfBirth")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("FirstName")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("Gender")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("LastName")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("PhoneNumber")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<DateTime>("UpdatedDate")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("char(36)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId")
+                        .IsUnique();
+
+                    b.ToTable("Admins");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("b231da64-78ef-49cd-ba12-0987654321ab"),
+                            Address = "Ogun State, Nigeria",
+                            CreatedDate = new DateTime(2026, 5, 30, 0, 0, 0, 0, DateTimeKind.Utc),
+                            DateOfBirth = new DateTime(1998, 3, 4, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Email = "admin@gmail.com",
+                            FirstName = "Admin",
+                            Gender = "Male",
+                            LastName = "QRCode",
+                            PhoneNumber = "+23470456780",
+                            UpdatedDate = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            UserId = new Guid("f47ac10b-58cc-4372-a567-0e02b2c3d479")
+                        });
+                });
+
             modelBuilder.Entity("QRCodeAttendance.Models.Entities.Attendance", b =>
                 {
                     b.Property<Guid>("Id")
@@ -126,6 +192,67 @@ namespace QRCodeAttendance.Migrations
                     b.ToTable("Instructors");
                 });
 
+            modelBuilder.Entity("QRCodeAttendance.Models.Entities.RegistrationInvitation", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("char(36)");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("Department")
+                        .HasColumnType("longtext");
+
+                    b.Property<DateTime>("ExpiryDate")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("FullName")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("InstructorEmail")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("InstructorIdentifier")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("InvitationCode")
+                        .HasColumnType("varchar(255)");
+
+                    b.Property<bool>("IsUsed")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<string>("RejectionReason")
+                        .HasColumnType("longtext");
+
+                    b.Property<DateTime?>("ReviewedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<DateTime>("UpdatedDate")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<DateTime?>("UsedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("WhatsAppNumber")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("InvitationCode")
+                        .IsUnique();
+
+                    b.ToTable("RegistrationInvitations");
+                });
+
             modelBuilder.Entity("QRCodeAttendance.Models.Entities.Role", b =>
                 {
                     b.Property<Guid>("Id")
@@ -153,15 +280,22 @@ namespace QRCodeAttendance.Migrations
                         new
                         {
                             Id = new Guid("c8f2e5ab-9f34-4b93-9b7c-1a5986d79e42"),
-                            CreatedDate = new DateTime(2026, 5, 11, 18, 0, 40, 742, DateTimeKind.Local).AddTicks(4532),
+                            CreatedDate = new DateTime(2026, 4, 25, 0, 0, 0, 0, DateTimeKind.Utc),
                             Name = "Student",
                             UpdatedDate = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified)
                         },
                         new
                         {
                             Id = new Guid("d9719e67-53f4-4f9c-bdb2-4c3956789abc"),
-                            CreatedDate = new DateTime(2026, 5, 11, 18, 0, 40, 742, DateTimeKind.Local).AddTicks(4551),
+                            CreatedDate = new DateTime(2026, 4, 25, 0, 0, 0, 0, DateTimeKind.Utc),
                             Name = "Instructor",
+                            UpdatedDate = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            Id = new Guid("a184ef12-34cd-56ef-78ab-9012345678cd"),
+                            CreatedDate = new DateTime(2026, 4, 25, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Name = "Admin",
                             UpdatedDate = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified)
                         });
                 });
@@ -299,6 +433,9 @@ namespace QRCodeAttendance.Migrations
                         .IsRequired()
                         .HasColumnType("longtext");
 
+                    b.Property<bool>("EmailConfirmed")
+                        .HasColumnType("tinyint(1)");
+
                     b.Property<string>("PasswordHash")
                         .IsRequired()
                         .HasColumnType("longtext");
@@ -318,6 +455,30 @@ namespace QRCodeAttendance.Migrations
                     b.HasIndex("RoleId");
 
                     b.ToTable("Users");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("f47ac10b-58cc-4372-a567-0e02b2c3d479"),
+                            CreatedDate = new DateTime(2025, 11, 10, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Email = "admin@gmail.com",
+                            EmailConfirmed = true,
+                            PasswordHash = "AQAAAAIAAYagAAAAEJjieFsJGM2Xgr+WpuS3juOABbBCvbqSvpym4WzP/SDMuvGz6qH+EFgm19l8SUHUGA==",
+                            RoleId = new Guid("a184ef12-34cd-56ef-78ab-9012345678cd"),
+                            UpdatedDate = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            UserName = "admin@gmail.com"
+                        });
+                });
+
+            modelBuilder.Entity("QRCodeAttendance.Models.Entities.Admin", b =>
+                {
+                    b.HasOne("QRCodeAttendance.Models.Entities.User", "User")
+                        .WithOne()
+                        .HasForeignKey("QRCodeAttendance.Models.Entities.Admin", "UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("QRCodeAttendance.Models.Entities.Attendance", b =>

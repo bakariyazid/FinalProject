@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using QRCodeAttendance.Interface.Services;
 using QRCodeAttendance.Models.DTOs.Instructor;
+using QRCodeAttendance.Models.DTOs.Admin;
 using QRCodeAttendance.Models.DTOs.Reports;
 using QRCodeAttendance.Models.DTOs.Session;
 using QRCodeAttendance.Models.Enums;
@@ -17,6 +18,7 @@ namespace QRCodeAttendance.Controllers
         private readonly ISessionService _sessionService;
         private readonly IStudentService _studentService;
         private readonly IReportService _reportService;
+        private readonly IAdminInvitationService _adminInvitationService;
         
 
         public InstructorController(
@@ -24,13 +26,15 @@ namespace QRCodeAttendance.Controllers
             IInstructorService instructorService,
             ISessionService sessionService,
             IStudentService studentService,
-            IReportService reportService) 
+            IReportService reportService,
+            IAdminInvitationService adminInvitationService) 
         {
             _logger = logger;
             _instructorService = instructorService;
             _sessionService = sessionService;
             _studentService = studentService;
             _reportService = reportService;
+            _adminInvitationService = adminInvitationService;
         }
 
         public IActionResult Index()
@@ -52,6 +56,36 @@ namespace QRCodeAttendance.Controllers
             TempData.Remove("Alert");
             TempData.Remove("AlertType");
             return View();
+        }
+
+        [HttpGet]
+        public IActionResult RequestInstructorAccess()
+        {
+            TempData.Remove("Alert");
+            TempData.Remove("AlertType");
+            return View();
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> RequestInstructorAccess(CreateInstructorAccessRequestModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                return View(model);
+            }
+
+            var response = await _adminInvitationService.SubmitInstructorAccessRequest(model);
+
+            TempData["Alert"] = response.Message;
+            TempData["AlertType"] = response.Status ? "success" : "danger";
+
+            if (!response.Status)
+            {
+                return View(model);
+            }
+
+            return RedirectToAction(nameof(RequestInstructorAccess));
         }
 
         [HttpPost]

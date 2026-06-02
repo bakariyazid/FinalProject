@@ -1,7 +1,9 @@
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using Microsoft.AspNetCore.Localization;
 using Microsoft.EntityFrameworkCore;
+using System.Globalization;
 using QRCodeAttendance.Identity;
 using QRCodeAttendance.Implementation.BackgroundJobs;
 using QRCodeAttendance.Implementation.Repositories;
@@ -66,7 +68,32 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
     config.SlidingExpiration = true;
 });
 
-builder.Services.AddControllersWithViews();
+builder.Services.AddLocalization(options => options.ResourcesPath = "Resources");
+
+var supportedCultures = new[]
+{
+    new CultureInfo("en"),
+    new CultureInfo("en-NG"),
+    new CultureInfo("yo"),
+    new CultureInfo("yo-NG"),
+    new CultureInfo("ha"),
+    new CultureInfo("ha-NG"),
+    new CultureInfo("ig"),
+    new CultureInfo("ig-NG"),
+    new CultureInfo("fr"),
+    new CultureInfo("es")
+};
+
+builder.Services.Configure<RequestLocalizationOptions>(options =>
+{
+    options.DefaultRequestCulture = new RequestCulture("en-NG");
+    options.SupportedCultures = supportedCultures;
+    options.SupportedUICultures = supportedCultures;
+});
+
+builder.Services.AddControllersWithViews()
+    .AddViewLocalization()
+    .AddDataAnnotationsLocalization();
 builder.Services.AddAuthorization();
 
 var app = builder.Build();
@@ -84,6 +111,7 @@ if (!app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();
+app.UseRequestLocalization();
 app.UseRouting();
 
 app.UseAuthentication();

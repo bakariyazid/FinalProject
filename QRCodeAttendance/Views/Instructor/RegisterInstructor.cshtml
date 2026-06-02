@@ -7,7 +7,7 @@
 }
 
 <!DOCTYPE html>
-<html lang="en">
+<html lang="@System.Globalization.CultureInfo.CurrentUICulture.Name">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -202,6 +202,12 @@
                                 <label class="form-label">Institutional Email</label>
                                 <input asp-for="Email" type="email" class="form-control" placeholder="name@university.edu" required />
                                 <span asp-validation-for="Email" class="text-danger"></span>
+                            </div>
+
+                            <div class="col-12">
+                                <label class="form-label">Admin Invitation Code</label>
+                                <input asp-for="InvitationCode" class="form-control text-uppercase" placeholder="INS-123456" required />
+                                <span asp-validation-for="InvitationCode" class="text-danger"></span>
                             </div>
 
                             <div class="col-md-6">

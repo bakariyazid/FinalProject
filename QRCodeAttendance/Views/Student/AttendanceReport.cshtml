@@ -8,7 +8,7 @@
 }
 
 <!DOCTYPE html>
-<html lang="en">
+<html lang="@System.Globalization.CultureInfo.CurrentUICulture.Name">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -283,7 +283,8 @@
                             </div>
                             <div class="row-item">
                                 <span>Class Time</span>
-                                <strong>@record.SessionStartTime.ToLocalTime().ToString("MMM dd, hh:mm tt") - @record.SessionEndTime.ToLocalTime().ToString("hh:mm tt")</strong>
+                                <strong>@record.SessionStartTime.ToLocalTime().ToString("MMM dd, hh:mm tt") -
+                                    @record.SessionEndTime.ToLocalTime().ToString("MMM dd, hh:mm tt")</strong>
                             </div>
                             <div class="row-item">
                                 <span>Scan Time</span>

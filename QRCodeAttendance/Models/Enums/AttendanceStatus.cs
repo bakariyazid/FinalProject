@@ -8,6 +8,7 @@ namespace QRCodeAttendance.Models.Enums
         Present,
         Absent,
         Late,
+        Incomplete,
         Excused
 
     }

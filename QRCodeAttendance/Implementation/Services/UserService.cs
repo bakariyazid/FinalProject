@@ -101,6 +101,11 @@ namespace QRCodeAttendance.Implementation.Services
                     response.FullName = user.Instructor.FullName();
                     response.InstructorId = user.Instructor.Id;
                 }
+                else if (role == "Admin")
+                {
+                    response.FirstName = "Admin";
+                    response.FullName = "System Admin";
+                }
                 else
                 {
                     return new BaseResponse<LoginResponseModel>

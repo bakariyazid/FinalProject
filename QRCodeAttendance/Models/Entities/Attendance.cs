@@ -12,6 +12,8 @@ namespace QRCodeAttendance.Models.Entities
         public Guid StudentId {get; set;}
         public Guid SessionId {get; set;}
         public DateTime ScanTime {get; set;}
+        public DateTime? FirstScanTime {get; set;}
+        public DateTime? SecondScanTime {get; set;}
         public required string StudentName {get; set;}
         public required string CourseName {get; set;}
         public required string CourseCode {get; set;}

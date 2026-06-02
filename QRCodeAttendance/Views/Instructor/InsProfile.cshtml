@@ -7,7 +7,7 @@
 }
 
 <!DOCTYPE html>
-<html lang="en">
+<html lang="@System.Globalization.CultureInfo.CurrentUICulture.Name">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -300,7 +300,7 @@
             </div>
 
             
-            <h3 class="fw-800 mb-1">Dr. @Model.LastName</h3>
+            <h3 class="fw-800 mb-1">Eng. @Model.LastName</h3>
             <p class="text-dim small mb-4">Instructor ID: #INST-@(Model.LastName.Substring(0,2).ToUpper())-2024</p>
 
             <ul class="nav-menu">

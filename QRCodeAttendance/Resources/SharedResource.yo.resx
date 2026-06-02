@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="AlreadyHaveCode" xml:space="preserve"><value>Ṣe o ti ni koodu tẹlẹ?</value></data>
+  <data name="AdminReviewed" xml:space="preserve"><value>Admin ti ṣayẹwo</value></data>
+  <data name="Department" xml:space="preserve"><value>Ẹka</value></data>
+  <data name="FullName" xml:space="preserve"><value>Orukọ kikun</value></data>
+  <data name="Home" xml:space="preserve"><value>Ile</value></data>
+  <data name="Instructor" xml:space="preserve"><value>Olukọ</value></data>
+  <data name="InstructorAccessDetails" xml:space="preserve"><value>Alaye iwọle olukọ</value></data>
+  <data name="InstructorAccessRequest" xml:space="preserve"><value>Ibere iwọle olukọ</value></data>
+  <data name="InstructorEmail" xml:space="preserve"><value>Imeeli olukọ</value></data>
+  <data name="InstructorVerification" xml:space="preserve"><value>Ìjẹrisi olukọ</value></data>
+  <data name="Login" xml:space="preserve"><value>Wọle</value></data>
+  <data name="QrSessionsEnabled" xml:space="preserve"><value>Awọn igba QR ṣiṣẹ</value></data>
+  <data name="RequestAccessHero" xml:space="preserve"><value>Beere iwọle lati kọ pẹlu attendance QR.</value></data>
+  <data name="RequestAccessIntro" xml:space="preserve"><value>Fi orukọ, imeeli, nọmba WhatsApp ati ẹka rẹ ranṣẹ. Admin yoo ṣayẹwo ibeere naa ki o pin koodu iforukọsilẹ ailewu fun awọn olukọ ti a fọwọsi.</value></data>
+  <data name="RequestFormHint" xml:space="preserve"><value>Lo imeeli kanna ti iwọ yoo lo nigba iforukọsilẹ akọọlẹ olukọ rẹ.</value></data>
+  <data name="RequestInstructorAccess" xml:space="preserve"><value>Beere iwọle olukọ</value></data>
+  <data name="SelectDepartment" xml:space="preserve"><value>Yan ẹka</value></data>
+  <data name="Student" xml:space="preserve"><value>Akẹkọ</value></data>
+  <data name="SubmitRequest" xml:space="preserve"><value>Fi ibeere ranṣẹ</value></data>
+  <data name="ToggleNavigation" xml:space="preserve"><value>Yi navigation pada</value></data>
+  <data name="WhatsAppCodeIssued" xml:space="preserve"><value>Koodu WhatsApp ti jade</value></data>
+  <data name="WhatsAppNumber" xml:space="preserve"><value>Nọmba WhatsApp</value></data>
+</root>
