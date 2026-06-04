@@ -12,8 +12,8 @@ using QRCodeAttendance.Persistence.QRCodeAttendanceDb;
 namespace QRCodeAttendance.Migrations
 {
     [DbContext(typeof(QRCodeDbContext))]
-    [Migration("20260603134131_AddQrCodeTokenHistory")]
-    partial class AddQrCodeTokenHistory
+    [Migration("20260604222409_First")]
+    partial class First
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -138,7 +138,8 @@ namespace QRCodeAttendance.Migrations
 
                     b.HasIndex("SessionId");
 
-                    b.HasIndex("StudentId");
+                    b.HasIndex("StudentId", "SessionId")
+                        .IsUnique();
 
                     b.ToTable("Attendances");
                 });

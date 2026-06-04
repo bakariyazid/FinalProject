@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace QRCodeAttendance.Migrations
 {
     /// <inheritdoc />
-    public partial class first : Migration
+    public partial class First : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -252,6 +252,8 @@ namespace QRCodeAttendance.Migrations
                     StudentId = table.Column<Guid>(type: "char(36)", nullable: false, collation: "ascii_general_ci"),
                     SessionId = table.Column<Guid>(type: "char(36)", nullable: false, collation: "ascii_general_ci"),
                     ScanTime = table.Column<DateTime>(type: "datetime(6)", nullable: false),
+                    FirstScanTime = table.Column<DateTime>(type: "datetime(6)", nullable: true),
+                    SecondScanTime = table.Column<DateTime>(type: "datetime(6)", nullable: true),
                     StudentName = table.Column<string>(type: "longtext", nullable: false)
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     CourseName = table.Column<string>(type: "longtext", nullable: false)
@@ -276,6 +278,31 @@ namespace QRCodeAttendance.Migrations
                         name: "FK_Attendances_Students_StudentId",
                         column: x => x.StudentId,
                         principalTable: "Students",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                })
+                .Annotation("MySql:CharSet", "utf8mb4");
+
+            migrationBuilder.CreateTable(
+                name: "QRCodeTokenHistories",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "char(36)", nullable: false, collation: "ascii_general_ci"),
+                    SessionId = table.Column<Guid>(type: "char(36)", nullable: false, collation: "ascii_general_ci"),
+                    Token = table.Column<string>(type: "varchar(64)", maxLength: 64, nullable: false)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    ValidFrom = table.Column<DateTime>(type: "datetime(6)", nullable: false),
+                    ValidUntil = table.Column<DateTime>(type: "datetime(6)", nullable: false),
+                    CreatedDate = table.Column<DateTime>(type: "datetime(6)", nullable: false),
+                    UpdatedDate = table.Column<DateTime>(type: "datetime(6)", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_QRCodeTokenHistories", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_QRCodeTokenHistories_Sessions_SessionId",
+                        column: x => x.SessionId,
+                        principalTable: "Sessions",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 })
@@ -313,14 +340,21 @@ namespace QRCodeAttendance.Migrations
                 column: "SessionId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Attendances_StudentId",
+                name: "IX_Attendances_StudentId_SessionId",
                 table: "Attendances",
-                column: "StudentId");
+                columns: new[] { "StudentId", "SessionId" },
+                unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "IX_Instructors_UserId",
                 table: "Instructors",
                 column: "UserId",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_QRCodeTokenHistories_SessionId_Token",
+                table: "QRCodeTokenHistories",
+                columns: new[] { "SessionId", "Token" },
                 unique: true);
 
             migrationBuilder.CreateIndex(
@@ -362,13 +396,16 @@ namespace QRCodeAttendance.Migrations
                 name: "Attendances");
 
             migrationBuilder.DropTable(
+                name: "QRCodeTokenHistories");
+
+            migrationBuilder.DropTable(
                 name: "RegistrationInvitations");
 
             migrationBuilder.DropTable(
-                name: "Sessions");
+                name: "Students");
 
             migrationBuilder.DropTable(
-                name: "Students");
+                name: "Sessions");
 
             migrationBuilder.DropTable(
                 name: "Instructors");

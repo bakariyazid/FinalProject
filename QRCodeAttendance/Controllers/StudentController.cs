@@ -313,7 +313,7 @@ namespace QRCodeAttendance.Controllers
             content.AppendLine("48 276 516 158 re S");
             AppendText(content, 74, 408, "F2", 13, "0.16 0.29 0.62 rg", "Class Details");
             AppendLabelValue(content, 378, "Course Code", report.CourseCode);
-            AppendLabelValue(content, 352, "Instructor", report.InstructorName);
+            AppendLabelValue(content, 352, "Instructor", $"ENG {report.InstructorName}");
             AppendLabelValue(content, 326, "Class Start", report.SessionStartTime.ToLocalTime().ToString("MMM dd, yyyy hh:mm tt"));
             AppendLabelValue(content, 300, "Class End", report.SessionEndTime.ToLocalTime().ToString("MMM dd, yyyy hh:mm tt"));
 
