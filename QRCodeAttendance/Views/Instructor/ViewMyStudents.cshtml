@@ -326,7 +326,7 @@
                             <th class="text-black-50">Matric Number</th>
                             <th class="text-black-50">Gender</th>
                             <th class="text-black-50">Level</th>
-                            <th class="text-center text-black-50">Report</th>
+                            @* <th class="text-center text-black-50">Report</th> *@
                         </tr>
                     </thead>
                     <tbody>
@@ -348,7 +348,7 @@
                                     <td data-label="Level">
                                         <span class="level-badge fw-semibold">@student.StudentLevel.GetDescription()</span>
                                     </td>
-                                    <td class="text-center" data-label="Report">
+                                    @* <td class="text-center" data-label="Report">
                                         <div class="d-flex justify-content-center">
                                             <a asp-controller="Student" asp-action="AttendanceReport" asp-route-id="@student.StudentId" 
                                                class="btn-action" title="View Full Report">
@@ -356,7 +356,7 @@
                                                 <span>View Report</span>
                                             </a>
                                         </div>
-                                    </td>
+                                    </td>*@
                                 </tr>
                             }
                         }

@@ -185,35 +185,6 @@
     </div>
 
     <div class="row g-4">
-        <div class="col-lg-7">
-            <div class="glass-panel h-100">
-                <h5 class="fw-bold mb-4">Attendance Volatility</h5>
-                <canvas id="reportChart" height="280"></canvas>
-            </div>
-        </div>
-
-        <div class="col-lg-5">
-            <div class="glass-panel h-100">
-                <h5 class="fw-bold mb-4 text-danger">Students at Risk (< 75%)</h5>
-                <div class="list-group list-group-flush bg-transparent">
-                    @foreach (var student in Model.AtRiskStudents)
-                    {
-                        var studentName = string.IsNullOrWhiteSpace(student.Name) ? "Unknown Student" : student.Name;
-                        <div class="list-group-item bg-transparent border-0 px-0 d-flex align-items-center justify-content-between">
-                            <div class="d-flex align-items-center gap-3">
-                                <div class="avatar-sm">@studentName.Substring(0, 1)</div>
-                                <div>
-                                    <div class="fw-bold small">@studentName</div>
-                                    <div class="text-muted" style="font-size: 0.7rem;">ID: @student.RegNumber</div>
-                                </div>
-                            </div>
-                            <span class="badge rounded-pill bg-danger bg-opacity-10 text-danger fw-bold">@student.AttendanceRate%</span>
-                        </div>
-                    }
-                </div>
-            </div>
-        </div>
-
         <div class="col-12">
             <div class="glass-panel">
                 <h5 class="fw-bold mb-4">Detailed Attendance Log</h5>
@@ -259,34 +230,3 @@
         </div>
     </div>
 </div>
-
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script>
-    const ctx = document.getElementById('reportChart').getContext('2d');
-    new Chart(ctx, {
-        type: 'bar',
-        data: {
-            labels: @Html.Raw(Json.Serialize(Model.DailyStats.Select(s => s.Date.ToString("dd/MM")))),
-            datasets: [{
-                label: 'Present Students',
-                data: @Html.Raw(Json.Serialize(Model.DailyStats.Select(s => s.Count))),
-                backgroundColor: '#6366f1',
-                borderRadius: 8,
-                barThickness: 20
-            }]
-        },
-        options: {
-            responsive: true,
-            plugins: { legend: { display: false } },
-            scales: {
-                y: { 
-                    beginAtZero: true, 
-                    grid: { borderDash: } 
-                },
-                x: { 
-                    grid: { display: false } 
-                }
-            }
-        }
-    });
-</script>

@@ -169,7 +169,7 @@ namespace QRCodeAttendance.Implementation.Services
                     return new BaseResponse<SessionDto>
                     {
                         Status = false,
-                        Message = $"No scan window is active. The second scan opens at {secondScanStart.ToLocalTime():hh:mm tt}.",
+                        Message = $"Please wait for the second scan time. The second scan opens at {secondScanStart.ToLocalTime():hh:mm tt}.",
                         Data = MapSessionToDto(session)
                     };
                 }

@@ -17,7 +17,6 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
     
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
 <style>
@@ -616,21 +615,12 @@
         </header>
 
         <div class="row g-4 mb-4">
-            <div class="col-md-6 col-xl-6">
+            <div class="col-md-6 col-xl-4">
                 <div class="stat-card">
                     <div class="icon-box icon-blue"><i class="fa fa-layer-group"></i></div>
                     <div>
                         <h6 class="text-muted mb-0 small uppercase">Total Sessions</h6>
                         <h2 class="fw-bold mb-0">@(Model?.TotalSessions ?? 0)</h2>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-6 col-xl-6">
-                <div class="stat-card">
-                    <div class="icon-box icon-purple"><i class="fa fa-users-check"></i></div>
-                    <div>
-                        <h6 class="text-muted mb-0 small uppercase">Total Attendances</h6>
-                        <h2 class="fw-bold mb-0">@(Model?.TotalAttendances ?? 0)</h2>
                     </div>
                 </div>
             </div>
@@ -713,40 +703,6 @@
     </div>*@
 
     <script>
-        // Chart Implementation
-        const attendanceChart = document.getElementById('attendanceChart');
-        if (attendanceChart) {
-            const ctx = attendanceChart.getContext('2d');
-            new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: @Html.Raw(Json.Serialize(sessions.Select(s => s.CourseCode))),
-                    datasets: [{
-                        label: 'Students Present',
-                        data: @Html.Raw(Json.Serialize(Model?.AttendanceStats ?? new List<int>())),
-                        borderColor: '#6366f1',
-                        tension: 0.4,
-                        fill: true,
-                        backgroundColor: 'rgba(99, 102, 241, 0.1)',
-                        pointBackgroundColor: '#6366f1',
-                        pointRadius: 5
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: { display: false },
-                        tooltip: { mode: 'index', intersect: false }
-                    },
-                    scales: {
-                        y: { beginAtZero: true, grid: { display: false } },
-                        x: { grid: { display: false } }
-                    }
-                }
-            });
-        }
-
         function generateQR(token, expiry){
             document.getElementById("qrcode").innerHTML = "";
             new QRCode(document.getElementById("qrcode"), {

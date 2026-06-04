@@ -235,67 +235,126 @@ namespace QRCodeAttendance.Controllers
                 return BadRequest("PDF download is only available after both scans are completed.");
             }
 
-            var pdfBytes = BuildAttendancePdf(response.Data);
+            var logoPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "images", "mitc-logo.jpg");
+            var pdfBytes = BuildAttendancePdf(response.Data, logoPath);
             var safeCourseCode = string.Concat(response.Data.CourseCode.Where(char.IsLetterOrDigit));
             var fileName = $"Attendance-{safeCourseCode}-{response.Data.ScanTime:yyyyMMdd}.pdf";
 
             return File(pdfBytes, "application/pdf", fileName);
         }
 
-        private static byte[] BuildAttendancePdf(StudentAttendanceReportItemDto report)
+        private static byte[] BuildAttendancePdf(StudentAttendanceReportItemDto report, string logoPath)
         {
             static string Escape(string value) => value
                 .Replace("\\", "\\\\")
                 .Replace("(", "\\(")
-                .Replace(")", "\\)");
+                .Replace(")", "\\)")
+                .Replace("©", "\\251");
 
-            var lines = new[]
+            static void AppendRect(StringBuilder content, double x, double y, double width, double height, string fillColor)
             {
-                "QRCode Attendance - Student Class Report",
-                "",
-                $"Student: {report.StudentName}",
-                $"Matric Number: {report.MatricNumber}",
-                $"Department: {report.Department}",
-                $"Level: {report.Level.GetDescription()}",
-                "",
-                $"Course: {report.CourseName}",
-                $"Course Code: {report.CourseCode}",
-                $"Instructor: {report.InstructorName}",
-                $"Class Start: {report.SessionStartTime.ToLocalTime():MMM dd, yyyy hh:mm tt}",
-                $"Class End: {report.SessionEndTime.ToLocalTime():MMM dd, yyyy hh:mm tt}",
-                "",
-                $"Attendance Status: {report.Status}",
-                $"First Scan: {FormatScanTime(report.FirstScanTime)}",
-                $"Second Scan: {FormatScanTime(report.SecondScanTime)}",
-                "",
-                $"Generated: {DateTime.Now:MMM dd, yyyy hh:mm tt}"
-            };
-
-            var content = new StringBuilder();
-            content.AppendLine("BT");
-            content.AppendLine("/F1 22 Tf");
-            content.AppendLine("72 760 Td");
-            content.AppendLine($"({Escape(lines[0])}) Tj");
-            content.AppendLine("0 -34 Td");
-            content.AppendLine("/F1 12 Tf");
-
-            foreach (var line in lines.Skip(1))
-            {
-                content.AppendLine("0 -22 Td");
-                content.AppendLine($"({Escape(line)}) Tj");
+                content.AppendLine(fillColor);
+                content.AppendLine($"{x:0.##} {y:0.##} {width:0.##} {height:0.##} re f");
             }
 
-            content.AppendLine("ET");
+            static void AppendText(StringBuilder content, double x, double y, string font, int size, string color, string text)
+            {
+                content.AppendLine("BT");
+                content.AppendLine(color);
+                content.AppendLine($"/{font} {size} Tf");
+                content.AppendLine($"{x:0.##} {y:0.##} Td");
+                content.AppendLine($"({Escape(text)}) Tj");
+                content.AppendLine("ET");
+            }
+
+            static void AppendLabelValue(StringBuilder content, double y, string label, string value)
+            {
+                AppendText(content, 74, y, "F2", 10, "0.36 0.43 0.54 rg", label.ToUpperInvariant());
+                AppendText(content, 220, y, "F1", 12, "0.08 0.12 0.20 rg", value);
+            }
+
+            static byte[] Ascii(string value) => Encoding.ASCII.GetBytes(value);
+
+            var content = new StringBuilder();
+            var logoWidth = 0;
+            var logoHeight = 0;
+            var logoBytes = System.IO.File.Exists(logoPath) ? System.IO.File.ReadAllBytes(logoPath) : null;
+            var hasLogo = logoBytes != null && TryReadJpegSize(logoBytes, out logoWidth, out logoHeight);
+
+            AppendRect(content, 0, 704, 612, 88, "0.16 0.29 0.62 rg");
+            AppendRect(content, 0, 0, 612, 704, "0.98 0.99 1 rg");
+
+            if (hasLogo)
+            {
+                var logoDrawWidth = 170d;
+                var logoDrawHeight = logoDrawWidth * logoHeight / logoWidth;
+                content.AppendLine("q");
+                content.AppendLine($"{logoDrawWidth:0.##} 0 0 {logoDrawHeight:0.##} 48 {735 - logoDrawHeight / 2:0.##} cm");
+                content.AppendLine("/Logo Do");
+                content.AppendLine("Q");
+            }
+
+            AppendText(content, 244, 759, "F2", 18, "1 1 1 rg", "MITC QRCode Attendance");
+            AppendText(content, 244, 737, "F1", 13, "0.88 0.93 1 rg", "Student Class Report");
+            AppendText(content, 48, 662, "F2", 22, "0.08 0.12 0.20 rg", report.CourseName);
+            AppendText(content, 48, 640, "F1", 12, "0.36 0.43 0.54 rg", $"Generated on {DateTime.Now:MMM dd, yyyy hh:mm tt}");
+
+            AppendRect(content, 48, 472, 516, 136, "1 1 1 rg");
+            content.AppendLine("0.86 0.90 0.96 RG");
+            content.AppendLine("48 472 516 136 re S");
+            AppendText(content, 74, 582, "F2", 13, "0.16 0.29 0.62 rg", "Student Information");
+            AppendLabelValue(content, 552, "Student", report.StudentName);
+            AppendLabelValue(content, 526, "Matric Number", report.MatricNumber);
+            AppendLabelValue(content, 500, "Department", report.Department.ToString());
+            AppendLabelValue(content, 474, "Level", report.Level.GetDescription());
+
+            AppendRect(content, 48, 276, 516, 158, "1 1 1 rg");
+            content.AppendLine("0.86 0.90 0.96 RG");
+            content.AppendLine("48 276 516 158 re S");
+            AppendText(content, 74, 408, "F2", 13, "0.16 0.29 0.62 rg", "Class Details");
+            AppendLabelValue(content, 378, "Course Code", report.CourseCode);
+            AppendLabelValue(content, 352, "Instructor", report.InstructorName);
+            AppendLabelValue(content, 326, "Class Start", report.SessionStartTime.ToLocalTime().ToString("MMM dd, yyyy hh:mm tt"));
+            AppendLabelValue(content, 300, "Class End", report.SessionEndTime.ToLocalTime().ToString("MMM dd, yyyy hh:mm tt"));
+
+            AppendRect(content, 48, 118, 516, 120, "0.93 0.97 1 rg");
+            content.AppendLine("0.72 0.82 0.96 RG");
+            content.AppendLine("48 118 516 120 re S");
+            AppendText(content, 74, 212, "F2", 13, "0.16 0.29 0.62 rg", "Attendance Summary");
+            AppendLabelValue(content, 182, "Status", report.Status.ToString());
+            AppendLabelValue(content, 156, "First Scan", FormatScanTime(report.FirstScanTime));
+            AppendLabelValue(content, 130, "Second Scan", FormatScanTime(report.SecondScanTime));
+
+            content.AppendLine("0.16 0.29 0.62 RG");
+            content.AppendLine("48 84 m 564 84 l S");
+            AppendText(content, 48, 58, "F1", 9, "0.36 0.43 0.54 rg", $"© {DateTime.Now.Year} MITC QR Code Attendance. All rights reserved.");
+            AppendText(content, 48, 42, "F1", 9, "0.36 0.43 0.54 rg", "Built with heart by BAKARI Yazid Akanni.");
 
             var contentBytes = Encoding.ASCII.GetBytes(content.ToString());
+            var contentObjectNumber = hasLogo ? 7 : 6;
+            var resources = hasLogo
+                ? "<< /Font << /F1 4 0 R /F2 5 0 R >> /XObject << /Logo 6 0 R >> >>"
+                : "<< /Font << /F1 4 0 R /F2 5 0 R >> >>";
+
             var objects = new List<string>
             {
                 "<< /Type /Catalog /Pages 2 0 R >>",
                 "<< /Type /Pages /Kids [3 0 R] /Count 1 >>",
-                "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 4 0 R >> >> /Contents 5 0 R >>",
+                $"<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources {resources} /Contents {contentObjectNumber} 0 R >>",
                 "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>",
-                $"<< /Length {contentBytes.Length} >>\nstream\n{content}\nendstream"
+                "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>"
             };
+
+            var objectBytes = objects.Select(Ascii).ToList();
+
+            if (hasLogo && logoBytes != null)
+            {
+                var imageHeader = Ascii($"<< /Type /XObject /Subtype /Image /Width {logoWidth} /Height {logoHeight} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length {logoBytes.Length} >>\nstream\n");
+                var imageFooter = Ascii("\nendstream");
+                objectBytes.Add(CombineBytes(imageHeader, logoBytes, imageFooter));
+            }
+
+            objectBytes.Add(Ascii($"<< /Length {contentBytes.Length} >>\nstream\n{content}\nendstream"));
 
             using var output = new MemoryStream();
             void Write(string value)
@@ -306,22 +365,91 @@ namespace QRCodeAttendance.Controllers
 
             Write("%PDF-1.4\n");
             var offsets = new List<long> { 0 };
-            for (var i = 0; i < objects.Count; i++)
+            for (var i = 0; i < objectBytes.Count; i++)
             {
                 offsets.Add(output.Position);
-                Write($"{i + 1} 0 obj\n{objects[i]}\nendobj\n");
+                Write($"{i + 1} 0 obj\n");
+                output.Write(objectBytes[i], 0, objectBytes[i].Length);
+                Write("\nendobj\n");
             }
 
             var xrefPosition = output.Position;
-            Write($"xref\n0 {objects.Count + 1}\n");
+            Write($"xref\n0 {objectBytes.Count + 1}\n");
             Write("0000000000 65535 f \n");
             foreach (var offset in offsets.Skip(1))
             {
                 Write($"{offset:0000000000} 00000 n \n");
             }
 
-            Write($"trailer\n<< /Size {objects.Count + 1} /Root 1 0 R >>\nstartxref\n{xrefPosition}\n%%EOF");
+            Write($"trailer\n<< /Size {objectBytes.Count + 1} /Root 1 0 R >>\nstartxref\n{xrefPosition}\n%%EOF");
             return output.ToArray();
+        }
+
+        private static byte[] CombineBytes(params byte[][] parts)
+        {
+            var length = parts.Sum(p => p.Length);
+            var result = new byte[length];
+            var offset = 0;
+
+            foreach (var part in parts)
+            {
+                Buffer.BlockCopy(part, 0, result, offset, part.Length);
+                offset += part.Length;
+            }
+
+            return result;
+        }
+
+        private static bool TryReadJpegSize(byte[] bytes, out int width, out int height)
+        {
+            width = 0;
+            height = 0;
+
+            if (bytes.Length < 4 || bytes[0] != 0xFF || bytes[1] != 0xD8)
+            {
+                return false;
+            }
+
+            var index = 2;
+            while (index + 9 < bytes.Length)
+            {
+                if (bytes[index] != 0xFF)
+                {
+                    index++;
+                    continue;
+                }
+
+                var marker = bytes[index + 1];
+                index += 2;
+
+                if (marker == 0xD9 || marker == 0xDA)
+                {
+                    break;
+                }
+
+                if (index + 1 >= bytes.Length)
+                {
+                    break;
+                }
+
+                var segmentLength = (bytes[index] << 8) + bytes[index + 1];
+                if (segmentLength < 2 || index + segmentLength > bytes.Length)
+                {
+                    break;
+                }
+
+                if ((marker >= 0xC0 && marker <= 0xC3) || (marker >= 0xC5 && marker <= 0xC7) ||
+                    (marker >= 0xC9 && marker <= 0xCB) || (marker >= 0xCD && marker <= 0xCF))
+                {
+                    height = (bytes[index + 3] << 8) + bytes[index + 4];
+                    width = (bytes[index + 5] << 8) + bytes[index + 6];
+                    return width > 0 && height > 0;
+                }
+
+                index += segmentLength;
+            }
+
+            return false;
         }
 
         private static string FormatScanTime(DateTime? scanTime)
