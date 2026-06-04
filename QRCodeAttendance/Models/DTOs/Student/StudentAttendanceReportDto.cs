@@ -12,7 +12,7 @@ namespace QRCodeAttendance.Models.DTOs.Student
         public List<StudentAttendanceReportItemDto> Records { get; set; } = new();
     }
 
-    public class StudentAttendanceReportItemDto
+    public class   StudentAttendanceReportItemDto
     {
         public Guid AttendanceId { get; set; }
         public Guid SessionId { get; set; }
@@ -26,6 +26,8 @@ namespace QRCodeAttendance.Models.DTOs.Student
         public DateTime SessionStartTime { get; set; }
         public DateTime SessionEndTime { get; set; }
         public DateTime ScanTime { get; set; }
+        public DateTime? FirstScanTime { get; set; }
+        public DateTime? SecondScanTime { get; set; }
         public AttendanceStatus Status { get; set; }
     }
 }

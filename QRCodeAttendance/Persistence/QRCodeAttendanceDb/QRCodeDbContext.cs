@@ -22,6 +22,7 @@ namespace QRCodeAttendance.Persistence.QRCodeAttendanceDb
         public DbSet<Admin> Admins { get; set; } = null!;
         public DbSet<Session> Sessions { get; set; } = null!;
         public DbSet<Attendance> Attendances { get; set; } = null!;
+        public DbSet<QRCodeTokenHistory> QRCodeTokenHistories { get; set; } = null!;
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -74,10 +75,28 @@ namespace QRCodeAttendance.Persistence.QRCodeAttendanceDb
                 .WithMany(s => s.Attendances)
                 .HasForeignKey(a => a.SessionId);
 
+            builder.Entity<Attendance>()
+                .HasIndex(a => new { a.StudentId, a.SessionId })
+                .IsUnique();
+
             builder.Entity<Session>()
                 .HasOne(s => s.Instructor)
                 .WithMany(i => i.Sessions)
                 .HasForeignKey(s => s.InstructorId);
+
+            builder.Entity<QRCodeTokenHistory>()
+                .Property(h => h.Token)
+                .HasMaxLength(64);
+
+            builder.Entity<QRCodeTokenHistory>()
+                .HasOne(h => h.Session)
+                .WithMany(s => s.QRCodeTokenHistories)
+                .HasForeignKey(h => h.SessionId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            builder.Entity<QRCodeTokenHistory>()
+                .HasIndex(h => new { h.SessionId, h.Token })
+                .IsUnique();
 
             builder.Entity<Instructor>().Property(a => a.Gender).HasConversion<string>();
             builder.Entity<Instructor>().Property(a => a.Department).HasConversion<string>();

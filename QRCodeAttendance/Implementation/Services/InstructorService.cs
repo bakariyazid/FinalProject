@@ -62,7 +62,6 @@ namespace QRCodeAttendance.Implementation.Services
 
                 var invitation = await _dbContext.RegistrationInvitations
                     .FirstOrDefaultAsync(i =>
-                        i.InstructorEmail.ToLower() == normalizedEmail &&
                         i.InvitationCode == invitationCode &&
                         i.Status == InstructorInvitationStatus.Approved);
 
@@ -70,7 +69,7 @@ namespace QRCodeAttendance.Implementation.Services
                 {
                     return new BaseResponse<bool>
                     {
-                        Message = "Invalid instructor invitation code for this email.",
+                        Message = "Invalid instructor invitation code.",
                         Status = false
                     };
                 }

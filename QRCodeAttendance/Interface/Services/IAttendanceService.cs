@@ -12,6 +12,7 @@ namespace QRCodeAttendance.Interface.Services
     {
         // Task <BaseResponse<bool>> MarkAttendance(Guid studentId, Guid sessionId);
         Task<BaseResponse<bool>> MarkAttendance(Guid sessionId, string qrCode);
+        Task<BaseResponse<bool>> SyncOfflineAttendance(OfflineAttendanceScanRequestModel request);
         Task<bool> HasStudentMarkedAttendance(Guid studentId, Guid sessionId);
         Task<IReadOnlyList<AttendanceDto>> GetAttendanceBySession(Guid sessionId);
         Task<IReadOnlyList<AttendanceDto>> GetAttendanceByStudent(Guid studentId);

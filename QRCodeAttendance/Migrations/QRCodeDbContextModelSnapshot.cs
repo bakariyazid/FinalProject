@@ -105,7 +105,13 @@ namespace QRCodeAttendance.Migrations
                     b.Property<DateTime>("CreatedDate")
                         .HasColumnType("datetime(6)");
 
+                    b.Property<DateTime?>("FirstScanTime")
+                        .HasColumnType("datetime(6)");
+
                     b.Property<DateTime>("ScanTime")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<DateTime?>("SecondScanTime")
                         .HasColumnType("datetime(6)");
 
                     b.Property<Guid>("SessionId")
@@ -129,7 +135,8 @@ namespace QRCodeAttendance.Migrations
 
                     b.HasIndex("SessionId");
 
-                    b.HasIndex("StudentId");
+                    b.HasIndex("StudentId", "SessionId")
+                        .IsUnique();
 
                     b.ToTable("Attendances");
                 });
@@ -190,6 +197,40 @@ namespace QRCodeAttendance.Migrations
                         .IsUnique();
 
                     b.ToTable("Instructors");
+                });
+
+            modelBuilder.Entity("QRCodeAttendance.Models.Entities.QRCodeTokenHistory", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("char(36)");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<Guid>("SessionId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<string>("Token")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("varchar(64)");
+
+                    b.Property<DateTime>("UpdatedDate")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<DateTime>("ValidFrom")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<DateTime>("ValidUntil")
+                        .HasColumnType("datetime(6)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SessionId", "Token")
+                        .IsUnique();
+
+                    b.ToTable("QRCodeTokenHistories");
                 });
 
             modelBuilder.Entity("QRCodeAttendance.Models.Entities.RegistrationInvitation", b =>
@@ -511,6 +552,17 @@ namespace QRCodeAttendance.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("QRCodeAttendance.Models.Entities.QRCodeTokenHistory", b =>
+                {
+                    b.HasOne("QRCodeAttendance.Models.Entities.Session", "Session")
+                        .WithMany("QRCodeTokenHistories")
+                        .HasForeignKey("SessionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Session");
+                });
+
             modelBuilder.Entity("QRCodeAttendance.Models.Entities.Session", b =>
                 {
                     b.HasOne("QRCodeAttendance.Models.Entities.Instructor", "Instructor")
@@ -557,6 +609,8 @@ namespace QRCodeAttendance.Migrations
             modelBuilder.Entity("QRCodeAttendance.Models.Entities.Session", b =>
                 {
                     b.Navigation("Attendances");
+
+                    b.Navigation("QRCodeTokenHistories");
                 });
 
             modelBuilder.Entity("QRCodeAttendance.Models.Entities.Student", b =>

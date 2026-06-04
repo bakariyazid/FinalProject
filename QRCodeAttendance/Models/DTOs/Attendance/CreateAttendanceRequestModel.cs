@@ -10,4 +10,19 @@ namespace QRCodeAttendance.Models.DTOs.Attendance
     {
         public string QrCodeData { get; set; } = string.Empty;
     }
+
+    public class OfflineAttendanceScanRequestModel
+    {
+        public Guid SessionId { get; set; }
+        public string QrCode { get; set; } = string.Empty;
+        public DateTime ScannedAt { get; set; }
+        public string ClientScanId { get; set; } = string.Empty;
+    }
+
+    public class OfflineAttendanceScanResponseModel
+    {
+        public string ClientScanId { get; set; } = string.Empty;
+        public bool Synced { get; set; }
+        public string Message { get; set; } = string.Empty;
+    }
 }

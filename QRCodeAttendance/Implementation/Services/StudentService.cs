@@ -154,7 +154,10 @@ namespace QRCodeAttendance.Implementation.Services
                     }
 
                     var attendances = await _attendanceRepository.GetAll(a => a.StudentId == student.Id);
-                    var attendedSessionIds = attendances.Select(a => a.SessionId).ToHashSet();
+                    var presentSessionIds = attendances
+                        .Where(a => a.Status == AttendanceStatus.Present)
+                        .Select(a => a.SessionId)
+                        .ToHashSet();
 
                     var sessions = await _sessionRepository.GetAll(s => 
                         s.Level == student.StudentLevel && 
@@ -166,27 +169,34 @@ namespace QRCodeAttendance.Implementation.Services
                         MatricNumber = student.MatricNumber,
                         Level = student.StudentLevel,
                         Department = student.Department,
-                        TotalSessionsAttended = attendances.Count,
+                        TotalSessionsAttended = presentSessionIds.Count,
                         
                         TotalSessionsAvailable = sessions.Count(s => s.SessionEndTime <= now),
 
                         ActiveSessions = sessions
                             .Where(s => s.IsActive == true && now >= s.SessionStartTime && now <= s.SessionEndTime)
-                            .Select(s => new ActiveSessionDto
+                            .Select(s =>
                             {
-                                Id = s.Id,
-                                CourseName = s.CourseName,
-                                CourseCode = s.CourseCode,
-                                Level = s.Level,
-                                SessionStartTime = s.SessionStartTime,
-                                IsActive = s.IsActive,
-                                Department = s.Department,
-                                SessionEndTime = s.SessionEndTime,
-                                InstructorName = s.Instructor != null ? $"{s.Instructor.FirstName} {s.Instructor.LastName}" : "Department Staff"
+                                var attendance = attendances.FirstOrDefault(a => a.SessionId == s.Id);
+                                return new ActiveSessionDto
+                                {
+                                    Id = s.Id,
+                                    CourseName = s.CourseName,
+                                    CourseCode = s.CourseCode,
+                                    Level = s.Level,
+                                    SessionStartTime = s.SessionStartTime,
+                                    IsActive = s.IsActive,
+                                    Department = s.Department,
+                                    SessionEndTime = s.SessionEndTime,
+                                    InstructorName = s.Instructor != null ? $"{s.Instructor.FirstName} {s.Instructor.LastName}" : "Department Staff",
+                                    AttendanceStatus = attendance?.Status,
+                                    FirstScanTime = attendance?.FirstScanTime,
+                                    SecondScanTime = attendance?.SecondScanTime
+                                };
                             }).ToList(),
 
                         MissedSessions = sessions
-                            .Where(s => s.SessionEndTime < now && !attendedSessionIds.Contains(s.Id))
+                            .Where(s => s.SessionEndTime < now && !presentSessionIds.Contains(s.Id))
                             .Select(s => new MissedSessionDto
                             {
                                 CourseName = s.CourseName,
@@ -208,6 +218,8 @@ namespace QRCodeAttendance.Implementation.Services
                                 CourseName = a.CourseName ?? a.ClassSession?.CourseName ?? "Unknown Course",
                                 CourseCode = a.CourseCode ?? a.ClassSession?.CourseCode ?? "N/A",
                                 ScanTime = a.ScanTime,
+                                FirstScanTime = a.FirstScanTime,
+                                SecondScanTime = a.SecondScanTime,
                                 Status = a.Status
                             }).ToList()
                     };
@@ -256,7 +268,7 @@ namespace QRCodeAttendance.Implementation.Services
                     MatricNumber = student.MatricNumber,
                     Department = student.Department,
                     Level = student.StudentLevel,
-                    TotalAttended = records.Count,
+                    TotalAttended = records.Count(r => r.Status == AttendanceStatus.Present),
                     Records = records
                 }
             };
@@ -290,7 +302,7 @@ namespace QRCodeAttendance.Implementation.Services
                     MatricNumber = student.MatricNumber,
                     Department = student.Department,
                     Level = student.StudentLevel,
-                    TotalAttended = records.Count,
+                    TotalAttended = records.Count(r => r.Status == AttendanceStatus.Present),
                     Records = records
                 }
             };
@@ -348,6 +360,8 @@ namespace QRCodeAttendance.Implementation.Services
                 SessionStartTime = session?.SessionStartTime ?? attendance.ScanTime,
                 SessionEndTime = session?.SessionEndTime ?? attendance.ScanTime,
                 ScanTime = attendance.ScanTime,
+                FirstScanTime = attendance.FirstScanTime,
+                SecondScanTime = attendance.SecondScanTime,
                 Status = attendance.Status
             };
         }

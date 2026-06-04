@@ -22,6 +22,7 @@ namespace QRCodeAttendance.Models.Entities
             public DateTime QRCodeExpiry { get; set; }
             public Instructor? Instructor {get; set;}
             public ICollection<Attendance> Attendances { get; set; } = new List<Attendance>();  
+            public ICollection<QRCodeTokenHistory> QRCodeTokenHistories { get; set; } = new List<QRCodeTokenHistory>();
 
         }
 }

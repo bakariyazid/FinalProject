@@ -12,19 +12,27 @@ namespace QRCodeAttendance.Implementation.Repositories
         {
         }
 
-        public async Task<bool> HasActiveInvitation(string instructorEmail)
+        public async Task<bool> HasPendingRequestForWhatsApp(string whatsAppNumber)
         {
-            var email = instructorEmail.Trim().ToLowerInvariant();
+            var normalizedNumber = NormalizeWhatsAppNumber(whatsAppNumber);
+            var invitations = await _qrCodeDbContext.RegistrationInvitations
+                .Where(i => i.Status == InstructorInvitationStatus.Pending)
+                .ToListAsync();
 
-            return await _qrCodeDbContext.RegistrationInvitations
-                .AnyAsync(i => i.InstructorEmail.ToLower() == email && !i.IsUsed && i.ExpiryDate > DateTime.UtcNow);
+            return invitations.Any(i => NormalizeWhatsAppNumber(i.WhatsAppNumber) == normalizedNumber);
         }
 
-        public async Task<bool> HasPendingRequest(string instructorEmail)
+        public async Task<bool> HasActiveInvitationForWhatsApp(string whatsAppNumber)
         {
-            var email = instructorEmail.Trim().ToLowerInvariant();
-            return await _qrCodeDbContext.RegistrationInvitations
-                .AnyAsync(i => i.InstructorEmail.ToLower() == email && i.Status == InstructorInvitationStatus.Pending);
+            var normalizedNumber = NormalizeWhatsAppNumber(whatsAppNumber);
+            var invitations = await _qrCodeDbContext.RegistrationInvitations
+                .Where(i =>
+                    i.Status == InstructorInvitationStatus.Approved &&
+                    !i.IsUsed &&
+                    i.ExpiryDate > DateTime.UtcNow)
+                .ToListAsync();
+
+            return invitations.Any(i => NormalizeWhatsAppNumber(i.WhatsAppNumber) == normalizedNumber);
         }
 
         public async Task<bool> InvitationCodeExists(string invitationCode)
@@ -52,6 +60,23 @@ namespace QRCodeAttendance.Implementation.Repositories
                 .OrderByDescending(i => i.CreatedDate)
                 .Take(count)
                 .ToListAsync();
+        }
+
+        private static string NormalizeWhatsAppNumber(string value)
+        {
+            var digits = new string((value ?? string.Empty).Where(char.IsDigit).ToArray());
+
+            if (digits.StartsWith("0") && digits.Length == 11)
+            {
+                return $"234{digits[1..]}";
+            }
+
+            if (digits.Length == 10)
+            {
+                return $"234{digits}";
+            }
+
+            return digits;
         }
     }
 }

@@ -17,9 +17,7 @@ namespace QRCodeAttendance.Implementation.Services
         private readonly IRegistrationInvitationRepository _invitationRepository;
         private readonly IUnitOfWork _unitOfWork;
 
-        public AdminInvitationService(
-            IRegistrationInvitationRepository invitationRepository,
-            IUnitOfWork unitOfWork)
+        public AdminInvitationService(IRegistrationInvitationRepository invitationRepository, IUnitOfWork unitOfWork)
         {
             _invitationRepository = invitationRepository;
             _unitOfWork = unitOfWork;
@@ -48,8 +46,9 @@ namespace QRCodeAttendance.Implementation.Services
         public async Task<BaseResponse<bool>> SubmitInstructorAccessRequest(CreateInstructorAccessRequestModel request)
         {
             var email = NormalizeEmail(request.Email);
+            var whatsAppNumber = request.WhatsAppNumber.Trim();
 
-            if (await _invitationRepository.HasPendingRequest(email))
+            if (await _invitationRepository.HasPendingRequestForWhatsApp(whatsAppNumber))
             {
                 return new BaseResponse<bool>
                 {
@@ -58,12 +57,12 @@ namespace QRCodeAttendance.Implementation.Services
                 };
             }
 
-            if (await _invitationRepository.HasActiveInvitation(email))
+            if (await _invitationRepository.HasActiveInvitationForWhatsApp(whatsAppNumber))
             {
                 return new BaseResponse<bool>
                 {
                     Status = false,
-                    Message = "You already have an active instructor invitation code. Check your email or contact the admin."
+                    Message = "You already have an active instructor invitation code. Check WhatsApp or contact the admin."
                 };
             }
 
@@ -71,11 +70,11 @@ namespace QRCodeAttendance.Implementation.Services
             {
                 InstructorEmail = email,
                 FullName = request.FullName.Trim(),
-                WhatsAppNumber = request.WhatsAppNumber.Trim(),
+                WhatsAppNumber = whatsAppNumber,
                 Department = request.Department,
                 Status = InstructorInvitationStatus.Pending,
-                CreatedDate = DateTime.UtcNow,
-                ExpiryDate = DateTime.UtcNow.AddDays(RequestExpiryDays),
+                CreatedDate = DateTime.UtcNow.ToUniversalTime(),
+                ExpiryDate = DateTime.UtcNow.ToUniversalTime().AddDays(RequestExpiryDays),
                 IsUsed = false
             };
 
@@ -93,23 +92,14 @@ namespace QRCodeAttendance.Implementation.Services
         {
             var email = NormalizeEmail(request.InstructorEmail);
 
-            if (await _invitationRepository.HasActiveInvitation(email))
-            {
-                return new BaseResponse<InstructorInvitationDto>
-                {
-                    Status = false,
-                    Message = "This instructor already has an active invitation code."
-                };
-            }
-
             var invitation = new RegistrationInvitation
             {
                 InstructorEmail = email,
                 InvitationCode = await GenerateUniqueCode(),
                 Status = InstructorInvitationStatus.Approved,
-                ReviewedAt = DateTime.UtcNow,
-                CreatedDate = DateTime.UtcNow,
-                ExpiryDate = DateTime.UtcNow.AddDays(ApprovedCodeExpiryDays),
+                ReviewedAt = DateTime.UtcNow.ToUniversalTime(),
+                CreatedDate = DateTime.UtcNow.ToUniversalTime(),
+                ExpiryDate = DateTime.UtcNow.ToUniversalTime().AddDays(ApprovedCodeExpiryDays),
                 IsUsed = false
             };
 
@@ -119,7 +109,7 @@ namespace QRCodeAttendance.Implementation.Services
             return new BaseResponse<InstructorInvitationDto>
             {
                 Status = true,
-                Message = $"Invitation code generated for {email}: {invitation.InvitationCode}",
+                Message = $"Invitation code generated: {invitation.InvitationCode}. Share it with the instructor through WhatsApp.",
                 Data = ToInvitationDto(invitation)
             };
         }
@@ -138,9 +128,9 @@ namespace QRCodeAttendance.Implementation.Services
 
             request.InvitationCode = await GenerateUniqueCode();
             request.Status = InstructorInvitationStatus.Approved;
-            request.ReviewedAt = DateTime.UtcNow;
-            request.ExpiryDate = DateTime.UtcNow.AddDays(ApprovedCodeExpiryDays);
-            request.UpdatedDate = DateTime.UtcNow;
+            request.ReviewedAt = DateTime.UtcNow.ToUniversalTime();
+            request.ExpiryDate = DateTime.UtcNow.ToUniversalTime().AddDays(ApprovedCodeExpiryDays);
+            request.UpdatedDate = DateTime.UtcNow.ToUniversalTime();
 
             _invitationRepository.Update(request);
             await _unitOfWork.SaveChangesAsync();
@@ -166,11 +156,9 @@ namespace QRCodeAttendance.Implementation.Services
             }
 
             request.Status = InstructorInvitationStatus.Rejected;
-            request.ReviewedAt = DateTime.UtcNow;
-            request.RejectionReason = string.IsNullOrWhiteSpace(reason)
-                ? DefaultRejectionReason
-                : reason.Trim();
-            request.UpdatedDate = DateTime.UtcNow;
+            request.ReviewedAt = DateTime.UtcNow.ToUniversalTime();
+            request.RejectionReason = string.IsNullOrWhiteSpace(reason)? DefaultRejectionReason : reason.Trim();
+            request.UpdatedDate = DateTime.UtcNow.ToUniversalTime();
 
             _invitationRepository.Update(request);
             await _unitOfWork.SaveChangesAsync();
@@ -178,7 +166,7 @@ namespace QRCodeAttendance.Implementation.Services
             return new BaseResponse<bool>
             {
                 Status = true,
-                Message = $"Request rejected for {request.InstructorEmail}."
+                Message = $"Request rejected for {DisplayName(request)}. Click WhatsApp to share the rejection message."
             };
         }
 

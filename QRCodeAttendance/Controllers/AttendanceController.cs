@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using QRCodeAttendance.Implementation.Services;
 using QRCodeAttendance.Interface.Services;
+using QRCodeAttendance.Models.DTOs.Attendance;
 
 namespace QRCodeAttendance.Controllers
 {
@@ -48,6 +49,19 @@ namespace QRCodeAttendance.Controllers
 
             TempData["SuccessMessage"] = "QR Code scanned successfully. Attendance marked.";
             return RedirectToAction("StudentDashboard", "Student");
+        }
+
+        [HttpPost("attendance/sync-offline")]
+        public async Task<IActionResult> SyncOfflineAttendance([FromBody] OfflineAttendanceScanRequestModel request)
+        {
+            var response = await _attendanceService.SyncOfflineAttendance(request);
+
+            return Ok(new OfflineAttendanceScanResponseModel
+            {
+                ClientScanId = request.ClientScanId,
+                Synced = response.Status,
+                Message = response.Message
+            });
         }
 
 

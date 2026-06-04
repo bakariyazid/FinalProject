@@ -119,13 +119,15 @@ namespace QRCodeAttendance.Implementation.Services
                 }
 
                 var now = DateTime.UtcNow.ToUniversalTime();
-                var firstScanEnd = session.SessionStartTime.AddMinutes(25);
-                var secondScanStart = session.SessionEndTime.AddMinutes(-20);
-                var hardCutoff = session.SessionEndTime.AddMinutes(-10);
-                var isFirstScanWindow = now >= session.SessionStartTime && now <= firstScanEnd;
+                var sessionStartTime = NormalizeStoredUtc(session.SessionStartTime);
+                var sessionEndTime = NormalizeStoredUtc(session.SessionEndTime);
+                var firstScanEnd = sessionStartTime.AddMinutes(25);
+                var secondScanStart = sessionEndTime.AddMinutes(-20);
+                var hardCutoff = sessionEndTime.AddMinutes(-10);
+                var isFirstScanWindow = now >= sessionStartTime && now <= firstScanEnd;
                 var isSecondScanWindow = now >= secondScanStart && now < hardCutoff;
 
-                if (now < session.SessionStartTime)
+                if (now < sessionStartTime)
                 {
                     return new BaseResponse<SessionDto>
                     {
@@ -174,6 +176,9 @@ namespace QRCodeAttendance.Implementation.Services
 
                 if (!string.IsNullOrWhiteSpace(session.QRCodeToken) && now < session.QRCodeExpiry)
                 {
+                    await EnsureQrTokenHistoryAsync(session, now);
+                    await _unitOfWork.SaveChangesAsync();
+
                     return new BaseResponse<SessionDto>
                     {
                         Status = true,
@@ -190,6 +195,7 @@ namespace QRCodeAttendance.Implementation.Services
                 session.UpdatedDate = now;
 
                 _sessionRepository.Update(session);
+                await AddQrTokenHistoryAsync(session, now);
                 await _unitOfWork.SaveChangesAsync();
 
                 return new BaseResponse<SessionDto>
@@ -208,13 +214,15 @@ namespace QRCodeAttendance.Implementation.Services
 
             foreach (var session in sessions)
             {
-                var hardCutoff = session.SessionEndTime.AddMinutes(-10);
-                var firstScanEnd = session.SessionStartTime.AddMinutes(25);
-                var secondScanStart = session.SessionEndTime.AddMinutes(-20);
-                var isFirstScanWindow = now >= session.SessionStartTime && now <= firstScanEnd;
+                var sessionStartTime = NormalizeStoredUtc(session.SessionStartTime);
+                var sessionEndTime = NormalizeStoredUtc(session.SessionEndTime);
+                var hardCutoff = sessionEndTime.AddMinutes(-10);
+                var firstScanEnd = sessionStartTime.AddMinutes(25);
+                var secondScanStart = sessionEndTime.AddMinutes(-20);
+                var isFirstScanWindow = now >= sessionStartTime && now <= firstScanEnd;
                 var isSecondScanWindow = now >= secondScanStart && now < hardCutoff;
 
-                if (now < session.SessionStartTime)
+                if (now < sessionStartTime)
                 {
                     continue;
                 }
@@ -269,6 +277,7 @@ namespace QRCodeAttendance.Implementation.Services
                 session.UpdatedDate = now;
 
                 _sessionRepository.Update(session);
+                await AddQrTokenHistoryAsync(session, now);
                 changedCount++;
             }
 
@@ -312,6 +321,49 @@ namespace QRCodeAttendance.Implementation.Services
                     UpdatedDate = now
                 });
             }
+        }
+
+        private async Task EnsureQrTokenHistoryAsync(Session session, DateTime validFrom)
+        {
+            if (string.IsNullOrWhiteSpace(session.QRCodeToken))
+            {
+                return;
+            }
+
+            var existingCount = await _sessionRepository.Count<QRCodeTokenHistory>(h =>
+                h.SessionId == session.Id &&
+                h.Token == session.QRCodeToken);
+
+            if (existingCount == 0)
+            {
+                await AddQrTokenHistoryAsync(session, validFrom);
+            }
+        }
+
+        private async Task AddQrTokenHistoryAsync(Session session, DateTime validFrom)
+        {
+            if (string.IsNullOrWhiteSpace(session.QRCodeToken))
+            {
+                return;
+            }
+
+            await _sessionRepository.Add(new QRCodeTokenHistory
+            {
+                Id = Guid.NewGuid(),
+                SessionId = session.Id,
+                Token = session.QRCodeToken,
+                ValidFrom = validFrom,
+                ValidUntil = session.QRCodeExpiry,
+                CreatedDate = validFrom,
+                UpdatedDate = validFrom
+            });
+        }
+
+        private static DateTime NormalizeStoredUtc(DateTime value)
+        {
+            return value.Kind == DateTimeKind.Utc
+                ? value
+                : DateTime.SpecifyKind(value, DateTimeKind.Utc);
         }
 
         private static SessionDto MapSessionToDto(Session session)

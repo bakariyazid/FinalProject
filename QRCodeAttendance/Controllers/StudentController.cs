@@ -3,7 +3,10 @@ using System.Text;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using QRCodeAttendance.Interface.Services;
+using QRCodeAttendance.Models.DTOs;
 using QRCodeAttendance.Models.DTOs.Student;
+using QRCodeAttendance.Models.Enums;
+using QRCodeAttendance.Models.Extensions;
 
 namespace QRCodeAttendance.Controllers
 {   
@@ -70,7 +73,13 @@ namespace QRCodeAttendance.Controllers
                 ViewBag.ErrorMessage = response.Message;
             }
 
-            return View(response.Data);
+            return View(response.Data ?? new StudentDashboardDto
+            {
+                UserName = User.Identity?.Name ?? "Student",
+                MatricNumber = "N/A",
+                Department = Departments.SoftwareDepartment,
+                Level = StudentLevel.HundredLevel
+            });
         }
 
             // var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -221,6 +230,11 @@ namespace QRCodeAttendance.Controllers
                 return NotFound(response.Message);
             }
 
+            if (response.Data.Status != AttendanceStatus.Present || !response.Data.FirstScanTime.HasValue || !response.Data.SecondScanTime.HasValue)
+            {
+                return BadRequest("PDF download is only available after both scans are completed.");
+            }
+
             var pdfBytes = BuildAttendancePdf(response.Data);
             var safeCourseCode = string.Concat(response.Data.CourseCode.Where(char.IsLetterOrDigit));
             var fileName = $"Attendance-{safeCourseCode}-{response.Data.ScanTime:yyyyMMdd}.pdf";
@@ -242,7 +256,7 @@ namespace QRCodeAttendance.Controllers
                 $"Student: {report.StudentName}",
                 $"Matric Number: {report.MatricNumber}",
                 $"Department: {report.Department}",
-                $"Level: {report.Level}",
+                $"Level: {report.Level.GetDescription()}",
                 "",
                 $"Course: {report.CourseName}",
                 $"Course Code: {report.CourseCode}",
@@ -251,7 +265,8 @@ namespace QRCodeAttendance.Controllers
                 $"Class End: {report.SessionEndTime.ToLocalTime():MMM dd, yyyy hh:mm tt}",
                 "",
                 $"Attendance Status: {report.Status}",
-                $"Scan Time: {report.ScanTime.ToLocalTime():MMM dd, yyyy hh:mm tt}",
+                $"First Scan: {FormatScanTime(report.FirstScanTime)}",
+                $"Second Scan: {FormatScanTime(report.SecondScanTime)}",
                 "",
                 $"Generated: {DateTime.Now:MMM dd, yyyy hh:mm tt}"
             };
@@ -307,6 +322,13 @@ namespace QRCodeAttendance.Controllers
 
             Write($"trailer\n<< /Size {objects.Count + 1} /Root 1 0 R >>\nstartxref\n{xrefPosition}\n%%EOF");
             return output.ToArray();
+        }
+
+        private static string FormatScanTime(DateTime? scanTime)
+        {
+            return scanTime.HasValue
+                ? scanTime.Value.ToLocalTime().ToString("MMM dd, yyyy hh:mm tt")
+                : "Not completed";
         }
     }
 }

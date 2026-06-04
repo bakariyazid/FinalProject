@@ -92,18 +92,101 @@
 <script src="https://unpkg.com/html5-qrcode"></script>
 
 <script>
-    function onScanSuccess(decodedText, decodedResult) {
-        // Stop the scanner
-        html5QrcodeScanner.clear();
-        
-        // Show a quick visual feedback
-        document.getElementById('result').innerHTML = `
-            <div class="alert alert-success rounded-pill">Code Detected! processing...</div>
-        `;
+    const offlineQueueKey = "attendanceOfflineScanQueue";
+    const sessionId = document.getElementById('sessionId').value;
+    const resultEl = document.getElementById('result');
 
-        // Put the code into the hidden form and submit
-        document.getElementById('qrCodeData').value = decodedText;
-        document.getElementById('attendanceForm').submit();
+    function getQueuedScans() {
+        try {
+            return JSON.parse(localStorage.getItem(offlineQueueKey) || "[]");
+        } catch {
+            return [];
+        }
+    }
+
+    function saveQueuedScans(scans) {
+        localStorage.setItem(offlineQueueKey, JSON.stringify(scans));
+    }
+
+    function renderScanMessage(message, type = "info") {
+        resultEl.innerHTML = `<div class="alert alert-${type} rounded-pill">${message}</div>`;
+    }
+
+    function queueScan(qrCode) {
+        const scans = getQueuedScans();
+        const scan = {
+            sessionId,
+            qrCode,
+            scannedAt: new Date().toISOString(),
+            clientScanId: crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`
+        };
+
+        scans.push(scan);
+        scans.sort((a, b) => new Date(a.scannedAt) - new Date(b.scannedAt));
+        saveQueuedScans(scans);
+        return scan;
+    }
+
+    async function syncQueuedScans(redirectWhenDone = false) {
+        if (!navigator.onLine) {
+            renderScanMessage("Scan saved offline. It will sync when your connection returns.", "warning");
+            return;
+        }
+
+        const scans = getQueuedScans().sort((a, b) => new Date(a.scannedAt) - new Date(b.scannedAt));
+        const remaining = [];
+        let syncedCount = 0;
+        let lastMessage = "";
+        let rejectedCount = 0;
+
+        for (const scan of scans) {
+            try {
+                const response = await fetch("/attendance/sync-offline", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(scan)
+                });
+
+                if (!response.ok) {
+                    remaining.push(scan);
+                    continue;
+                }
+
+                const result = await response.json();
+                lastMessage = result.message || "";
+
+                if (result.synced) {
+                    syncedCount++;
+                } else {
+                    rejectedCount++;
+                }
+            } catch {
+                remaining.push(scan);
+            }
+        }
+
+        saveQueuedScans(remaining);
+
+        if (remaining.length > 0) {
+            renderScanMessage(lastMessage || `${remaining.length} scan(s) are still waiting to sync.`, "warning");
+            return;
+        }
+
+        if (syncedCount > 0) {
+            renderScanMessage(lastMessage || "Scan synced successfully.", "success");
+            if (redirectWhenDone) {
+                window.location.href = "@Url.Action("StudentDashboard", "Student")";
+            }
+        } else if (rejectedCount > 0) {
+            renderScanMessage(lastMessage || "Scan was processed but not accepted.", "warning");
+        }
+    }
+
+    function onScanSuccess(decodedText, decodedResult) {
+        html5QrcodeScanner.clear();
+        queueScan(decodedText);
+        renderScanMessage("Code detected. Syncing...", "success");
+        syncQueuedScans(true);
     }
 
     function onScanFailure(error) {
@@ -120,6 +203,8 @@
         false);
 
     html5QrcodeScanner.render(onScanSuccess, onScanFailure);
+    window.addEventListener("online", () => syncQueuedScans(false));
+    syncQueuedScans(false);
 </script>
 
     @await Html.PartialAsync("_PortalFooter")

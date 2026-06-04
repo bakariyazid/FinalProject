@@ -33,6 +33,9 @@ namespace QRCodeAttendance.Models.DTOs
         public bool IsActive { get; set; }
         public required DateTime SessionEndTime { get; set; }
         public required string InstructorName { get; set; }
+        public AttendanceStatus? AttendanceStatus { get; set; }
+        public DateTime? FirstScanTime { get; set; }
+        public DateTime? SecondScanTime { get; set; }
     }
         public class MissedSessionDto {
             public required string CourseName { get; set; }

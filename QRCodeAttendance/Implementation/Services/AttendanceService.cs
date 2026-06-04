@@ -32,6 +32,37 @@ namespace QRCodeAttendance.Implementation.Services
 
         public async Task<BaseResponse<bool>> MarkAttendance(Guid sessionId, string qrCode)
         {
+            return await ProcessAttendanceScan(sessionId, qrCode, DateTime.UtcNow, false);
+        }
+
+        public async Task<BaseResponse<bool>> SyncOfflineAttendance(OfflineAttendanceScanRequestModel request)
+        {
+            if (request.SessionId == Guid.Empty)
+                return new BaseResponse<bool>
+                {
+                    Status = false,
+                    Message = "Session is required"
+                };
+
+            if (string.IsNullOrWhiteSpace(request.QrCode))
+                return new BaseResponse<bool>
+                {
+                    Status = false,
+                    Message = "QR Code is required"
+                };
+
+            if (request.ScannedAt == default)
+                return new BaseResponse<bool>
+                {
+                    Status = false,
+                    Message = "Scan time is required"
+                };
+
+            return await ProcessAttendanceScan(request.SessionId, request.QrCode, request.ScannedAt, true);
+        }
+
+        private async Task<BaseResponse<bool>> ProcessAttendanceScan(Guid sessionId, string qrCode, DateTime scannedAt, bool validateAgainstTokenHistory)
+        {
             var student = await _studentRepository.Get<Student>(s => s.UserId == _currentUserService.UserId);
             if (student == null)
                 return new BaseResponse<bool>
@@ -50,15 +81,18 @@ namespace QRCodeAttendance.Implementation.Services
                      Message = "Session not found" 
                 };
 
-            var now = DateTime.UtcNow.ToUniversalTime();
-            var firstScanStart = session.SessionStartTime;
-            var firstScanEnd = session.SessionStartTime.AddMinutes(25);
-            var secondScanStart = session.SessionEndTime.AddMinutes(-20);
-            var secondScanEnd = session.SessionEndTime.AddMinutes(-10);
-            var isFirstScanWindow = now >= firstScanStart && now <= firstScanEnd;
-            var isSecondScanWindow = now >= secondScanStart && now < secondScanEnd;
+            var now = DateTime.UtcNow;
+            var scanTime = NormalizeScanTimeUtc(scannedAt);
+            var firstScanStart = NormalizeStoredUtc(session.SessionStartTime);
+            var firstScanEnd = firstScanStart.AddMinutes(25);
+            var sessionEndTime = NormalizeStoredUtc(session.SessionEndTime);
+            var secondScanStart = sessionEndTime.AddMinutes(-20);
+            var secondScanEnd = sessionEndTime.AddMinutes(-10);
+            var isFirstScanWindow = scanTime >= firstScanStart && scanTime <= firstScanEnd;
+            var isSecondScanWindow = scanTime >= secondScanStart && scanTime < secondScanEnd;
+            var attendance = await _attendanceRepository.Get<Attendance>(a => a.StudentId == studentId && a.SessionId == sessionId);
 
-            if (now >= secondScanEnd)
+            if (!validateAgainstTokenHistory && now >= secondScanEnd)
             {
                 session.IsActive = false;
                 session.QRCodeToken = null;
@@ -74,7 +108,7 @@ namespace QRCodeAttendance.Implementation.Services
                 };
             }
 
-            if (!session.IsActive || now < session.SessionStartTime)
+            if (!validateAgainstTokenHistory && (!session.IsActive || now < firstScanStart))
                 return new BaseResponse<bool>
                 {
                     Status = false,
@@ -82,27 +116,58 @@ namespace QRCodeAttendance.Implementation.Services
                 };
 
             if (!isFirstScanWindow && !isSecondScanWindow)
+            {
+                if (attendance?.FirstScanTime.HasValue == true && !attendance.SecondScanTime.HasValue)
+                    return new BaseResponse<bool>
+                    {
+                        Status = false,
+                        Message = $"Your first scan has been recorded. The second scan opens from {secondScanStart.ToLocalTime():hh:mm tt} to {secondScanEnd.ToLocalTime():hh:mm tt}."
+                    };
+
+                if (attendance?.SecondScanTime.HasValue == true)
+                    return new BaseResponse<bool>
+                    {
+                        Status = false,
+                        Message = "You have already completed both scans for this class."
+                    };
+
                 return new BaseResponse<bool>
                 {
                     Status = false,
                     Message = $"No scan is active now. First scan is open for the first 25 minutes. Second scan opens from {secondScanStart.ToLocalTime():hh:mm tt} to {secondScanEnd.ToLocalTime():hh:mm tt}."
                 };
+            }
 
-            if (string.IsNullOrWhiteSpace(session.QRCodeToken) || now >= session.QRCodeExpiry)
+            if (validateAgainstTokenHistory)
+            {
+                var tokenWasValidAtScanTime = _attendanceRepository
+                    .QueryWhere<QRCodeTokenHistory>(h =>
+                        h.SessionId == sessionId &&
+                        h.Token == qrCode &&
+                        scanTime >= h.ValidFrom &&
+                        scanTime < h.ValidUntil)
+                    .Any();
+
+                if (!tokenWasValidAtScanTime)
+                    return new BaseResponse<bool>
+                    {
+                        Status = false,
+                        Message = "This offline scan could not be verified against the QR token that was valid at the scan time."
+                    };
+            }
+            else if (string.IsNullOrWhiteSpace(session.QRCodeToken) || now >= session.QRCodeExpiry)
                 return new BaseResponse<bool>
                 {
                     Status = false,
                     Message = "This QR Code has expired. Please scan the current live QR Code"
                 };
 
-            if (qrCode != session.QRCodeToken)
+            if (!validateAgainstTokenHistory && qrCode != session.QRCodeToken)
                 return new BaseResponse<bool> 
                 { 
                     Status = false, 
                     Message = "Invalid or expired QR Code" 
                 };
-
-            var attendance = await _attendanceRepository.Get<Attendance>(a => a.StudentId == studentId && a.SessionId == sessionId);
 
             if (isFirstScanWindow)
             {
@@ -111,22 +176,24 @@ namespace QRCodeAttendance.Implementation.Services
                     if (attendance.FirstScanTime.HasValue)
                         return new BaseResponse<bool>
                         {
-                            Status = false,
+                            Status = validateAgainstTokenHistory,
                             Message = attendance.SecondScanTime.HasValue
                                 ? "You have already completed both scans for this class."
-                                : "You have already completed the first scan. Wait for the second scan window."
+                                : "You have already completed the first scan. Wait for the second scan window.",
+                            Data = validateAgainstTokenHistory
                         };
 
-                    attendance.FirstScanTime = now;
-                    attendance.ScanTime = now;
+                    attendance.FirstScanTime = scanTime;
+                    attendance.ScanTime = scanTime;
                     attendance.Status = AttendanceStatus.Incomplete;
                     attendance.UpdatedDate = now;
                     _attendanceRepository.Update(attendance);
                 }
                 else
                 {
-                    attendance = CreateAttendance(student, session, now, AttendanceStatus.Incomplete);
-                    attendance.FirstScanTime = now;
+                    attendance = CreateAttendance(student, session, scanTime, AttendanceStatus.Incomplete);
+                    attendance.FirstScanTime = scanTime;
+                    attendance.UpdatedDate = now;
                     await _attendanceRepository.Add(attendance);
                 }
 
@@ -144,13 +211,14 @@ namespace QRCodeAttendance.Implementation.Services
             {
                 if (attendance == null)
                 {
-                    attendance = CreateAttendance(student, session, now, AttendanceStatus.Absent);
+                    attendance = CreateAttendance(student, session, scanTime, AttendanceStatus.Absent);
+                    attendance.UpdatedDate = now;
                     await _attendanceRepository.Add(attendance);
                 }
                 else
                 {
                     attendance.Status = AttendanceStatus.Absent;
-                    attendance.ScanTime = now;
+                    attendance.ScanTime = scanTime;
                     attendance.UpdatedDate = now;
                     _attendanceRepository.Update(attendance);
                 }
@@ -167,12 +235,13 @@ namespace QRCodeAttendance.Implementation.Services
             if (attendance.SecondScanTime.HasValue)
                 return new BaseResponse<bool>
                 {
-                    Status = false,
-                    Message = "You have already completed both scans for this class."
+                    Status = validateAgainstTokenHistory,
+                    Message = "You have already completed both scans for this class.",
+                    Data = validateAgainstTokenHistory
                 };
 
-            attendance.SecondScanTime = now;
-            attendance.ScanTime = now;
+            attendance.SecondScanTime = scanTime;
+            attendance.ScanTime = scanTime;
             attendance.Status = AttendanceStatus.Present;
             attendance.UpdatedDate = now;
             _attendanceRepository.Update(attendance);
@@ -184,6 +253,20 @@ namespace QRCodeAttendance.Implementation.Services
                 Message = "Second scan recorded. You are fully present for this class.",
                 Data = true
             };
+        }
+
+        private static DateTime NormalizeScanTimeUtc(DateTime value)
+        {
+            return value.Kind == DateTimeKind.Utc
+                ? value
+                : value.ToUniversalTime();
+        }
+
+        private static DateTime NormalizeStoredUtc(DateTime value)
+        {
+            return value.Kind == DateTimeKind.Utc
+                ? value
+                : DateTime.SpecifyKind(value, DateTimeKind.Utc);
         }
 
         private static Attendance CreateAttendance(Student student, Session session, DateTime scanTime, AttendanceStatus status)

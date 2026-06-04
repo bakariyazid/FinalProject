@@ -287,16 +287,23 @@
                                     @record.SessionEndTime.ToLocalTime().ToString("MMM dd, hh:mm tt")</strong>
                             </div>
                             <div class="row-item">
-                                <span>Scan Time</span>
-                                <strong>@record.ScanTime.ToLocalTime().ToString("MMM dd, yyyy hh:mm tt")</strong>
+                                <span>First Scan</span>
+                                <strong>@(record.FirstScanTime.HasValue ? record.FirstScanTime.Value.ToLocalTime().ToString("MMM dd, yyyy hh:mm tt") : "Not completed")</strong>
+                            </div>
+                            <div class="row-item">
+                                <span>Second Scan</span>
+                                <strong>@(record.SecondScanTime.HasValue ? record.SecondScanTime.Value.ToLocalTime().ToString("MMM dd, yyyy hh:mm tt") : "Not completed")</strong>
                             </div>
                         </div>
                         <div class="card-actions">
                             <span class="status-badge">@record.Status</span>
-                            <a asp-controller="Student" asp-action="AttendanceReportPdf" asp-route-sessionId="@record.SessionId" class="btn-download">
-                                <i class="fa fa-file-pdf"></i>
-                                Download PDF
-                            </a>
+                            @if (record.Status == QRCodeAttendance.Models.Enums.AttendanceStatus.Present)
+                            {
+                                <a asp-controller="Student" asp-action="AttendanceReportPdf" asp-route-sessionId="@record.SessionId" class="btn-download">
+                                    <i class="fa fa-file-pdf"></i>
+                                    Download PDF
+                                </a>
+                            }
                         </div>
                     </article>
                 }
