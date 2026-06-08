@@ -5,7 +5,7 @@ using QRCodeAttendance.Models.Enums;
 
 namespace QRCodeAttendance.Models.Entities
 {
-    public class RegistrationInvitation : BaseEntity
+    public class Invitation : BaseEntity
     {
         [Required]
         [EmailAddress]
@@ -18,9 +18,6 @@ namespace QRCodeAttendance.Models.Entities
 
         [Required]
         public string WhatsAppNumber { get; set; } = string.Empty;
-
-        [Required]
-        public string InstructorIdentifier { get; set; } = string.Empty;
 
         public Departments? Department { get; set; }
 

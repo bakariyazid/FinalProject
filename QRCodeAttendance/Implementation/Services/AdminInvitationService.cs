@@ -14,10 +14,10 @@ namespace QRCodeAttendance.Implementation.Services
         private const int ApprovedCodeExpiryDays = 1;
         private const string DefaultRejectionReason = "The applicant could not be verified as an instructor.";
 
-        private readonly IRegistrationInvitationRepository _invitationRepository;
+        private readonly IInvitationRepository _invitationRepository;
         private readonly IUnitOfWork _unitOfWork;
 
-        public AdminInvitationService(IRegistrationInvitationRepository invitationRepository, IUnitOfWork unitOfWork)
+        public AdminInvitationService(IInvitationRepository invitationRepository, IUnitOfWork unitOfWork)
         {
             _invitationRepository = invitationRepository;
             _unitOfWork = unitOfWork;
@@ -66,7 +66,7 @@ namespace QRCodeAttendance.Implementation.Services
                 };
             }
 
-            var requestEntity = new RegistrationInvitation
+            var requestEntity = new Invitation
             {
                 InstructorEmail = email,
                 FullName = request.FullName.Trim(),
@@ -92,7 +92,7 @@ namespace QRCodeAttendance.Implementation.Services
         {
             var email = NormalizeEmail(request.InstructorEmail);
 
-            var invitation = new RegistrationInvitation
+            var invitation = new Invitation
             {
                 InstructorEmail = email,
                 InvitationCode = await GenerateUniqueCode(),
@@ -188,12 +188,12 @@ namespace QRCodeAttendance.Implementation.Services
             return email.Trim().ToLowerInvariant();
         }
 
-        private static string DisplayName(RegistrationInvitation invitation)
+        private static string DisplayName(Invitation invitation)
         {
             return string.IsNullOrWhiteSpace(invitation.FullName) ? invitation.InstructorEmail : invitation.FullName;
         }
 
-        private static InstructorInvitationDto ToInvitationDto(RegistrationInvitation invitation)
+        private static InstructorInvitationDto ToInvitationDto(Invitation invitation)
         {
             return new InstructorInvitationDto
             {

@@ -16,7 +16,6 @@ using QRCodeAttendance.Models.DTOs.Session;
 using QRCodeAttendance.Models.DTOs.StudentDto;
 using QRCodeAttendance.Models.Entities;
 using QRCodeAttendance.Models.Enums;
-using QRCodeAttendance.Persistence.QRCodeAttendanceDb;
 
 namespace QRCodeAttendance.Implementation.Services
 {
@@ -33,13 +32,13 @@ namespace QRCodeAttendance.Implementation.Services
         private readonly UserManager<User> _userManager;
         private readonly ILogger<InstructorService> _logger;
         private readonly IStudentRepository _studentRepository;
-        private readonly QRCodeDbContext _dbContext;
+        private readonly IInvitationRepository _invitationRepository;
 
         public InstructorService(IInstructorRepository instructorRepository, ISessionRepository sessionRepository,
         IAttendanceRepository attendanceRepository, IUnitOfWork unitOfWork, ISessionService sessionService, 
         IUserRepository userRepository, IIdentityService identityService, IRoleRepository roleRepository, 
         UserManager<User> userManager, ILogger<InstructorService> logger, IStudentRepository studentRepository,
-        QRCodeDbContext dbContext)
+        IInvitationRepository invitationRepository)
         {
             _instructorRepository = instructorRepository ?? throw new ArgumentNullException(nameof(instructorRepository));
             _sessionRepository = sessionRepository ?? throw new ArgumentNullException(nameof(sessionRepository));
@@ -52,7 +51,7 @@ namespace QRCodeAttendance.Implementation.Services
             _userManager = userManager ?? throw new ArgumentNullException(nameof(userManager));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _studentRepository = studentRepository ?? throw new ArgumentNullException(nameof(studentRepository));
-            _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
+            _invitationRepository = invitationRepository ?? throw new ArgumentNullException(nameof(invitationRepository));
         }
 
  public async Task<BaseResponse<bool>> RegisterInstructor(CreateInstructorRequestModel request)
@@ -60,10 +59,7 @@ namespace QRCodeAttendance.Implementation.Services
                 var normalizedEmail = request.Email.Trim().ToLowerInvariant();
                 var invitationCode = request.InvitationCode.Trim().ToUpperInvariant();
 
-                var invitation = await _dbContext.RegistrationInvitations
-                    .FirstOrDefaultAsync(i =>
-                        i.InvitationCode == invitationCode &&
-                        i.Status == InstructorInvitationStatus.Approved);
+                var invitation = await _invitationRepository.GetApprovedByCode(invitationCode);
 
                 if (invitation == null)
                 {
@@ -83,7 +79,7 @@ namespace QRCodeAttendance.Implementation.Services
                     };
                 }
 
-                if (invitation.ExpiryDate <= DateTime.UtcNow)
+                if (invitation.ExpiryDate <= DateTime.UtcNow.ToUniversalTime())
                 {
                     return new BaseResponse<bool>
                     {
@@ -97,7 +93,7 @@ namespace QRCodeAttendance.Implementation.Services
                 {
                     return new BaseResponse<bool>
                     {
-                            Message = "Instructor with email already exist",
+                        Message = "Instructor with email already exist",
                         Status = false
                     };
                 }

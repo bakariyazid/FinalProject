@@ -38,7 +38,7 @@ namespace QRCodeAttendance.Models.DTOs.Admin
     public class CreateInstructorAccessRequestModel
     {
         [Required]
-        [StringLength(120, MinimumLength = 2)]
+        [StringLength(120, MinimumLength = 4)]
         [Display(Name = "Full name")]
         public string FullName { get; set; } = string.Empty;
 

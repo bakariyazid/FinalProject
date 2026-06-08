@@ -81,7 +81,7 @@ namespace QRCodeAttendance.Implementation.Services
                      Message = "Session not found" 
                 };
 
-            var now = DateTime.UtcNow;
+            var now = DateTime.UtcNow.ToUniversalTime();
             var scanTime = NormalizeScanTimeUtc(scannedAt);
             var firstScanStart = NormalizeStoredUtc(session.SessionStartTime);
             var firstScanEnd = firstScanStart.AddMinutes(25);

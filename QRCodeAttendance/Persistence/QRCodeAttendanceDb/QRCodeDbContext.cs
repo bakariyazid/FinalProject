@@ -18,7 +18,7 @@ namespace QRCodeAttendance.Persistence.QRCodeAttendanceDb
         public DbSet<Role> Roles { get; set; } = null!;
         public DbSet<Student> Students { get; set; } = null!;
         public DbSet<Instructor> Instructors { get; set; } = null!;
-        public DbSet<RegistrationInvitation> RegistrationInvitations { get; set; } = null!;
+        public DbSet<Invitation> Invitations { get; set; } = null!;
         public DbSet<Admin> Admins { get; set; } = null!;
         public DbSet<Session> Sessions { get; set; } = null!;
         public DbSet<Attendance> Attendances { get; set; } = null!;
@@ -38,15 +38,15 @@ namespace QRCodeAttendance.Persistence.QRCodeAttendanceDb
                 .HasIndex(r => r.Name)
                 .IsUnique();
 
-            builder.Entity<RegistrationInvitation>()
+            builder.Entity<Invitation>()
                 .HasIndex(i => i.InvitationCode)
                 .IsUnique();
 
-            builder.Entity<RegistrationInvitation>()
+            builder.Entity<Invitation>()
                 .Property(i => i.Department)
                 .HasConversion<string>();
 
-            builder.Entity<RegistrationInvitation>()
+            builder.Entity<Invitation>()
                 .Property(i => i.Status)
                 .HasConversion<string>();
 
