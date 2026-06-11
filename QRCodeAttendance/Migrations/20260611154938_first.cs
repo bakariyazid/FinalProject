@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace QRCodeAttendance.Migrations
 {
     /// <inheritdoc />
-    public partial class First : Migration
+    public partial class first : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -17,7 +17,7 @@ namespace QRCodeAttendance.Migrations
                 .Annotation("MySql:CharSet", "utf8mb4");
 
             migrationBuilder.CreateTable(
-                name: "RegistrationInvitations",
+                name: "Invitations",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "char(36)", nullable: false, collation: "ascii_general_ci"),
@@ -28,8 +28,6 @@ namespace QRCodeAttendance.Migrations
                     FullName = table.Column<string>(type: "longtext", nullable: false)
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     WhatsAppNumber = table.Column<string>(type: "longtext", nullable: false)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    InstructorIdentifier = table.Column<string>(type: "longtext", nullable: false)
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     Department = table.Column<string>(type: "longtext", nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
@@ -46,7 +44,7 @@ namespace QRCodeAttendance.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_RegistrationInvitations", x => x.Id);
+                    table.PrimaryKey("PK_Invitations", x => x.Id);
                 })
                 .Annotation("MySql:CharSet", "utf8mb4");
 
@@ -352,15 +350,15 @@ namespace QRCodeAttendance.Migrations
                 unique: true);
 
             migrationBuilder.CreateIndex(
-                name: "IX_QRCodeTokenHistories_SessionId_Token",
-                table: "QRCodeTokenHistories",
-                columns: new[] { "SessionId", "Token" },
+                name: "IX_Invitations_InvitationCode",
+                table: "Invitations",
+                column: "InvitationCode",
                 unique: true);
 
             migrationBuilder.CreateIndex(
-                name: "IX_RegistrationInvitations_InvitationCode",
-                table: "RegistrationInvitations",
-                column: "InvitationCode",
+                name: "IX_QRCodeTokenHistories_SessionId_Token",
+                table: "QRCodeTokenHistories",
+                columns: new[] { "SessionId", "Token" },
                 unique: true);
 
             migrationBuilder.CreateIndex(
@@ -396,10 +394,10 @@ namespace QRCodeAttendance.Migrations
                 name: "Attendances");
 
             migrationBuilder.DropTable(
-                name: "QRCodeTokenHistories");
+                name: "Invitations");
 
             migrationBuilder.DropTable(
-                name: "RegistrationInvitations");
+                name: "QRCodeTokenHistories");
 
             migrationBuilder.DropTable(
                 name: "Students");

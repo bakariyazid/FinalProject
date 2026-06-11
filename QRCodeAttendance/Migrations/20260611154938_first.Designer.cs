@@ -12,8 +12,8 @@ using QRCodeAttendance.Persistence.QRCodeAttendanceDb;
 namespace QRCodeAttendance.Migrations
 {
     [DbContext(typeof(QRCodeDbContext))]
-    [Migration("20260604222409_First")]
-    partial class First
+    [Migration("20260611154938_first")]
+    partial class first
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -202,41 +202,7 @@ namespace QRCodeAttendance.Migrations
                     b.ToTable("Instructors");
                 });
 
-            modelBuilder.Entity("QRCodeAttendance.Models.Entities.QRCodeTokenHistory", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("char(36)");
-
-                    b.Property<DateTime>("CreatedDate")
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<Guid>("SessionId")
-                        .HasColumnType("char(36)");
-
-                    b.Property<string>("Token")
-                        .IsRequired()
-                        .HasMaxLength(64)
-                        .HasColumnType("varchar(64)");
-
-                    b.Property<DateTime>("UpdatedDate")
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<DateTime>("ValidFrom")
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<DateTime>("ValidUntil")
-                        .HasColumnType("datetime(6)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("SessionId", "Token")
-                        .IsUnique();
-
-                    b.ToTable("QRCodeTokenHistories");
-                });
-
-            modelBuilder.Entity("QRCodeAttendance.Models.Entities.RegistrationInvitation", b =>
+            modelBuilder.Entity("QRCodeAttendance.Models.Entities.Invitation", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -256,10 +222,6 @@ namespace QRCodeAttendance.Migrations
                         .HasColumnType("longtext");
 
                     b.Property<string>("InstructorEmail")
-                        .IsRequired()
-                        .HasColumnType("longtext");
-
-                    b.Property<string>("InstructorIdentifier")
                         .IsRequired()
                         .HasColumnType("longtext");
 
@@ -294,7 +256,41 @@ namespace QRCodeAttendance.Migrations
                     b.HasIndex("InvitationCode")
                         .IsUnique();
 
-                    b.ToTable("RegistrationInvitations");
+                    b.ToTable("Invitations");
+                });
+
+            modelBuilder.Entity("QRCodeAttendance.Models.Entities.QRCodeTokenHistory", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("char(36)");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<Guid>("SessionId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<string>("Token")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("varchar(64)");
+
+                    b.Property<DateTime>("UpdatedDate")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<DateTime>("ValidFrom")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<DateTime>("ValidUntil")
+                        .HasColumnType("datetime(6)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SessionId", "Token")
+                        .IsUnique();
+
+                    b.ToTable("QRCodeTokenHistories");
                 });
 
             modelBuilder.Entity("QRCodeAttendance.Models.Entities.Role", b =>
