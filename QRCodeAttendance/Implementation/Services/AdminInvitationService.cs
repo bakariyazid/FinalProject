@@ -1,3 +1,5 @@
+using System.Security.Cryptography;
+using System.Text;
 using QRCodeAttendance.Interface.Repositories;
 using QRCodeAttendance.Interface.Services;
 using QRCodeAttendance.Models.DTOs;
@@ -10,23 +12,29 @@ namespace QRCodeAttendance.Implementation.Services
     public class AdminInvitationService : IAdminInvitationService
     {
         private const int RecentInvitationLimit = 25;
-        private const int RequestExpiryDays = 7;
-        private const int ApprovedCodeExpiryDays = 1;
-        private const string DefaultRejectionReason = "The applicant could not be verified as an instructor.";
+        private const int CodeExpiryHours = 24;
+        private const string CodeCharacters = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 
         private readonly IInvitationRepository _invitationRepository;
         private readonly IUnitOfWork _unitOfWork;
+        private readonly IEmailService _emailService;
+        private readonly ILogger<AdminInvitationService> _logger;
 
-        public AdminInvitationService(IInvitationRepository invitationRepository, IUnitOfWork unitOfWork)
+        public AdminInvitationService(
+            IInvitationRepository invitationRepository,
+            IUnitOfWork unitOfWork,
+            IEmailService emailService,
+            ILogger<AdminInvitationService> logger)
         {
             _invitationRepository = invitationRepository;
             _unitOfWork = unitOfWork;
+            _emailService = emailService;
+            _logger = logger;
         }
 
         public async Task<BaseResponse<AdminInvitationDashboardDto>> GetInvitationDashboard()
         {
             var invitations = await _invitationRepository.GetRecentInvitations(RecentInvitationLimit);
-            var pendingRequests = await _invitationRepository.GetPendingRequests();
 
             return new BaseResponse<AdminInvitationDashboardDto>
             {
@@ -34,57 +42,8 @@ namespace QRCodeAttendance.Implementation.Services
                 Message = "Invitation dashboard loaded successfully.",
                 Data = new AdminInvitationDashboardDto
                 {
-                    PendingRequests = pendingRequests.Select(ToInvitationDto).ToList(),
-                    RecentInvitations = invitations
-                        .Where(i => i.Status != InstructorInvitationStatus.Pending)
-                        .Select(ToInvitationDto)
-                        .ToList()
+                    RecentInvitations = invitations.Select(ToInvitationDto).ToList()
                 }
-            };
-        }
-
-        public async Task<BaseResponse<bool>> SubmitInstructorAccessRequest(CreateInstructorAccessRequestModel request)
-        {
-            var email = NormalizeEmail(request.Email);
-            var whatsAppNumber = request.WhatsAppNumber.Trim();
-
-            if (await _invitationRepository.HasPendingRequestForWhatsApp(whatsAppNumber))
-            {
-                return new BaseResponse<bool>
-                {
-                    Status = false,
-                    Message = "You already have an instructor access request waiting for admin review."
-                };
-            }
-
-            if (await _invitationRepository.HasActiveInvitationForWhatsApp(whatsAppNumber))
-            {
-                return new BaseResponse<bool>
-                {
-                    Status = false,
-                    Message = "You already have an active instructor invitation code. Check WhatsApp or contact the admin."
-                };
-            }
-
-            var requestEntity = new Invitation
-            {
-                InstructorEmail = email,
-                FullName = request.FullName.Trim(),
-                WhatsAppNumber = whatsAppNumber,
-                Department = request.Department,
-                Status = InstructorInvitationStatus.Pending,
-                CreatedDate = DateTime.UtcNow.ToUniversalTime(),
-                ExpiryDate = DateTime.UtcNow.ToUniversalTime().AddDays(RequestExpiryDays),
-                IsUsed = false
-            };
-
-            await _invitationRepository.Add(requestEntity);
-            await _unitOfWork.SaveChangesAsync();
-
-            return new BaseResponse<bool>
-            {
-                Status = true,
-                Message = "Your instructor access request has been submitted. The admin will review it and share the next step through WhatsApp."
             };
         }
 
@@ -92,95 +51,90 @@ namespace QRCodeAttendance.Implementation.Services
         {
             var email = NormalizeEmail(request.InstructorEmail);
 
+            if (await _invitationRepository.HasActiveInvitationForEmail(email))
+            {
+                return new BaseResponse<InstructorInvitationDto>
+                {
+                    Status = false,
+                    Message = "This instructor already has an active registration code. Wait until it expires or the instructor uses it."
+                };
+            }
+
+            var code = await GenerateUniqueCode(email);
             var invitation = new Invitation
             {
                 InstructorEmail = email,
-                InvitationCode = await GenerateUniqueCode(),
+                InvitationCodeHash = HashInvitationCode(email, code),
                 Status = InstructorInvitationStatus.Approved,
-                ReviewedAt = DateTime.UtcNow.ToUniversalTime(),
-                CreatedDate = DateTime.UtcNow.ToUniversalTime(),
-                ExpiryDate = DateTime.UtcNow.ToUniversalTime().AddDays(ApprovedCodeExpiryDays),
+                CreatedDate = DateTime.UtcNow,
+                ExpiryDate = DateTime.UtcNow.AddHours(CodeExpiryHours),
                 IsUsed = false
             };
 
             await _invitationRepository.Add(invitation);
             await _unitOfWork.SaveChangesAsync();
 
+            try
+            {
+                await _emailService.SendInstructorInvitationCodeAsync(email, code, invitation.ExpiryDate);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to deliver instructor invitation code to {InstructorEmail}", email);
+                invitation.Status = InstructorInvitationStatus.Rejected;
+                invitation.RejectionReason = ex.Message;
+                invitation.UpdatedDate = DateTime.UtcNow;
+                _invitationRepository.Update(invitation);
+                await _unitOfWork.SaveChangesAsync();
+
+                return new BaseResponse<InstructorInvitationDto>
+                {
+                    Status = false,
+                    Message = $"The code was generated but the email could not be delivered: {ex.Message}",
+                    Data = ToInvitationDto(invitation)
+                };
+            }
+
             return new BaseResponse<InstructorInvitationDto>
             {
                 Status = true,
-                Message = $"Invitation code generated: {invitation.InvitationCode}. Share it with the instructor through WhatsApp.",
+                Message = $"Instructor code sent to {email}. The code is hidden from admins and expires after 24 hours.",
                 Data = ToInvitationDto(invitation)
             };
         }
 
-        public async Task<BaseResponse<InstructorInvitationDto>> ApproveInstructorRequest(Guid requestId)
+        public static string HashInvitationCode(string email, string code)
         {
-            var request = await _invitationRepository.GetById(requestId);
-            if (request == null || request.Status != InstructorInvitationStatus.Pending)
-            {
-                return new BaseResponse<InstructorInvitationDto>
-                {
-                    Status = false,
-                    Message = "Instructor request was not found or has already been reviewed."
-                };
-            }
-
-            request.InvitationCode = await GenerateUniqueCode();
-            request.Status = InstructorInvitationStatus.Approved;
-            request.ReviewedAt = DateTime.UtcNow.ToUniversalTime();
-            request.ExpiryDate = DateTime.UtcNow.ToUniversalTime().AddDays(ApprovedCodeExpiryDays);
-            request.UpdatedDate = DateTime.UtcNow.ToUniversalTime();
-
-            _invitationRepository.Update(request);
-            await _unitOfWork.SaveChangesAsync();
-
-            return new BaseResponse<InstructorInvitationDto>
-            {
-                Status = true,
-                Message = $"Request approved. Click WhatsApp to send the invitation code to {request.FullName}.",
-                Data = ToInvitationDto(request)
-            };
+            var normalized = NormalizeCode(code);
+            var hashBytes = SHA256.HashData(Encoding.UTF8.GetBytes(normalized));
+            return Convert.ToHexString(hashBytes);
         }
 
-        public async Task<BaseResponse<bool>> RejectInstructorRequest(Guid requestId, string? reason)
-        {
-            var request = await _invitationRepository.GetById(requestId);
-            if (request == null || request.Status != InstructorInvitationStatus.Pending)
-            {
-                return new BaseResponse<bool>
-                {
-                    Status = false,
-                    Message = "Instructor request was not found or has already been reviewed."
-                };
-            }
-
-            request.Status = InstructorInvitationStatus.Rejected;
-            request.ReviewedAt = DateTime.UtcNow.ToUniversalTime();
-            request.RejectionReason = string.IsNullOrWhiteSpace(reason)? DefaultRejectionReason : reason.Trim();
-            request.UpdatedDate = DateTime.UtcNow.ToUniversalTime();
-
-            _invitationRepository.Update(request);
-            await _unitOfWork.SaveChangesAsync();
-
-            return new BaseResponse<bool>
-            {
-                Status = true,
-                Message = $"Request rejected for {DisplayName(request)}. Click WhatsApp to share the rejection message."
-            };
-        }
-
-        private async Task<string> GenerateUniqueCode()
+        private async Task<string> GenerateUniqueCode(string email)
         {
             string code;
+            string codeHash;
 
             do
             {
-                code = $"INS-{Random.Shared.Next(100000, 999999)}";
+                code = $"INS-{GenerateCodeSegment(8)}";
+                codeHash = HashInvitationCode(email, code);
             }
-            while (await _invitationRepository.InvitationCodeExists(code));
+            while (await _invitationRepository.InvitationCodeHashExists(codeHash));
 
             return code;
+        }
+
+        private static string GenerateCodeSegment(int length)
+        {
+            var code = new char[length];
+
+            for (var i = 0; i < code.Length; i++)
+            {
+                code[i] = CodeCharacters[RandomNumberGenerator.GetInt32(CodeCharacters.Length)];
+            }
+
+            return new string(code);
         }
 
         private static string NormalizeEmail(string email)
@@ -188,9 +142,9 @@ namespace QRCodeAttendance.Implementation.Services
             return email.Trim().ToLowerInvariant();
         }
 
-        private static string DisplayName(Invitation invitation)
+        private static string NormalizeCode(string code)
         {
-            return string.IsNullOrWhiteSpace(invitation.FullName) ? invitation.InstructorEmail : invitation.FullName;
+            return code.Trim().ToUpperInvariant();
         }
 
         private static InstructorInvitationDto ToInvitationDto(Invitation invitation)
@@ -199,12 +153,7 @@ namespace QRCodeAttendance.Implementation.Services
             {
                 Id = invitation.Id,
                 InstructorEmail = invitation.InstructorEmail,
-                InvitationCode = invitation.InvitationCode ?? string.Empty,
-                FullName = invitation.FullName,
-                WhatsAppNumber = invitation.WhatsAppNumber,
-                Department = invitation.Department,
                 Status = invitation.Status,
-                ReviewedAt = invitation.ReviewedAt,
                 RejectionReason = invitation.RejectionReason,
                 CreatedDate = invitation.CreatedDate,
                 ExpiryDate = invitation.ExpiryDate,

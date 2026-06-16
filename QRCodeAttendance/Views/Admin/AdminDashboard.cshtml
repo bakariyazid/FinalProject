@@ -2,9 +2,9 @@
 
 @{
     ViewData["Title"] = "Admin Dashboard";
-    var pendingCount = Model.PendingRequests.Count;
     var activeCount = Model.RecentInvitations.Count(i => !i.IsUsed && i.ExpiryDate > DateTime.UtcNow && i.Status.ToString() == "Approved");
     var usedCount = Model.RecentInvitations.Count(i => i.IsUsed);
+    var expiredCount = Model.RecentInvitations.Count(i => !i.IsUsed && i.ExpiryDate <= DateTime.UtcNow && i.Status.ToString() == "Approved");
 }
 
 <style>
@@ -266,7 +266,7 @@
         <div>
             <p class="admin-kicker">Admin Control</p>
             <h1 class="admin-title">Instructor Invitations</h1>
-            <p class="admin-subtitle">Review instructor access requests, approve verified applicants, and issue registration codes for the QR attendance portal.</p>
+            <p class="admin-subtitle">Send secure instructor registration codes by email. Codes are hidden from admins, tied to the instructor email, and expire after 24 hours.</p>
         </div>
         <form asp-controller="User" asp-action="Logout" method="post">
             @Html.AntiForgeryToken()
@@ -284,8 +284,8 @@
 
     <div class="admin-stats">
         <div class="admin-stat">
-            <span>Pending Review</span>
-            <strong>@pendingCount</strong>
+            <span>Expired Codes</span>
+            <strong>@expiredCount</strong>
         </div>
         <div class="admin-stat">
             <span>Active Codes</span>
@@ -300,65 +300,30 @@
     <div class="admin-grid">
         <section class="admin-panel">
             <div class="admin-panel-header">
-                <h2>Pending Instructor Requests</h2>
-                <p>Approve only applicants you have confirmed as instructors.</p>
+                <h2>Send Instructor Code</h2>
+                <p>Enter the instructor email address. Brevo will deliver a private registration code with the MITC logo.</p>
             </div>
 
-            @if (Model.PendingRequests.Any())
-            {
-                <div class="table-responsive">
-                    <table class="table admin-table align-middle">
-                        <thead>
-                            <tr>
-                                <th>Name</th>
-                                <th>Email</th>
-                                <th>WhatsApp</th>
-                                <th>Department</th>
-                                <th>Requested</th>
-                                <th class="text-end">Action</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach (var request in Model.PendingRequests)
-                            {
-                                <tr>
-                                    <td class="fw-bold">@request.FullName</td>
-                                    <td>@request.InstructorEmail</td>
-                                    <td>@request.WhatsAppNumber</td>
-                                    <td>@request.Department</td>
-                                    <td>@request.CreatedDate.ToLocalTime().ToString("MMM dd, yyyy h:mm tt")</td>
-                                    <td>
-                                        <div class="admin-action-row">
-                                            <form asp-controller="Admin" asp-action="ApproveInstructorRequest" method="post">
-                                                @Html.AntiForgeryToken()
-                                                <input type="hidden" name="id" value="@request.Id" />
-                                                <button type="submit" class="btn btn-sm btn-success">Approve</button>
-                                            </form>
-                                            <form asp-controller="Admin" asp-action="RejectInstructorRequest" method="post">
-                                                @Html.AntiForgeryToken()
-                                                <input type="hidden" name="id" value="@request.Id" />
-                                                <input type="hidden" name="reason" value="The applicant could not be verified as an instructor." />
-                                                <button type="submit" class="btn btn-sm btn-outline-danger">Reject</button>
-                                            </form>
-                                        </div>
-                                    </td>
-                                </tr>
-                            }
-                        </tbody>
-                    </table>
-                </div>
-            }
-            else
-            {
-                <div class="admin-empty">No instructor access requests are waiting for review.</div>
-            }
+            <div class="admin-panel-body">
+                <form asp-controller="Admin" asp-action="GenerateInstructorCode" method="post" class="row g-3">
+                    @Html.AntiForgeryToken()
+                    <div class="col-md-9">
+                        <label asp-for="Form.InstructorEmail" class="form-label fw-bold">Instructor email</label>
+                        <input asp-for="Form.InstructorEmail" type="email" class="form-control admin-control" placeholder="instructor@mitc.edu.ng" autocomplete="email" />
+                        <span asp-validation-for="Form.InstructorEmail" class="text-danger small"></span>
+                    </div>
+                    <div class="col-md-3 d-flex align-items-end">
+                        <button type="submit" class="btn admin-primary-btn w-100">Send Code</button>
+                    </div>
+                </form>
+            </div>
         </section>
     </div>
 
     <section class="admin-panel admin-recent">
         <div class="admin-panel-header">
             <h2>Recent Invitations</h2>
-            <p>Codes are validated by the registration code only and expire after one day.</p>
+            <p>Raw codes are not displayed here. Each code can only be used with the email address it was generated for.</p>
         </div>
 
         @if (Model.RecentInvitations.Any())
@@ -368,55 +333,23 @@
                     <thead>
                         <tr>
                             <th>Email</th>
-                            <th>WhatsApp</th>
-                            <th>Code</th>
-                            <th>Requested</th>
+                            <th>Sent</th>
                             <th>Expires</th>
                             <th>Status</th>
-                            <th class="text-end">Share</th>
                         </tr>
                     </thead>
                     <tbody>
                         @foreach (var invitation in Model.RecentInvitations)
                         {
-                            var expired = invitation.ExpiryDate <= DateTime.UtcNow.ToLocalTime();
+                            var expired = invitation.ExpiryDate <= DateTime.UtcNow;
                             var badgeClass = invitation.Status.ToString() == "Rejected" ? "bg-danger" : invitation.IsUsed ? "bg-secondary" : expired ? "bg-warning text-dark" : "bg-success";
-                            var status = invitation.Status.ToString() == "Rejected" ? "Rejected" : invitation.IsUsed ? "Used" : expired ? "Expired" : invitation.Status.ToString();
-                            var instructorName = string.IsNullOrWhiteSpace(invitation.FullName) ? "Instructor" : invitation.FullName.Trim();
-                            var whatsappNumber = NormalizeWhatsAppNumber(invitation.WhatsAppNumber);
-                            var isApproved = invitation.Status.ToString() == "Approved";
-                            var isRejected = invitation.Status.ToString() == "Rejected";
-                            var whatsappMessage = isRejected
-                                ? $"Hi {instructorName}, your MITC QRCode Attendance instructor access request was not approved. Reason: {invitation.RejectionReason}"
-                                : $"Hi {instructorName}, welcome to MITC QRCode Attendance. Your instructor registration code is {invitation.InvitationCode}";
-                            var whatsappUrl = $"https://wa.me/{whatsappNumber}?text={Uri.EscapeDataString(whatsappMessage)}";
+                            var status = invitation.Status.ToString() == "Rejected" ? "Email Failed" : invitation.IsUsed ? "Used" : expired ? "Expired" : "Active";
 
                             <tr>
                                 <td class="fw-bold">@invitation.InstructorEmail</td>
-                                <td>@invitation.WhatsAppNumber</td>
-                                <td>
-                                    @if (!string.IsNullOrWhiteSpace(invitation.InvitationCode))
-                                    {
-                                        <span class="admin-code">@invitation.InvitationCode</span>
-                                    }
-                                    else
-                                    {
-                                        <span class="text-muted">Not issued</span>
-                                    }
-                                </td>
                                 <td>@invitation.CreatedDate.ToLocalTime().ToString("MMM dd, yyyy h:mm tt")</td>
                                 <td>@invitation.ExpiryDate.ToLocalTime().ToString("MMM dd, yyyy h:mm tt")</td>
                                 <td><span class="badge @badgeClass rounded-pill px-3">@status</span></td>
-                                <td class="text-end">
-                                    @if (!string.IsNullOrWhiteSpace(whatsappNumber) && ((isApproved && !string.IsNullOrWhiteSpace(invitation.InvitationCode)) || isRejected))
-                                    {
-                                        <a class="admin-whatsapp-btn" href="@whatsappUrl" target="_blank" rel="noopener">WhatsApp</a>
-                                    }
-                                    else
-                                    {
-                                        <span class="text-muted">Unavailable</span>
-                                    }
-                                </td>
                             </tr>
                         }
                     </tbody>
@@ -433,23 +366,4 @@
 
 @section Scripts {
 <partial name="_ValidationScriptsPartial" />
-}
-
-@functions {
-    private static string NormalizeWhatsAppNumber(string? value)
-    {
-        var digits = new string((value ?? string.Empty).Where(char.IsDigit).ToArray());
-
-        if (digits.StartsWith("0") && digits.Length == 11)
-        {
-            return $"234{digits[1..]}";
-        }
-
-        if (digits.Length == 10)
-        {
-            return $"234{digits}";
-        }
-
-        return digits;
-    }
 }

@@ -10,6 +10,7 @@ using QRCodeAttendance.Implementation.Repositories;
 using QRCodeAttendance.Implementation.Services;
 using QRCodeAttendance.Interface.Repositories;
 using QRCodeAttendance.Interface.Services;
+using QRCodeAttendance.Models.Configuration;
 using QRCodeAttendance.Models.Entities;
 using QRCodeAttendance.Persistence.QRCodeAttendanceDb;
 
@@ -28,6 +29,8 @@ builder.Services.Scan(scan => scan
         .AsImplementedInterfaces()
         .WithScopedLifetime());
 
+builder.Services.Configure<BrevoOptions>(builder.Configuration.GetSection("Brevo"));
+builder.Services.AddHttpClient<IEmailService, BrevoEmailService>();
 
 //Add Database Context
 builder.Services.AddDbContext<QRCodeDbContext>(options =>

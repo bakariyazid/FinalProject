@@ -49,28 +49,5 @@ namespace QRCodeAttendance.Controllers
             return RedirectToAction(nameof(AdminDashboard));
         }
 
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> ApproveInstructorRequest(Guid id)
-        {
-            var response = await _adminInvitationService.ApproveInstructorRequest(id);
-
-            TempData["Alert"] = response.Message;
-            TempData["AlertType"] = response.Status ? "success" : "warning";
-
-            return RedirectToAction(nameof(AdminDashboard));
-        }
-
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> RejectInstructorRequest(Guid id, string? reason)
-        {
-            var response = await _adminInvitationService.RejectInstructorRequest(id, reason);
-
-            TempData["Alert"] = response.Message;
-            TempData["AlertType"] = response.Status ? "success" : "warning";
-
-            return RedirectToAction(nameof(AdminDashboard));
-        }
     }
 }

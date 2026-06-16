@@ -118,7 +118,7 @@ namespace QRCodeAttendance.Implementation.Services
                     };
                 }
 
-                var now = DateTime.UtcNow.ToUniversalTime();
+                var now = DateTime.UtcNow;
                 var sessionStartTime = NormalizeStoredUtc(session.SessionStartTime);
                 var sessionEndTime = NormalizeStoredUtc(session.SessionEndTime);
                 var firstScanEnd = sessionStartTime.AddMinutes(25);
@@ -208,7 +208,7 @@ namespace QRCodeAttendance.Implementation.Services
 
         public async Task<int> RotateDueQrCodesAsync()
         {
-            var now = DateTime.UtcNow.ToUniversalTime();
+            var now = DateTime.UtcNow;
             var sessions = await _sessionRepository.GetAll<Session>();
             var changedCount = 0;
 

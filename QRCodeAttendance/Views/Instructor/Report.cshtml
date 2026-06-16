@@ -6,122 +6,278 @@
 }
 
 <style>
+    @@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+
     :root {
-        --glass: rgba(255, 255, 255, 0.7);
-        --glass-border: rgba(255, 255, 255, 0.3);
-        --primary: #6366f1;
-        --success: #22c55e;
+        --mitc-blue: #1e40af;
+        --mitc-dark-blue: #0f172a;
+        --glass: rgba(255, 255, 255, 0.85);
+        --glass-border: rgba(226, 232, 240, 0.8);
+        --primary: #4f46e5;
+        --primary-light: rgba(79, 70, 229, 0.1);
+        --success: #10b981;
+        --success-bg: #ecfdf5;
+        --success-text: #047857;
         --warning: #f59e0b;
+        --warning-bg: #fffbeb;
+        --warning-text: #b45309;
         --danger: #ef4444;
+        --danger-bg: #fef2f2;
+        --danger-text: #b91c1c;
+        --text-main: #1e293b;
+        --text-muted: #64748b;
     }
 
     body {
-        background: radial-gradient(circle at top left, #f8fafc, #e2e8f0);
+        background: radial-gradient(circle at 0% 0%, #f1f5f9 0%, #e2e8f0 100%);
         font-family: 'Plus Jakarta Sans', sans-serif;
-        color: #1e293b;
+        color: var(--text-main);
+        -webkit-font-smoothing: antialiased;
     }
 
     .report-container {
-        padding: 2rem 0;
+        padding: 2.5rem 0;
     }
 
-    .glass-panel {
-        background: var(--glass);
-        backdrop-filter: blur(12px);
-        border: 1px solid var(--glass-border);
+    /* Brand Header Components */
+    .brand-header-wrapper {
+        background: linear-gradient(135deg, #1e3a8a 0%, #0f172a 100%);
         border-radius: 24px;
-        padding: 1.5rem;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.03);
-        margin-bottom: 2rem;
+        padding: 2rem 2.5rem;
+        color: #ffffff;
+        box-shadow: 0 20px 40px rgba(15, 23, 42, 0.12);
     }
 
-    .avatar-sm {
-        width: 32px;
-        height: 32px;
-        background: var(--primary);
-        color: white;
-        border-radius: 50%;
+    .brand-logo-emblem {
+        font-size: 2.5rem;
+        font-weight: 800;
+        letter-spacing: -1px;
+        line-height: 1;
         display: flex;
         align-items: center;
-        justify-content: center;
-        font-size: 0.7rem;
-        font-weight: bold;
+        gap: 2px;
+    }
+
+    .brand-logo-emblem span:nth-child(1) { color: #38bdf8; } /* M */
+    .brand-logo-emblem span:nth-child(2) { color: #f97316; } /* I */
+    .brand-logo-emblem span:nth-child(3) { color: #eab308; } /* T */
+    .brand-logo-emblem span:nth-child(4) { color: #38bdf8; } /* C */
+
+    .brand-divider {
+        width: 1px;
+        height: 50px;
+        background: rgba(255, 255, 255, 0.15);
+    }
+
+    .brand-title-text {
+        font-size: 1.25rem;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+        line-height: 1.2;
+        color: #f8fafc;
+    }
+
+    /* Glass Panels */
+    .glass-panel {
+        background: var(--glass);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        border: 1px solid var(--glass-border);
+        border-radius: 24px;
+        padding: 2rem;
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.02), 0 8px 10px -6px rgba(0, 0, 0, 0.02);
+    }
+
+    /* Stats Cards */
+    .stat-card {
+        transition: transform 0.25s ease, box-shadow 0.25s ease;
+    }
+
+    .stat-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.05);
+    }
+
+    /* Typography Overrides */
+    .text-muted-custom {
+        color: var(--text-muted);
+    }
+
+    .letter-spacing-caps {
+        text-transform: uppercase;
+        letter-spacing: 1.5px;
+        font-size: 0.75rem;
+    }
+
+    /* Table Styling */
+    .table-custom-wrapper {
+        border-radius: 16px;
+        overflow: hidden;
+        border: 1px solid rgba(0, 0, 0, 0.03);
     }
 
     .table-custom thead th {
-        background: transparent;
-        color: #64748b;
+        background: #f8fafc;
+        color: var(--text-muted);
         font-size: 0.75rem;
         text-transform: uppercase;
         letter-spacing: 1px;
-        border: none;
-        padding: 1rem;
+        font-weight: 700;
+        padding: 1.25rem 1.5rem;
+        border-bottom: 1px solid #edf2f7;
     }
 
     .table-custom tbody tr {
-        border-bottom: 1px solid rgba(0,0,0,0.05);
-        transition: all 0.2s;
+        background: #ffffff;
+        border-bottom: 1px solid #f1f5f9;
+        transition: background 0.2s ease;
+    }
+
+    .table-custom tbody tr:last-child {
+        border-bottom: none;
     }
 
     .table-custom tbody tr:hover {
-        background: rgba(255,255,255,0.4);
-        transform: scale(1.005);
+        background: #f8fafc;
     }
 
+    .table-custom td {
+        padding: 1.25rem 1.5rem;
+        color: var(--text-main);
+    }
+
+    /* Status Badges */
     .status-pill {
-        padding: 5px 12px;
-        border-radius: 10px;
+        display: inline-flex;
+        align-items: center;
+        padding: 6px 14px;
+        border-radius: 9999px;
         font-size: 0.75rem;
         font-weight: 700;
+        letter-spacing: 0.3px;
     }
-    .status-present { background: #dcfce7; color: #15803d; }
-    .status-late { background: #fef3c7; color: #92400e; }
-    .status-absent { background: #fee2e2; color: #991b1b; }
+    
+    .status-present { background: var(--success-bg); color: var(--success-text); }
+    .status-late { background: var(--warning-bg); color: var(--warning-text); }
+    .status-absent { background: var(--danger-bg); color: var(--danger-text); }
+    .status-unknown { background: #f1f5f9; color: #475569; }
 
-    .report-toolbar {
-        gap: 0.75rem;
-    }
-
+    /* Buttons */
     .btn-dashboard {
         display: inline-flex;
         align-items: center;
         justify-content: center;
         gap: 0.5rem;
-        min-height: 42px;
-        padding: 0 1rem;
-        border-radius: 999px;
-        background: #0f172a;
+        height: 46px;
+        padding: 0 1.5rem;
+        border-radius: 12px;
+        background: var(--mitc-dark-blue);
         color: #ffffff;
-        font-weight: 800;
+        font-weight: 600;
         text-decoration: none;
-        box-shadow: 0 12px 28px rgba(15, 23, 42, 0.14);
+        transition: all 0.2s ease;
+        box-shadow: 0 4px 12px rgba(15, 23, 42, 0.15);
     }
 
     .btn-dashboard:hover {
         color: #ffffff;
         background: #1e293b;
+        transform: translateY(-1px);
+        box-shadow: 0 6px 20px rgba(15, 23, 42, 0.2);
     }
 
+    .btn-action-outline {
+        height: 46px;
+        border-radius: 12px;
+        font-weight: 600;
+        background: #ffffff;
+        border: 1px solid #cbd5e1;
+        color: var(--text-main);
+        transition: all 0.2s ease;
+    }
+
+    .btn-action-outline:hover {
+        background: #f8fafc;
+        border-color: #94a3b8;
+    }
+
+    .btn-action-primary {
+        height: 46px;
+        border-radius: 12px;
+        font-weight: 600;
+        background: var(--primary);
+        border: none;
+        color: #ffffff;
+        transition: all 0.2s ease;
+        box-shadow: 0 4px 12px rgba(79, 70, 229, 0.2);
+    }
+
+    .btn-action-primary:hover {
+        background: #4338ca;
+        box-shadow: 0 6px 20px rgba(79, 70, 229, 0.3);
+    }
+
+    .progress-track {
+        background-color: #e2e8f0;
+        border-radius: 999px;
+        overflow: hidden;
+    }
+
+    /* Media Queries */
     @@media (max-width: 768px) {
         .report-toolbar {
-            align-items: stretch !important;
             flex-direction: column;
+            align-items: stretch !important;
+            gap: 1rem;
         }
 
         .report-actions {
             display: grid !important;
-            grid-template-columns: 1fr;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.75rem;
         }
 
-        .btn-dashboard,
-        .report-actions .btn {
-            width: 100%;
+        .brand-header-wrapper {
+            flex-direction: column;
+            text-align: center;
+            gap: 1rem;
+            padding: 2rem 1.5rem;
+        }
+
+        .brand-divider {
+            display: none;
+        }
+
+        .course-meta-header {
+            flex-direction: column;
+            text-align: center;
+            gap: 1.5rem;
+        }
+
+        .course-meta-header .text-end {
+            text-align: center !important;
         }
     }
 
     @@media print {
-        .no-print { display: none; }
-        .glass-panel { border: 1px solid #ccc; box-shadow: none; }
+        .no-print { display: none !important; }
+        body { background: #ffffff; color: #000000; }
+        .glass-panel { 
+            background: transparent; 
+            border: 1px solid #cbd5e1; 
+            box-shadow: none !important;
+            backdrop-filter: none;
+        }
+        .brand-header-wrapper {
+            background: transparent !important;
+            color: #000000 !important;
+            border: 1px solid #cbd5e1;
+            box-shadow: none !important;
+        }
+        .brand-logo-emblem span { color: #000000 !important; }
+        .brand-title-text { color: #000000 !important; }
+        .table-custom-wrapper { border: none; }
+        .table-custom thead th { background: #f1f5f9; color: #000000; }
     }
 </style>
 
@@ -132,54 +288,67 @@
             Dashboard
         </a>
         <div class="report-actions d-flex gap-2">
-            <button class="btn btn-white border shadow-sm rounded-pill px-4" onclick="window.print()">
-                <i class="fas fa-print me-2 text-dark"></i> Print Report
+            <button class="btn btn-action-outline px-4 shadow-sm" onclick="window.print()">
+                <i class="fas fa-print me-2 text-muted"></i> Print Report
             </button>
-            <button class="btn btn-primary rounded-pill px-4 shadow-sm">
+            <button class="btn btn-action-primary px-4 shadow-sm">
                 <i class="fas fa-download me-2"></i> Export Data
             </button>
         </div>
     </div>
 
-    <div class="glass-panel mb-4 d-flex justify-content-between align-items-center">
-        <div>
-            <span class="badge bg-primary bg-opacity-10 text-primary mb-2 px-3 rounded-pill">Official Attendance Record</span>
-            <h2 class="fw-800 mb-1">@Model.CourseCode: @Model.CourseName</h2>
-            <p class="text-muted mb-0">
-                <i class="fas fa-user-tie me-2 text-primary"></i> <strong>Instructor:</strong> @Model.InstructorName 
-                <span class="mx-3 text-light">|</span>
-                <i class="fas fa-calendar-alt me-2 text-primary"></i> <strong>Generated:</strong> @DateTime.Now.ToString("MMM dd, yyyy")
-            </p>
+    <div class="brand-header-wrapper d-flex align-items-center gap-4 mb-4">
+        <div class="brand-logo-emblem">
+            <span>M</span><span>I</span><span>T</span><span>C</span>
         </div>
-        <div class="text-end">
-            <div class="display-6 fw-900 text-primary">@Model.AverageAttendancePercentage%</div>
-            <div class="small fw-bold text-muted uppercase">Avg. Attendance Rate</div>
+        <div class="brand-divider"></div>
+        <div>
+            <div class="brand-title-text">Masroor International</div>
+            <div class="brand-title-text opacity-75">Technical College</div>
+        </div>
+    </div>
+
+    <div class="glass-panel mb-4">
+        <div class="course-meta-header d-flex justify-content-between align-items-center">
+            <div>
+                <span class="badge bg-primary bg-opacity-10 text-primary mb-3 px-3 py-2 rounded-pill fw-600 letter-spacing-caps">Official Attendance Record</span>
+                <h1 class="fw-800 mb-2 tracking-tight" style="font-size: 1.75rem; color: var(--text-dark-blue);">@Model.CourseCode: @Model.CourseName</h1>
+                <p class="text-muted-custom mb-0 d-flex flex-wrap align-items-center gap-1">
+                    <span><i class="fas fa-user-tie me-2 text-primary"></i><strong>Instructor:</strong> @Model.InstructorName</span>
+                    <span class="mx-3 d-none d-md-inline text-muted opacity-50">|</span>
+                    <span><i class="fas fa-calendar-alt me-2 text-primary"></i><strong>Generated:</strong> @DateTime.Now.ToString("MMM dd, yyyy")</span>
+                </p>
+            </div>
+            <div class="text-end">
+                <div class="display-5 fw-800 text-primary mb-0">@Model.AverageAttendancePercentage%</div>
+                <div class="fw-bold text-muted-custom letter-spacing-caps">Avg. Attendance Rate</div>
+            </div>
         </div>
     </div>
 
     <div class="row g-4 mb-4">
         <div class="col-md-3">
-            <div class="glass-panel text-center">
-                <h6 class="text-muted small fw-bold mb-3 uppercase">Total Sessions</h6>
-                <h2 class="fw-900 mb-0">@Model.TotalSessions</h2>
+            <div class="glass-panel stat-card text-center h-100 py-4">
+                <h6 class="text-muted-custom fw-bold mb-3 letter-spacing-caps">Total Sessions</h6>
+                <h2 class="fw-800 mb-0" style="color: var(--text-dark-blue);">@Model.TotalSessions</h2>
             </div>
         </div>
         <div class="col-md-3">
-            <div class="glass-panel text-center border-start border-success border-4">
-                <h6 class="text-muted small fw-bold mb-3 uppercase">Total Present</h6>
-                <h2 class="fw-900 text-success mb-0">@Model.TotalPresent</h2>
+            <div class="glass-panel stat-card text-center border-top border-success border-4 h-100 py-4">
+                <h6 class="text-muted-custom fw-bold mb-3 letter-spacing-caps">Total Present</h6>
+                <h2 class="fw-800 text-success mb-0">@Model.TotalPresent</h2>
             </div>
         </div>
         <div class="col-md-3">
-            <div class="glass-panel text-center border-start border-warning border-4">
-                <h6 class="text-muted small fw-bold mb-3 uppercase">Total Late</h6>
-                <h2 class="fw-900 text-warning mb-0">@Model.TotalLate</h2>
+            <div class="glass-panel stat-card text-center border-top border-warning border-4 h-100 py-4">
+                <h6 class="text-muted-custom fw-bold mb-3 letter-spacing-caps">Total Late</h6>
+                <h2 class="fw-800 text-warning mb-0">@Model.TotalLate</h2>
             </div>
         </div>
         <div class="col-md-3">
-            <div class="glass-panel text-center border-start border-danger border-4">
-                <h6 class="text-muted small fw-bold mb-3 uppercase">Total Absent</h6>
-                <h2 class="fw-900 text-danger mb-0">@Model.TotalAbsent</h2>
+            <div class="glass-panel stat-card text-center border-top border-danger border-4 h-100 py-4">
+                <h6 class="text-muted-custom fw-bold mb-3 letter-spacing-caps">Total Absent</h6>
+                <h2 class="fw-800 text-danger mb-0">@Model.TotalAbsent</h2>
             </div>
         </div>
     </div>
@@ -187,16 +356,16 @@
     <div class="row g-4">
         <div class="col-12">
             <div class="glass-panel">
-                <h5 class="fw-bold mb-4">Detailed Attendance Log</h5>
-                <div class="table-responsive">
-                    <table class="table table-custom align-middle">
+                <h5 class="fw-700 mb-4" style="color: var(--text-dark-blue);">Detailed Attendance Log</h5>
+                <div class="table-responsive table-custom-wrapper">
+                    <table class="table table-custom align-middle mb-0">
                         <thead>
                             <tr>
                                 <th>Student Information</th>
                                 <th>Session Date</th>
                                 <th>Scan Time</th>
                                 <th>Status</th>
-                                <th>Score</th>
+                                <th>Weight</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -205,24 +374,23 @@
                             var recordStatus = record.Status ?? "Unknown";
                             <tr>
                                 <td>
-                                    <div class="fw-bold">@record.StudentName</div>
-                                        <div class="text-muted small">@record.StudentEmail</div>
-                                    </td>
-                                    <td>@record.SessionDate.ToString("dd MMM yyyy")</td>
-                                <td>@(record.ScanTime?.ToString("hh:mm tt") ?? "---")</td>
+                                    <div class="fw-700" style="color: var(--text-dark-blue);">@record.StudentName</div>
+                                    <div class="text-muted-custom small">@record.StudentEmail</div>
+                                </td>
+                                <td class="fw-500">@record.SessionDate.ToString("dd MMM yyyy")</td>
+                                <td class="text-muted-custom">@(record.ScanTime?.ToString("hh:mm tt") ?? "---")</td>
                                 <td>
                                     <span class="status-pill status-@recordStatus.ToLower()">
                                         @recordStatus
                                     </span>
                                 </td>
-                                    <td>
-                                        <div class="progress" style="height: 6px; width: 60px;">
-                                            @* <div class="progress-bar bg-primary" style="width: @(record.Status == AttendanceStatus.Present ? "100" : (record.Status == AttendanceStatus.Late ? "50" : "0"))%"></div> *@
-                                            <div class="progress-bar bg-primary" style="width: @(record.Status == "Present" ? "100" : (record.Status == "Late" ? "50" : "0"))%"></div>
-                                        </div>
-                                    </td>
-                                </tr>
-                            }
+                                <td>
+                                    <div class="progress progress-track" style="height: 6px; width: 70px;">
+                                        <div class="progress-bar bg-primary rounded-pill" style="width: @(record.Status == "Present" ? "100" : (record.Status == "Late" ? "50" : "0"))%"></div>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
                         </tbody>
                     </table>
                 </div>

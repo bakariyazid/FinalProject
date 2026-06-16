@@ -12,54 +12,36 @@ namespace QRCodeAttendance.Implementation.Repositories
         {
         }
 
-        public async Task<bool> HasPendingRequestForWhatsApp(string whatsAppNumber)
+        public async Task<bool> HasActiveInvitationForEmail(string email)
         {
-            var normalizedNumber = NormalizeWhatsAppNumber(whatsAppNumber);
-            var invitations = await _qrCodeDbContext.Invitations
-                .Where(i => i.Status == InstructorInvitationStatus.Pending)
-                .ToListAsync();
-
-            return invitations.Any(i => NormalizeWhatsAppNumber(i.WhatsAppNumber) == normalizedNumber);
-        }
-
-        public async Task<bool> HasActiveInvitationForWhatsApp(string whatsAppNumber)
-        {
-            var normalizedNumber = NormalizeWhatsAppNumber(whatsAppNumber);
-            var invitations = await _qrCodeDbContext.Invitations
-                .Where(i =>
+            var normalizedEmail = email.Trim().ToLowerInvariant();
+            return await _qrCodeDbContext.Invitations
+                .AnyAsync(i =>
+                    i.InstructorEmail == normalizedEmail &&
                     i.Status == InstructorInvitationStatus.Approved &&
                     !i.IsUsed &&
-                    i.ExpiryDate > DateTime.UtcNow.ToUniversalTime())
-                .ToListAsync();
-
-            return invitations.Any(i => NormalizeWhatsAppNumber(i.WhatsAppNumber) == normalizedNumber);
+                    i.ExpiryDate > DateTime.UtcNow);
         }
 
-        public async Task<bool> InvitationCodeExists(string invitationCode)
+        public async Task<bool> InvitationCodeHashExists(string invitationCodeHash)
         {
             return await _qrCodeDbContext.Invitations
-                .AnyAsync(i => i.InvitationCode == invitationCode);
+                .AnyAsync(i => i.InvitationCodeHash == invitationCodeHash);
         }
 
-        public async Task<Invitation?> GetApprovedByCode(string invitationCode)
+        public async Task<Invitation?> GetApprovedByEmailAndCodeHash(string email, string invitationCodeHash)
         {
+            var normalizedEmail = email.Trim().ToLowerInvariant();
             return await _qrCodeDbContext.Invitations
                 .FirstOrDefaultAsync(i =>
-                    i.InvitationCode == invitationCode &&
+                    i.InstructorEmail == normalizedEmail &&
+                    i.InvitationCodeHash == invitationCodeHash &&
                     i.Status == InstructorInvitationStatus.Approved);
         }
 
         public async Task<Invitation?> GetById(Guid id)
         {
             return await _qrCodeDbContext.Invitations.FindAsync(id);
-        }
-
-        public async Task<IReadOnlyList<Invitation>> GetPendingRequests()
-        {
-            return await _qrCodeDbContext.Invitations
-                .Where(i => i.Status == InstructorInvitationStatus.Pending)
-                .OrderByDescending(i => i.CreatedDate)
-                .ToListAsync();
         }
 
         public async Task<IReadOnlyList<Invitation>> GetRecentInvitations(int count)
@@ -70,21 +52,5 @@ namespace QRCodeAttendance.Implementation.Repositories
                 .ToListAsync();
         }
 
-        private static string NormalizeWhatsAppNumber(string value)
-        {
-            var digits = new string((value ?? string.Empty).Where(char.IsDigit).ToArray());
-
-            if (digits.StartsWith("0") && digits.Length == 11)
-            {
-                return $"+234{digits[1..]}";
-            }
-
-            if (digits.Length == 10)
-            {
-                return $"+234{digits}";
-            }
-
-            return digits;
-        }
     }
 }

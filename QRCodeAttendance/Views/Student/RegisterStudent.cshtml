@@ -282,13 +282,21 @@
                                     <label>Email Address</label>
                                 </div>
 
-                                <div class="input-field">
-                                    <input asp-for="PasswordHash" type="password" placeholder=" " required />
-                                    <label>Password</label>
+                                <div class="input-field full-width password-strength-field" data-password-strength>
+                                    <input asp-for="PasswordHash" type="password" placeholder=" " required autocomplete="new-password" data-password-strength-input aria-describedby="student-password-strength student-password-requirements" />
+                                    <label>Enter Your Password <span class="required-star">*</span></label>
+                                    <button class="password-toggle-button" type="button" data-password-toggle aria-label="Show password" aria-pressed="false">
+                                        <i class="fas fa-eye-slash"></i>
+                                    </button>
+                                    <div class="password-strength-meter" aria-hidden="true">
+                                        <span></span> <span></span> <span></span>
+                                    </div>
+                                    <p class="password-strength-label">Password Strength: <span id="student-password-strength" data-password-strength-label></span></p>
+                                    <ul class="password-requirements" id="student-password-requirements" data-password-requirements></ul>
                                 </div>
                                 
-                                <div class="input-field">
-                                    <input asp-for="ConfirmPassword" type="password" placeholder=" " required />
+                                <div class="input-field full-width">
+                                    <input asp-for="ConfirmPassword" type="password" placeholder=" " required autocomplete="new-password" />
                                     <label>Confirm Password</label>
                                 </div>
                             </div>
@@ -302,7 +310,7 @@
                         <div class="footer-action">
                             <div class="mb-2">
                                 <span class="small opacity-50">Not a Student?</span> 
-                                <a href="/Instructor/RequestInstructorAccess" class="slide-link ms-2">Instructor Portal <i class="fas fa-chevron-right small"></i></a>
+                                <a href="/Instructor/RegisterInstructor" class="slide-link ms-2">Instructor Portal <i class="fas fa-chevron-right small"></i></a>
                             </div>
                             <div>
                                 <span class="small opacity-50">Already enrolled?</span> 
@@ -315,5 +323,6 @@
         </div>
     </main>
     @await Html.PartialAsync("_PortalFooter")
+    <script src="~/js/password-strength.js" asp-append-version="true"></script>
 </body>
 </html>

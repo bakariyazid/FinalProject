@@ -39,12 +39,12 @@ namespace QRCodeAttendance.Persistence.QRCodeAttendanceDb
                 .IsUnique();
 
             builder.Entity<Invitation>()
-                .HasIndex(i => i.InvitationCode)
+                .HasIndex(i => i.InvitationCodeHash)
                 .IsUnique();
 
             builder.Entity<Invitation>()
-                .Property(i => i.Department)
-                .HasConversion<string>();
+                .Property(i => i.InvitationCodeHash)
+                .IsRequired();
 
             builder.Entity<Invitation>()
                 .Property(i => i.Status)

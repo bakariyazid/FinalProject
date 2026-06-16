@@ -4,8 +4,10 @@
 
 <header class="app-shell-header" role="banner">
     <div class="app-shell-header__inner">
-        <a class="app-shell-brand" asp-controller="Home" asp-action="Index" aria-label="QRCode Attendance home">
-            <span class="app-shell-brand__mark">QR</span>
+        <a class="app-shell-brand" asp-controller="Home" asp-action="Index" aria-label="MITC QRCode Attendance home">
+            <span class="app-shell-brand__mark" aria-hidden="true">
+                <img src="~/images/mitc-logo.jpg" asp-append-version="true" alt="" />
+            </span>
             <span class="app-shell-brand__text">
                 <span class="app-shell-brand__title" data-marquee="Masroor International Technical College">Masroor International Technical College</span>
                 <span class="app-shell-brand__subtitle">QR Code Attendance</span>
@@ -23,7 +25,7 @@
             <a asp-controller="Home" asp-action="Index">@Localizer["Home"]</a>
             <a asp-controller="User" asp-action="Login">@Localizer["Login"]</a>
             <a asp-controller="Student" asp-action="RegisterStudent">@Localizer["Student"]</a>
-            <a asp-controller="Instructor" asp-action="RequestInstructorAccess">@Localizer["Instructor"]</a>
+            <a asp-controller="Instructor" asp-action="RegisterInstructor">@Localizer["Instructor"]</a>
         </nav>
     </div>
 </header>

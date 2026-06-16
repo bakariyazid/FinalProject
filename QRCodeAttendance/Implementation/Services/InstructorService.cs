@@ -58,14 +58,15 @@ namespace QRCodeAttendance.Implementation.Services
             {
                 var normalizedEmail = request.Email.Trim().ToLowerInvariant();
                 var invitationCode = request.InvitationCode.Trim().ToUpperInvariant();
+                var invitationCodeHash = AdminInvitationService.HashInvitationCode(normalizedEmail, invitationCode);
 
-                var invitation = await _invitationRepository.GetApprovedByCode(invitationCode);
+                var invitation = await _invitationRepository.GetApprovedByEmailAndCodeHash(normalizedEmail, invitationCodeHash);
 
                 if (invitation == null)
                 {
                     return new BaseResponse<bool>
                     {
-                        Message = "Invalid instructor invitation code.",
+                        Message = "Invalid instructor invitation code for this email address.",
                         Status = false
                     };
                 }
