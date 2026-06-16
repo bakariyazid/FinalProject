@@ -1,0 +1,216 @@
+/* Please see documentation at https://learn.microsoft.com/aspnet/core/client-side/bundling-and-minification
+for details on configuring this project to bundle and minify static web assets. */
+
+:root[b-x1pit6xu2z] {
+    --surface-glass: rgba(15, 23, 42, 0.45);
+    --border-glass: rgba(255, 255, 255, 0.12);
+    --text-main: #f8fafc;
+    --text-dim: #94a3b8;
+    --primary-glow: #10b981;
+}
+
+/* HEADER ENGINE */
+.site-header-portal[b-x1pit6xu2z] {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: 1000;
+    background: linear-gradient(to bottom, rgba(9, 13, 22, 0.8), transparent);
+}
+
+/* Silky Smooth CSS Marquee Layout */
+.header-ticker-wrapper[b-x1pit6xu2z] {
+    background: rgba(16, 185, 129, 0.08);
+    border-bottom: 1px solid rgba(16, 185, 129, 0.15);
+    overflow: hidden;
+    padding: 6px 0;
+    display: flex;
+    white-space: nowrap;
+}
+
+.ticker-track[b-x1pit6xu2z] {
+    display: flex;
+    width: max-content;
+    animation: smoothMarquee-b-x1pit6xu2z 25s linear infinite;
+}
+
+.ticker-item[b-x1pit6xu2z] {
+    color: #10b981;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    padding: 0 3rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* Hardware-accelerated */
+@keyframes smoothMarquee-b-x1pit6xu2z {
+    0% {
+        transform: translate3d(0, 0, 0);
+    }
+
+    100% {
+        transform: translate3d(-50%, 0, 0);
+    }
+}
+
+/* Main Header */
+.header-main-brand[b-x1pit6xu2z] {
+    text-align: center;
+    padding: 1.5rem 1rem;
+}
+
+.brand-line-1[b-x1pit6xu2z] {
+    font-size: 1.8rem;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+    color: var(--text-main);
+    text-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.brand-line-2[b-x1pit6xu2z] {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--text-dim);
+    letter-spacing: 0.5px;
+    margin-top: 2px;
+}
+
+
+/* FOOTER ENGINE */
+.site-footer-portal[b-x1pit6xu2z] {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    z-index: 1000;
+    background: var(--surface-glass);
+    -webkit-backdrop-filter: blur(20px);
+    backdrop-filter: blur(20px);
+    border-top: 1px solid var(--border-glass);
+    padding: 1.25rem 2rem;
+}
+
+.footer-container[b-x1pit6xu2z] {
+    max-width: 1400px;
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1.5rem;
+}
+
+.footer-copyright[b-x1pit6xu2z] {
+    font-size: 0.8rem;
+    color: var(--text-dim);
+    font-weight: 500;
+}
+
+.footer-signature[b-x1pit6xu2z] {
+    font-size: 0.8rem;
+    color: var(--text-dim);
+    font-weight: 500;
+}
+
+.developer-name[b-x1pit6xu2z] {
+    color: var(--text-main);
+    font-weight: 700;
+    letter-spacing: 0.3px;
+}
+
+.heart-pulse[b-x1pit6xu2z] {
+    display: inline-block;
+    animation: heartBeat-b-x1pit6xu2z 1.2s infinite alternate cubic-bezier(0.215, 0.610, 0.355, 1);
+}
+
+@keyframes heartBeat-b-x1pit6xu2z {
+    to {
+        transform: scale(1.12);
+    }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .brand-line-1[b-x1pit6xu2z] {
+        font-size: 1.2rem;
+    }
+
+    .brand-line-2[b-x1pit6xu2z] {
+        font-size: 0.8rem;
+    }
+
+    .footer-container[b-x1pit6xu2z] {
+        flex-direction: column;
+        gap: 0.5rem;
+        text-align: center;
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+/*a.navbar-brand {
+  white-space: normal;
+  text-align: center;
+  word-break: break-all;
+}
+
+a {
+  color: #0077cc;
+}
+
+.btn-primary {
+  color: #fff;
+  background-color: #1b6ec2;
+  border-color: #1861ac;
+}
+
+.nav-pills .nav-link.active, .nav-pills .show > .nav-link {
+  color: #fff;
+  background-color: #1b6ec2;
+  border-color: #1861ac;
+}
+
+.border-top {
+  border-top: 1px solid #e5e5e5;
+}
+.border-bottom {
+  border-bottom: 1px solid #e5e5e5;
+}
+
+.box-shadow {
+  box-shadow: 0 .25rem .75rem rgba(0, 0, 0, .05);
+}
+
+button.accept-policy {
+  font-size: 1rem;
+  line-height: inherit;
+}
+
+.footer {
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  white-space: nowrap;
+  line-height: 60px;
+}
+*/
+
+
+
+
+
+
+

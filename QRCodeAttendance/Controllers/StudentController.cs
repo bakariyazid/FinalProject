@@ -286,10 +286,10 @@ namespace QRCodeAttendance.Controllers
 
             if (hasLogo)
             {
-                var logoDrawWidth = 170d;
+                var logoDrawWidth = 152d;
                 var logoDrawHeight = logoDrawWidth * logoHeight / logoWidth;
                 content.AppendLine("q");
-                content.AppendLine($"{logoDrawWidth:0.##} 0 0 {logoDrawHeight:0.##} 48 {735 - logoDrawHeight / 2:0.##} cm");
+                content.AppendLine($"{logoDrawWidth:0.##} 0 0 {logoDrawHeight:0.##} 48 {748 - logoDrawHeight / 2:0.##} cm");
                 content.AppendLine("/Logo Do");
                 content.AppendLine("Q");
             }
@@ -299,14 +299,14 @@ namespace QRCodeAttendance.Controllers
             AppendText(content, 48, 662, "F2", 22, "0.08 0.12 0.20 rg", report.CourseName);
             AppendText(content, 48, 640, "F1", 12, "0.36 0.43 0.54 rg", $"Generated on {DateTime.Now:MMM dd, yyyy hh:mm tt}");
 
-            AppendRect(content, 48, 472, 516, 136, "1 1 1 rg");
+            AppendRect(content, 48, 462, 516, 146, "1 1 1 rg");
             content.AppendLine("0.86 0.90 0.96 RG");
-            content.AppendLine("48 472 516 136 re S");
+            content.AppendLine("48 462 516 146 re S");
             AppendText(content, 74, 582, "F2", 13, "0.16 0.29 0.62 rg", "Student Information");
-            AppendLabelValue(content, 552, "Student", report.StudentName);
-            AppendLabelValue(content, 526, "Matric Number", report.MatricNumber);
-            AppendLabelValue(content, 500, "Department", report.Department.ToString());
-            AppendLabelValue(content, 474, "Level", report.Level.GetDescription());
+            AppendLabelValue(content, 554, "Student", report.StudentName);
+            AppendLabelValue(content, 528, "Matric Number", report.MatricNumber);
+            AppendLabelValue(content, 502, "Department", report.Department.ToString());
+            AppendLabelValue(content, 476, "Level", report.Level.GetDescription());
 
             AppendRect(content, 48, 276, 516, 158, "1 1 1 rg");
             content.AppendLine("0.86 0.90 0.96 RG");
