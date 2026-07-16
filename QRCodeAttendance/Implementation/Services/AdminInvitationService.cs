@@ -13,7 +13,9 @@ namespace QRCodeAttendance.Implementation.Services
     {
         private const int RecentInvitationLimit = 25;
         private const int CodeExpiryHours = 24;
-        private const string CodeCharacters = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+        private const string CodeLetters = "ABCDEFGHJKLMNPQRSTUVWXYZ";
+        private const string CodeDigits = "23456789";
+        private const string CodeCharacters = CodeLetters + CodeDigits;
 
         private readonly IInvitationRepository _invitationRepository;
         private readonly IUnitOfWork _unitOfWork;
@@ -127,11 +129,24 @@ namespace QRCodeAttendance.Implementation.Services
 
         private static string GenerateCodeSegment(int length)
         {
-            var code = new char[length];
+            if (length < 2)
+            {
+                throw new ArgumentOutOfRangeException(nameof(length), "A code must contain at least two characters.");
+            }
 
-            for (var i = 0; i < code.Length; i++)
+            var code = new char[length];
+            code[0] = CodeLetters[RandomNumberGenerator.GetInt32(CodeLetters.Length)];
+            code[1] = CodeDigits[RandomNumberGenerator.GetInt32(CodeDigits.Length)];
+
+            for (var i = 2; i < code.Length; i++)
             {
                 code[i] = CodeCharacters[RandomNumberGenerator.GetInt32(CodeCharacters.Length)];
+            }
+
+            for (var i = code.Length - 1; i > 0; i--)
+            {
+                var swapIndex = RandomNumberGenerator.GetInt32(i + 1);
+                (code[i], code[swapIndex]) = (code[swapIndex], code[i]);
             }
 
             return new string(code);

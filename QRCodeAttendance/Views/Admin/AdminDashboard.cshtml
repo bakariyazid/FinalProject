@@ -268,10 +268,6 @@
             <h1 class="admin-title">Instructor Invitations</h1>
             <p class="admin-subtitle">Send secure instructor registration codes by email. Codes are hidden from admins, tied to the instructor email, and expire after 24 hours.</p>
         </div>
-        <form asp-controller="User" asp-action="Logout" method="post">
-            @Html.AntiForgeryToken()
-            <button type="submit" class="admin-logout">Logout</button>
-        </form>
     </div>
 
     @if (TempData["Alert"] != null)
@@ -301,7 +297,7 @@
         <section class="admin-panel">
             <div class="admin-panel-header">
                 <h2>Send Instructor Code</h2>
-                <p>Enter the instructor email address. Brevo will deliver a private registration code with the MITC logo.</p>
+                <p>Enter the instructor email address.</p>
             </div>
 
             <div class="admin-panel-body">

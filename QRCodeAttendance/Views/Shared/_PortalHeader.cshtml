@@ -23,7 +23,17 @@
 
         <nav class="app-shell-nav" id="appShellNav" aria-label="Primary navigation">
             <a asp-controller="Home" asp-action="Index">@Localizer["Home"]</a>
-            <a asp-controller="User" asp-action="Login">@Localizer["Login"]</a>
+            @if (User.Identity?.IsAuthenticated == true)
+            {
+                <form asp-controller="User" asp-action="Logout" method="post">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="app-shell-nav__logout">Logout</button>
+                </form>
+            }
+            else
+            {
+                <a asp-controller="User" asp-action="Login">@Localizer["Login"]</a>
+            }
             <a asp-controller="Student" asp-action="RegisterStudent">@Localizer["Student"]</a>
             <a asp-controller="Instructor" asp-action="RegisterInstructor">@Localizer["Instructor"]</a>
         </nav>

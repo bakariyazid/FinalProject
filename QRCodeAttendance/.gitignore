@@ -1,0 +1,6 @@
+# # Avoid tracking build artifacts
+# bin/
+# obj/
+# .vs/
+# *.user
+# *.suo

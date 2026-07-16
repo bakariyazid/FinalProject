@@ -90,8 +90,10 @@ namespace QRCodeAttendance.Controllers
             };
         }
     [HttpPost]
+    [ValidateAntiForgeryToken]
     public async Task<IActionResult> Logout()
     {
+        await HttpContext.SignOutAsync(IdentityConstants.ApplicationScheme);
         return RedirectToAction("Login", "User");
     }
         

@@ -589,13 +589,6 @@
             </li>
             <li class="nav-item"><a class="nav-link" asp-controller="Session" asp-action="Details"><i class="fa fa-calendar-check"></i> <span>Sessions</span></a></li>
             <li class="nav-item"><a class="nav-link" asp-controller="Instructor" asp-action="Report"><i class="fa fa-file-invoice"></i> <span>Reports</span></a></li>
-            <li class="nav-item dashboard-logout">
-                <form asp-controller="User" asp-action="Logout" method="post" id="logoutForm">
-                    <a href="#" class="nav-link text-danger" onclick="document.getElementById('logoutForm').submit(); return false;">
-                        <i class="fa fa-power-off text-danger"></i> <span>Logout</span>
-                    </a>
-                </form>
-            </li>
         </ul>
     </nav>
 

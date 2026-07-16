@@ -302,14 +302,18 @@ body.with-portal-chrome .page-wrapper {
   background: currentColor;
 }
 
-.app-shell-nav a {
+.app-shell-nav a,
+.app-shell-nav__logout {
   min-height: 38px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   padding: 0 0.8rem;
+  border: 0;
   border-radius: 10px;
+  background: transparent;
   color: var(--portal-muted);
+  cursor: pointer;
   font-size: 0.9rem;
   font-weight: 700;
   text-decoration: none;
@@ -317,7 +321,9 @@ body.with-portal-chrome .page-wrapper {
 }
 
 .app-shell-nav a:hover,
-.app-shell-nav a:focus-visible {
+.app-shell-nav a:focus-visible,
+.app-shell-nav__logout:hover,
+.app-shell-nav__logout:focus-visible {
   background: rgba(15, 159, 110, 0.1);
   color: var(--portal-accent);
 }
@@ -614,11 +620,20 @@ body.with-portal-chrome.login-page .login-wrapper {
     display: inline-flex;
   }
 
-  .app-shell-nav a {
+  .app-shell-nav a,
+  .app-shell-nav__logout {
     flex: 1 1 auto;
     min-height: 34px;
     padding: 0 0.45rem;
     font-size: 0.78rem;
+  }
+
+  .app-shell-nav form {
+    display: flex;
+  }
+
+  .app-shell-nav__logout {
+    width: 100%;
   }
 
   .app-shell-footer__inner {
