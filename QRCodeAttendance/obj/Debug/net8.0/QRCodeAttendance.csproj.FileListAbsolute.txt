@@ -1870,3 +1870,9 @@ C:\Users\YAZIDB~1\AppData\Local\Temp\QRCodeAttendance-inline-logo-verify\fr\QRCo
 C:\Users\YAZIDB~1\AppData\Local\Temp\QRCodeAttendance-inline-logo-verify\ha\QRCodeAttendance.resources.dll
 C:\Users\YAZIDB~1\AppData\Local\Temp\QRCodeAttendance-inline-logo-verify\ig\QRCodeAttendance.resources.dll
 C:\Users\YAZIDB~1\AppData\Local\Temp\QRCodeAttendance-inline-logo-verify\yo\QRCodeAttendance.resources.dll
+E:\Project folder\FinalProject\QRCodeAttendance\bin\Debug\net8.0\Microsoft.Extensions.Caching.Memory.dll
+E:\Project folder\FinalProject\QRCodeAttendance\bin\Debug\net8.0\Microsoft.Extensions.DependencyInjection.dll
+E:\Project folder\FinalProject\QRCodeAttendance\bin\Debug\net8.0\Microsoft.Extensions.Logging.dll
+E:\Project folder\FinalProject\QRCodeAttendance\bin\Debug\net8.0\Microsoft.Extensions.Logging.Abstractions.dll
+E:\Project folder\FinalProject\QRCodeAttendance\bin\Debug\net8.0\Npgsql.dll
+E:\Project folder\FinalProject\QRCodeAttendance\bin\Debug\net8.0\Npgsql.EntityFrameworkCore.PostgreSQL.dll

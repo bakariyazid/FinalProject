@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("QRCodeAttendance")]
 [assembly: System.Reflection.AssemblyCopyrightAttribute(" ")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+160c55a2d044d456fcc83fc29843206cfd195483")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+ad2cef9584a8f698d538074913ec7d1e11cb66d4")]
 [assembly: System.Reflection.AssemblyProductAttribute("QRCodeAttendance")]
 [assembly: System.Reflection.AssemblyTitleAttribute("QRCodeAttendance")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
