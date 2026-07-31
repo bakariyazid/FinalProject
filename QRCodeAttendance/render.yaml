@@ -1,0 +1,45 @@
+#This works when hardcoding your render db connection from your code
+
+
+# services: 
+#   - type: web
+#     name: hms
+#     env: docker
+#     plan: starter
+#     dockerfilePath: ./Dockerfile
+#     autoDeploy: true
+
+# databases:
+#   - name: hms-db
+#     databaseName: hmsdb_93f0
+#     user: hmsdb_93f0_user
+#     plan: free
+#     region: oregon
+
+
+#This line works when using env in your render to store db connection
+
+
+services:
+  - type: web
+    name: qr-code-attendance
+    env: docker
+    plan: starter
+    dockerfilePath: ./Dockerfile
+    autoDeploy: true
+
+    # Link environment variable to your Render database
+    envVars:
+      - key: ConnectionStrings__QRCodeDbContext
+        fromDatabase:
+          name: qrcode-db 
+          property: connectionString
+
+# Define the PostgreSQL database
+databases:
+  - name: qrcode-db
+    databaseName: qrcoddb
+    user: qrcoddb_user
+    plan: free
+    region: oregon
+
