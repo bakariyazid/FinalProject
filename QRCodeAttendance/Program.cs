@@ -29,8 +29,8 @@ builder.Services.Scan(scan => scan
         .AsImplementedInterfaces()
         .WithScopedLifetime());
 
-builder.Services.Configure<SmtpOptions>(builder.Configuration.GetSection("Smtp"));
-builder.Services.AddScoped<IEmailService, SmtpEmailService>();
+builder.Services.Configure<ResendOptions>(builder.Configuration.GetSection("Resend"));
+builder.Services.AddHttpClient<IEmailService, ResendEmailService>();
 
 //Add Database Context
 builder.Services.AddDbContext<QRCodeDbContext>(options =>
