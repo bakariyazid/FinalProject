@@ -14,42 +14,51 @@
             </span>
         </a>
 
-        <button class="app-shell-nav-toggle" type="button" aria-controls="appShellNav" aria-expanded="false">
-            <span class="app-shell-nav-toggle__bar"></span>
-            <span class="app-shell-nav-toggle__bar"></span>
-            <span class="app-shell-nav-toggle__bar"></span>
-            <span class="visually-hidden">@Localizer["ToggleNavigation"]</span>
-        </button>
+        @if (User.Identity?.IsAuthenticated == true)
+        {
+            <form asp-controller="User" asp-action="Logout" method="post" class="app-shell-auth-logout">
+                @Html.AntiForgeryToken()
+                <button type="submit" title="Log out" aria-label="Log out">
+                    <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M10 17l5-5-5-5" />
+                        <path d="M15 12H3" />
+                        <path d="M21 19V5a2 2 0 0 0-2-2h-6" />
+                    </svg>
+                    <span class="visually-hidden">Log out</span>
+                </button>
+            </form>
+        }
+        else
+        {
+            <button class="app-shell-nav-toggle" type="button" aria-controls="appShellNav" aria-expanded="false">
+                <span class="app-shell-nav-toggle__bar"></span>
+                <span class="app-shell-nav-toggle__bar"></span>
+                <span class="app-shell-nav-toggle__bar"></span>
+                <span class="visually-hidden">@Localizer["ToggleNavigation"]</span>
+            </button>
 
-        <nav class="app-shell-nav" id="appShellNav" aria-label="Primary navigation">
-            <a asp-controller="Home" asp-action="Index">@Localizer["Home"]</a>
-            @if (User.Identity?.IsAuthenticated == true)
-            {
-                <form asp-controller="User" asp-action="Logout" method="post">
-                    @Html.AntiForgeryToken()
-                    <button type="submit" class="app-shell-nav__logout">Logout</button>
-                </form>
-            }
-            else
-            {
+            <nav class="app-shell-nav" id="appShellNav" aria-label="Primary navigation">
+                <a asp-controller="Home" asp-action="Index">@Localizer["Home"]</a>
                 <a asp-controller="User" asp-action="Login">@Localizer["Login"]</a>
-            }
-            <a asp-controller="Student" asp-action="RegisterStudent">@Localizer["Student"]</a>
-            <a asp-controller="Instructor" asp-action="RegisterInstructor">@Localizer["Instructor"]</a>
-        </nav>
+                <a asp-controller="Student" asp-action="RegisterStudent">@Localizer["Student"]</a>
+                <a asp-controller="Instructor" asp-action="RegisterInstructor">@Localizer["Instructor"]</a>
+            </nav>
+        }
     </div>
 </header>
 
 <script>
     (() => {
-        const toggle = document.querySelector(".app-shell-nav-toggle");
-        const nav = document.getElementById("appShellNav");
+        const header = document.querySelector(".app-shell-header");
+        const toggle = header?.querySelector(".app-shell-nav-toggle");
+        const nav = header?.querySelector("#appShellNav");
 
         if (!toggle || !nav) {
             return;
         }
 
-        toggle.addEventListener("click", () => {
+        toggle.addEventListener("click", (event) => {
+            event.preventDefault();
             const isOpen = nav.classList.toggle("is-open");
             toggle.setAttribute("aria-expanded", isOpen.toString());
         });

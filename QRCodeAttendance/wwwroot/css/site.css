@@ -302,6 +302,32 @@ body.with-portal-chrome .page-wrapper {
   background: currentColor;
 }
 
+.app-shell-auth-logout {
+  flex: 0 0 auto;
+  margin: 0;
+}
+
+.app-shell-auth-logout button {
+  width: 42px;
+  height: 42px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--portal-line);
+  border-radius: 12px;
+  background: #ffffff;
+  color: var(--portal-ink);
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
+  cursor: pointer;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.app-shell-auth-logout button:hover,
+.app-shell-auth-logout button:focus-visible {
+  background: rgba(220, 53, 69, 0.1);
+  color: #dc3545;
+}
+
 .app-shell-nav a,
 .app-shell-nav__logout {
   min-height: 38px;
@@ -601,7 +627,7 @@ body.with-portal-chrome.login-page .login-wrapper {
     top: 100%;
     left: 12px;
     right: 12px;
-    width: 100%;
+    width: auto;
     justify-content: stretch;
     gap: 0.25rem;
     padding: 0.65rem;
