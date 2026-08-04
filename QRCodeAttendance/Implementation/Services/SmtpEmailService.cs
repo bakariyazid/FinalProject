@@ -81,7 +81,7 @@ namespace QRCodeAttendance.Implementation.Services
         {
             var logo = string.IsNullOrWhiteSpace(logoSource)
                 ? string.Empty
-                : $@"<img src=""{logoSource}"" alt=""MITC logo"" width=""92"" style=""display:block;margin:0 auto;max-width:92px;height:auto;border:0;"" />";
+                : $@"<img src=""{logoSource}"" alt=""MITC logo"" width=""150"" style=""display:block;margin:0 auto;max-width:150px;height:auto;border:0;"" />";
 
             return $@"
 <!doctype html>
@@ -104,7 +104,7 @@ namespace QRCodeAttendance.Implementation.Services
             <td align=""center"" style=""padding:26px 30px 24px;background:linear-gradient(135deg,#075a57 0%,#0f766e 58%,#12958b 100%);"">
               <table role=""presentation"" cellspacing=""0"" cellpadding=""0"" style=""margin:0 auto;"">
                 <tr>
-                  <td align=""center"" style=""width:118px;height:118px;padding:12px;border-radius:59px;background:#ffffff;box-shadow:0 8px 22px rgba(0,0,0,0.18);"">
+                  <td align=""center"" style=""width:170px;height:130px;padding:14px;border-radius:24px;background:#ffffff;box-shadow:0 8px 22px rgba(0,0,0,0.18);"">
                     {logo}
                   </td>
                 </tr>

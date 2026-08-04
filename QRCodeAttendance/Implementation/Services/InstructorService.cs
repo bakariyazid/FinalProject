@@ -126,6 +126,8 @@ namespace QRCodeAttendance.Implementation.Services
                             PasswordHash = _identityService.GetPasswordHash(request.PasswordHash),
                             UserName = normalizedEmail,
                             RoleId = (await _roleRepository.GetByName("Instructor"))?.Id ?? throw new Exception("Instructor role not found"),
+                            CreatedDate = DateTime.UtcNow,
+                            UpdatedDate = DateTime.UtcNow
                         };
 
                         var createResult = await _userManager.CreateAsync(user);
@@ -147,9 +149,10 @@ namespace QRCodeAttendance.Implementation.Services
                             Address = request.Address,
                             Gender = request.Gender,
                             PhoneNumber = request.PhoneNumber,
-                            DateOfBirth = request.DateOfBirth,
+                            DateOfBirth = DateTime.SpecifyKind(request.DateOfBirth.Date, DateTimeKind.Utc),
                             PasswordHash = hashedPassword,
-                            CreatedDate = DateTime.UtcNow
+                            CreatedDate = DateTime.UtcNow,
+                            UpdatedDate = DateTime.UtcNow
                         };
 
                         await _instructorRepository.Add(instructor);
