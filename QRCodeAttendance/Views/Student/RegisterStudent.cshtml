@@ -141,6 +141,25 @@
             padding: 0 5px;
         }
 
+        .password-strength-field {
+            padding-top: 0.65rem;
+        }
+
+        .password-strength-field > label,
+        .password-strength-field input:focus + label,
+        .password-strength-field input:not(:placeholder-shown) + label {
+            top: 0.65rem;
+            left: 12px;
+            transform: translateY(-50%);
+            background: #4b4d5f;
+            padding: 0 6px;
+            z-index: 2;
+        }
+
+        .password-strength-field input {
+            padding-right: 3.5rem;
+        }
+
         .btn-submit {
             width: 100%;
             margin-top: 2.5rem;

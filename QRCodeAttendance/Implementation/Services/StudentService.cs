@@ -82,6 +82,8 @@ namespace QRCodeAttendance.Implementation.Services
                                     PasswordHash = _identityService.GetPasswordHash(request.PasswordHash),
                                     UserName = request.Email,
                                     RoleId = (await _roleRepository.GetByName("Student"))?.Id ?? throw new Exception("Student role not found"),
+                                    CreatedDate = DateTime.UtcNow,
+                                    UpdatedDate = DateTime.UtcNow
                                 };
 
                                 var createResult = await _userManager.CreateAsync(user);
@@ -101,14 +103,15 @@ namespace QRCodeAttendance.Implementation.Services
                                     Email = request.Email,
                                     Address = request.Address,
                                     Gender = request.Gender,
-                                    DateOfBirth = request.DateOfBirth,
+                                    DateOfBirth = DateTime.SpecifyKind(request.DateOfBirth.Date, DateTimeKind.Utc),
                                     PhoneNumber = request.PhoneNumber,
                                     MatricNumber = request.MatricNumber,
                                     StudentLevel = request.StudentLevel,
                                     Department = request.Department,
                                     PasswordHash = hashedPassword,
                                     UserId = user.Id,
-                                    CreatedDate = DateTime.UtcNow
+                                    CreatedDate = DateTime.UtcNow,
+                                    UpdatedDate = DateTime.UtcNow
                                 };
                                 
                                 await _studentRepository.Add(student);
@@ -465,7 +468,9 @@ namespace QRCodeAttendance.Implementation.Services
                 student.Gender = request.Gender != default ? request.Gender : student.Gender;
                 student.StudentLevel = request.StudentLevel != default ? request.StudentLevel : student.StudentLevel;
                 student.Department = request.Department != default ? request.Department : student.Department;
-                student.DateOfBirth = request.DateOfBirth != default ? request.DateOfBirth : student.DateOfBirth;
+                student.DateOfBirth = request.DateOfBirth != default
+                    ? DateTime.SpecifyKind(request.DateOfBirth.Date, DateTimeKind.Utc)
+                    : student.DateOfBirth;
                 student.UpdatedDate = DateTime.UtcNow.ToUniversalTime();
 
                 _studentRepository.Update(student);

@@ -392,7 +392,9 @@ namespace QRCodeAttendance.Implementation.Services
                 instructor.PhoneNumber = request.PhoneNumber ?? instructor.PhoneNumber;
                 instructor.Gender = request.Gender != default ? request.Gender : instructor.Gender;
                 instructor.Department = request.Department != default ? request.Department : instructor.Department;
-                instructor.DateOfBirth = request.DateOfBirth != default ? request.DateOfBirth : instructor.DateOfBirth;
+                instructor.DateOfBirth = request.DateOfBirth != default
+                    ? DateTime.SpecifyKind(request.DateOfBirth.Date, DateTimeKind.Utc)
+                    : instructor.DateOfBirth;
                 instructor.Address = request.Address ?? instructor.Address;
                 instructor.UpdatedDate = DateTime.UtcNow.ToUniversalTime();
 

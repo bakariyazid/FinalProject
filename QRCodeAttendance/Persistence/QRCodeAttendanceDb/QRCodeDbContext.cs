@@ -24,6 +24,42 @@ namespace QRCodeAttendance.Persistence.QRCodeAttendanceDb
         public DbSet<Attendance> Attendances { get; set; } = null!;
         public DbSet<QRCodeTokenHistory> QRCodeTokenHistories { get; set; } = null!;
 
+        public override int SaveChanges(bool acceptAllChangesOnSuccess)
+        {
+            NormalizeDateTimesToUtc();
+            return base.SaveChanges(acceptAllChangesOnSuccess);
+        }
+
+        public override Task<int> SaveChangesAsync(bool acceptAllChangesOnSuccess, CancellationToken cancellationToken = default)
+        {
+            NormalizeDateTimesToUtc();
+            return base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
+        }
+
+        private void NormalizeDateTimesToUtc()
+        {
+            foreach (var entry in ChangeTracker.Entries().Where(entry =>
+                         entry.State == EntityState.Added || entry.State == EntityState.Modified))
+            {
+                foreach (var property in entry.Properties)
+                {
+                    var propertyType = property.Metadata.ClrType;
+                    var isDateTime = propertyType == typeof(DateTime) ||
+                                     Nullable.GetUnderlyingType(propertyType) == typeof(DateTime);
+
+                    if (isDateTime && property.CurrentValue is DateTime value)
+                    {
+                        property.CurrentValue = value.Kind switch
+                        {
+                            DateTimeKind.Utc => value,
+                            DateTimeKind.Local => value.ToUniversalTime(),
+                            _ => DateTime.SpecifyKind(value, DateTimeKind.Utc)
+                        };
+                    }
+                }
+            }
+        }
+
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
