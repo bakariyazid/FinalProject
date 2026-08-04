@@ -30,8 +30,8 @@ builder.Services.Scan(scan => scan
         .WithScopedLifetime());
 
 
-builder.Services.Configure<SmtpOptions>(builder.Configuration.GetSection("Smtp"));
-builder.Services.AddScoped<IEmailService, SmtpEmailService>();
+builder.Services.Configure<BrevoOptions>(builder.Configuration.GetSection("Brevo"));
+builder.Services.AddHttpClient<IEmailService, BrevoEmailService>();
 
 //Add Database Context
 builder.Services.AddDbContext<QRCodeDbContext>(options =>

@@ -77,7 +77,7 @@ namespace QRCodeAttendance.Implementation.Services
             await smtpClient.SendMailAsync(message);
         }
 
-        private string BuildHtmlContent(string code, DateTime expiryDate, string logoSource)
+        internal static string BuildHtmlContent(string code, DateTime expiryDate, string logoSource)
         {
             var logo = string.IsNullOrWhiteSpace(logoSource)
                 ? string.Empty
@@ -150,7 +150,7 @@ namespace QRCodeAttendance.Implementation.Services
 </html>";
         }
 
-        private static string BuildTextContent(string code, DateTime expiryDate)
+        internal static string BuildTextContent(string code, DateTime expiryDate)
         {
             return $"Welcome to MITC QRCode Attendance System. Your instructor registration code is {code}. Please use it as soon as possible. It is linked to this email address only and expires after 24 hours.";
         }
