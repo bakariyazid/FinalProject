@@ -157,3 +157,9 @@ E:\Project folder\FinalProject\QRCodeAttendance\obj\Release\net8.0\ig\QRCodeAtte
 E:\Project folder\FinalProject\QRCodeAttendance\obj\Release\net8.0\ig\QRCodeAttendance.resources.dll
 E:\Project folder\FinalProject\QRCodeAttendance\obj\Release\net8.0\yo\QRCodeAttendance.resources.cs
 E:\Project folder\FinalProject\QRCodeAttendance\obj\Release\net8.0\yo\QRCodeAttendance.resources.dll
+E:\Project folder\FinalProject\QRCodeAttendance\bin\Release\net8.0\Microsoft.Extensions.Caching.Memory.dll
+E:\Project folder\FinalProject\QRCodeAttendance\bin\Release\net8.0\Microsoft.Extensions.DependencyInjection.dll
+E:\Project folder\FinalProject\QRCodeAttendance\bin\Release\net8.0\Microsoft.Extensions.Logging.dll
+E:\Project folder\FinalProject\QRCodeAttendance\bin\Release\net8.0\Microsoft.Extensions.Logging.Abstractions.dll
+E:\Project folder\FinalProject\QRCodeAttendance\bin\Release\net8.0\Npgsql.dll
+E:\Project folder\FinalProject\QRCodeAttendance\bin\Release\net8.0\Npgsql.EntityFrameworkCore.PostgreSQL.dll
