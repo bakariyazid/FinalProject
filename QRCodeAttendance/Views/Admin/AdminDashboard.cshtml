@@ -203,15 +203,16 @@
     }
 
     .admin-delete-btn {
-        min-height: 34px;
+        width: 36px;
+        height: 34px;
         border: 0;
         border-radius: 8px;
         background: #dc3545;
         color: #ffffff;
-        font-size: 0.82rem;
-        font-weight: 900;
-        padding: 0 0.75rem;
-        white-space: nowrap;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0;
     }
 
     .admin-delete-btn:hover {
@@ -368,7 +369,14 @@
                                     <form asp-controller="Admin" asp-action="DeleteInstructorInvitation" method="post" class="d-inline" onsubmit="return confirm('Delete this instructor invitation? This action cannot be undone.');">
                                         @Html.AntiForgeryToken()
                                         <input type="hidden" name="invitationId" value="@invitation.Id" />
-                                        <button type="submit" class="admin-delete-btn">Delete</button>
+                                        <button type="submit" class="admin-delete-btn" title="Delete invitation" aria-label="Delete invitation">
+                                            <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                <path d="M3 6h18" />
+                                                <path d="M8 6V4h8v2" />
+                                                <path d="M19 6l-1 14H6L5 6" />
+                                                <path d="M10 11v5M14 11v5" />
+                                            </svg>
+                                        </button>
                                     </form>
                                 </td>
                             </tr>
