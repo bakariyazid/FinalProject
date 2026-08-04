@@ -7,5 +7,6 @@ namespace QRCodeAttendance.Interface.Services
     {
         Task<BaseResponse<AdminInvitationDashboardDto>> GetInvitationDashboard();
         Task<BaseResponse<InstructorInvitationDto>> GenerateInstructorInvitation(CreateInstructorInvitationRequestModel request);
+        Task<BaseResponse> DeleteInstructorInvitation(Guid invitationId);
     }
 }

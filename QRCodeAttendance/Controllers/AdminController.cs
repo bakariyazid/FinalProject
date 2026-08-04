@@ -49,5 +49,16 @@ namespace QRCodeAttendance.Controllers
             return RedirectToAction(nameof(AdminDashboard));
         }
 
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteInstructorInvitation(Guid invitationId)
+        {
+            var response = await _adminInvitationService.DeleteInstructorInvitation(invitationId);
+            TempData["Alert"] = response.Message;
+            TempData["AlertType"] = response.Status ? "success" : "warning";
+
+            return RedirectToAction(nameof(AdminDashboard));
+        }
+
     }
 }

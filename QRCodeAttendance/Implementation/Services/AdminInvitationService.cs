@@ -105,6 +105,28 @@ namespace QRCodeAttendance.Implementation.Services
             };
         }
 
+        public async Task<BaseResponse> DeleteInstructorInvitation(Guid invitationId)
+        {
+            var invitation = await _invitationRepository.GetById(invitationId);
+            if (invitation == null)
+            {
+                return new BaseResponse
+                {
+                    Status = false,
+                    Message = "The invitation could not be found."
+                };
+            }
+
+            await _invitationRepository.Delete(invitation);
+            await _unitOfWork.SaveChangesAsync();
+
+            return new BaseResponse
+            {
+                Status = true,
+                Message = "Instructor invitation deleted successfully."
+            };
+        }
+
         public static string HashInvitationCode(string email, string code)
         {
             var normalized = NormalizeCode(code);

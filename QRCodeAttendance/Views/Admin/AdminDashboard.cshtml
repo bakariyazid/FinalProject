@@ -202,6 +202,23 @@
         color: #ffffff;
     }
 
+    .admin-delete-btn {
+        min-height: 34px;
+        border: 0;
+        border-radius: 8px;
+        background: #dc3545;
+        color: #ffffff;
+        font-size: 0.82rem;
+        font-weight: 900;
+        padding: 0 0.75rem;
+        white-space: nowrap;
+    }
+
+    .admin-delete-btn:hover {
+        background: #bb2d3b;
+        color: #ffffff;
+    }
+
     .admin-empty {
         padding: 2rem 1rem;
         color: #64748b;
@@ -332,6 +349,7 @@
                             <th>Sent</th>
                             <th>Expires</th>
                             <th>Status</th>
+                            <th class="text-end">Action</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -346,6 +364,13 @@
                                 <td>@invitation.CreatedDate.ToLocalTime().ToString("MMM dd, yyyy h:mm tt")</td>
                                 <td>@invitation.ExpiryDate.ToLocalTime().ToString("MMM dd, yyyy h:mm tt")</td>
                                 <td><span class="badge @badgeClass rounded-pill px-3">@status</span></td>
+                                <td class="text-end">
+                                    <form asp-controller="Admin" asp-action="DeleteInstructorInvitation" method="post" class="d-inline" onsubmit="return confirm('Delete this instructor invitation? This action cannot be undone.');">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="invitationId" value="@invitation.Id" />
+                                        <button type="submit" class="admin-delete-btn">Delete</button>
+                                    </form>
+                                </td>
                             </tr>
                         }
                     </tbody>
