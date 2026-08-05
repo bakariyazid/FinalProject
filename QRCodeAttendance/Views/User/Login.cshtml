@@ -113,6 +113,16 @@
             color: rgba(255, 255, 255, 0.3);
         }
 
+        .form-control:-webkit-autofill,
+        .form-control:-webkit-autofill:hover,
+        .form-control:-webkit-autofill:focus {
+            -webkit-text-fill-color: #ffffff;
+            caret-color: #ffffff;
+            -webkit-box-shadow: 0 0 0 1000px #27334c inset;
+            box-shadow: 0 0 0 1000px #27334c inset;
+            transition: background-color 9999s ease-out 0s;
+        }
+
         .password-toggle {
             position: absolute;
             right: 18px;
@@ -125,8 +135,13 @@
             border: 0;
             background: transparent;
             cursor: pointer;
-            color: var(--text-muted);
+            color: #dbeafe;
             z-index: 10;
+        }
+
+        .password-toggle:hover,
+        .password-toggle:focus-visible {
+            color: var(--accent);
         }
 
         .btn-login {
