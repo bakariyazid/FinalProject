@@ -118,6 +118,12 @@
             right: 18px;
             top: 50%;
             transform: translateY(-50%);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+            border: 0;
+            background: transparent;
             cursor: pointer;
             color: var(--text-muted);
             z-index: 10;
@@ -269,7 +275,9 @@
                 <div class="input-group">
                     <i class="fas fa-lock"></i>
                     <input asp-for="Password" type="password" class="form-control" id="password-field" placeholder="Password" required />
-                    <i class="fas fa-eye password-toggle" id="toggle-password"></i>
+                    <button class="password-toggle" type="button" id="toggle-password" aria-label="Show password" aria-pressed="false">
+                        <i class="fas fa-eye-slash" aria-hidden="true"></i>
+                    </button>
                 </div>
 
                 <div class="d-flex justify-content-between align-items-center mb-4">
@@ -299,13 +307,24 @@
     <script>
         const togglePassword = document.querySelector('#toggle-password');
         const password = document.querySelector('#password-field');
+        const passwordIcon = togglePassword?.querySelector('i');
 
-        togglePassword.addEventListener('click', function () {
-            const type = password.getAttribute('type') === 'password' ? 'text' : 'password';
-            password.setAttribute('type', type);
-            this.classList.toggle('fa-eye');
-            this.classList.toggle('fa-eye-slash');
-        });
+        if (togglePassword && password && passwordIcon) {
+            const updatePasswordToggle = () => {
+                const isHidden = password.type === 'password';
+                passwordIcon.classList.toggle('fa-eye-slash', isHidden);
+                passwordIcon.classList.toggle('fa-eye', !isHidden);
+                togglePassword.setAttribute('aria-label', isHidden ? 'Show password' : 'Hide password');
+                togglePassword.setAttribute('aria-pressed', (!isHidden).toString());
+            };
+
+            updatePasswordToggle();
+
+            togglePassword.addEventListener('click', () => {
+                password.type = password.type === 'password' ? 'text' : 'password';
+                updatePasswordToggle();
+            });
+        }
     </script>
     @await Html.PartialAsync("_PortalFooter")
 </body>

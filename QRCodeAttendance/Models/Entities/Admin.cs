@@ -12,7 +12,5 @@ namespace QRCodeAttendance.Models.Entities
 
         public User User { get; set; } = null!;
 
-       
-
     }
 }
