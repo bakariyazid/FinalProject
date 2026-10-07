@@ -79,10 +79,6 @@ namespace QRCodeAttendance.Persistence.QRCodeAttendanceDb
                 .IsUnique();
 
             builder.Entity<Invitation>()
-                .Property(i => i.InvitationCodeHash)
-                .IsRequired();
-
-            builder.Entity<Invitation>()
                 .Property(i => i.Status)
                 .HasConversion<string>();
 

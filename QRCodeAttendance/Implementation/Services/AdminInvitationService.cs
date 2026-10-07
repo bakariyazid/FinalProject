@@ -13,6 +13,8 @@ namespace QRCodeAttendance.Implementation.Services
     {
         private const int RecentInvitationLimit = 25;
         private const int CodeExpiryHours = 24;
+        private const int OtpExpiryMinutes = 10;
+        private const int MaximumOtpAttempts = 5;
         private const string CodeLetters = "ABCDEFGHJKLMNPQRSTUVWXYZ";
         private const string CodeDigits = "23456789";
         private const string CodeCharacters = CodeLetters + CodeDigits;
@@ -49,27 +51,54 @@ namespace QRCodeAttendance.Implementation.Services
             };
         }
 
-        public async Task<BaseResponse<InstructorInvitationDto>> GenerateInstructorInvitation(CreateInstructorInvitationRequestModel request)
+        public async Task<BaseResponse<InstructorInvitationDto>> RequestInstructorEmailVerification(CreateInstructorInvitationRequestModel request)
         {
             var email = NormalizeEmail(request.InstructorEmail);
+
+            // First gate: reject empty / clearly invalid addresses before any DB write or SMTP call
+            if (string.IsNullOrWhiteSpace(email) || !email.Contains('@') || email.StartsWith('@') || email.EndsWith('@'))
+            {
+                return new BaseResponse<InstructorInvitationDto>
+                {
+                    Status = false,
+                    Message = "Please enter a valid instructor email address."
+                };
+            }
+
+            try
+            {
+                // Strict format check (same family of rules as System.Net.Mail)
+                _ = new System.Net.Mail.MailAddress(email);
+            }
+            catch
+            {
+                return new BaseResponse<InstructorInvitationDto>
+                {
+                    Status = false,
+                    Message = "Please enter a valid instructor email address."
+                };
+            }
 
             if (await _invitationRepository.HasActiveInvitationForEmail(email))
             {
                 return new BaseResponse<InstructorInvitationDto>
                 {
                     Status = false,
-                    Message = "This instructor already has an active registration code. Wait until it expires or the instructor uses it."
+                    Message = "This email already has a pending verification or active registration code."
                 };
             }
 
-            var code = await GenerateUniqueCode(email);
+            var otp = GenerateOtp();
+            var otpExpiresAt = DateTime.UtcNow.AddMinutes(OtpExpiryMinutes);
             var invitation = new Invitation
             {
                 InstructorEmail = email,
-                InvitationCodeHash = HashInvitationCode(email, code),
-                Status = InstructorInvitationStatus.Approved,
+                VerificationOtpHash = HashOtp(email, otp),
+                OtpExpiresAt = otpExpiresAt,
+                Status = InstructorInvitationStatus.Pending,
                 CreatedDate = DateTime.UtcNow,
-                ExpiryDate = DateTime.UtcNow.AddHours(CodeExpiryHours),
+                // Keep ExpiryDate aligned with OTP window until email is verified
+                ExpiryDate = otpExpiresAt,
                 IsUsed = false
             };
 
@@ -78,11 +107,11 @@ namespace QRCodeAttendance.Implementation.Services
 
             try
             {
-                await _emailService.SendInstructorInvitationCodeAsync(email, code, invitation.ExpiryDate);
+                await _emailService.SendInstructorEmailVerificationCodeAsync(email, otp, invitation.OtpExpiresAt.Value);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to deliver instructor invitation code to {InstructorEmail}", email);
+                _logger.LogError(ex, "Failed to deliver instructor verification code to {InstructorEmail}", email);
                 invitation.Status = InstructorInvitationStatus.Rejected;
                 invitation.RejectionReason = ex.Message;
                 invitation.UpdatedDate = DateTime.UtcNow;
@@ -92,7 +121,7 @@ namespace QRCodeAttendance.Implementation.Services
                 return new BaseResponse<InstructorInvitationDto>
                 {
                     Status = false,
-                    Message = $"The code was generated but the email could not be delivered: {ex.Message}",
+                    Message = "The verification code could not be delivered. Please check the email address and try again.",
                     Data = ToInvitationDto(invitation)
                 };
             }
@@ -100,9 +129,63 @@ namespace QRCodeAttendance.Implementation.Services
             return new BaseResponse<InstructorInvitationDto>
             {
                 Status = true,
-                Message = $"Instructor code sent to {email}. The code is hidden from admins and expires after 24 hours.",
+                Message = $"A six-digit verification code was sent to {email}. Ask the instructor for the code before issuing their registration code.",
                 Data = ToInvitationDto(invitation)
             };
+        }
+
+        public async Task<BaseResponse<InstructorInvitationDto>> VerifyInstructorEmail(VerifyInstructorEmailRequestModel request)
+        {
+            var email = NormalizeEmail(request.InstructorEmail);
+            var invitation = await _invitationRepository.GetPendingVerificationByEmail(email);
+
+            if (invitation == null || invitation.OtpExpiresAt <= DateTime.UtcNow)
+            {
+                return new BaseResponse<InstructorInvitationDto> { Status = false, Message = "The verification code is invalid or has expired. Request a new code." };
+            }
+
+            if (invitation.OtpFailedAttempts >= MaximumOtpAttempts)
+            {
+                return new BaseResponse<InstructorInvitationDto> { Status = false, Message = "Too many incorrect attempts. Request a new verification code." };
+            }
+
+            if (invitation.VerificationOtpHash == null || !CryptographicOperations.FixedTimeEquals(
+                    Convert.FromHexString(invitation.VerificationOtpHash),
+                    Convert.FromHexString(HashOtp(email, request.VerificationCode))))
+            {
+                invitation.OtpFailedAttempts++;
+                invitation.UpdatedDate = DateTime.UtcNow;
+                _invitationRepository.Update(invitation);
+                await _unitOfWork.SaveChangesAsync();
+                return new BaseResponse<InstructorInvitationDto> { Status = false, Message = "The verification code is incorrect." };
+            }
+
+            var code = await GenerateUniqueCode(email);
+            invitation.IsEmailVerified = true;
+            invitation.VerificationOtpHash = null;
+            invitation.OtpExpiresAt = null;
+            invitation.InvitationCodeHash = HashInvitationCode(email, code);
+            invitation.ExpiryDate = DateTime.UtcNow.AddHours(CodeExpiryHours);
+            invitation.Status = InstructorInvitationStatus.Approved;
+            invitation.UpdatedDate = DateTime.UtcNow;
+            _invitationRepository.Update(invitation);
+            await _unitOfWork.SaveChangesAsync();
+
+            try
+            {
+                await _emailService.SendInstructorInvitationCodeAsync(email, code, invitation.ExpiryDate);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to deliver verified instructor invitation to {InstructorEmail}", email);
+                invitation.Status = InstructorInvitationStatus.Rejected;
+                invitation.UpdatedDate = DateTime.UtcNow;
+                _invitationRepository.Update(invitation);
+                await _unitOfWork.SaveChangesAsync();
+                return new BaseResponse<InstructorInvitationDto> { Status = false, Message = "Email verification succeeded, but the registration code could not be delivered. Request a new verification code.", Data = ToInvitationDto(invitation) };
+            }
+
+            return new BaseResponse<InstructorInvitationDto> { Status = true, Message = $"Email verified. The registration code was sent to {email} and expires after 24 hours.", Data = ToInvitationDto(invitation) };
         }
 
         public async Task<BaseResponse> DeleteInstructorInvitation(Guid invitationId)
@@ -133,6 +216,14 @@ namespace QRCodeAttendance.Implementation.Services
             var hashBytes = SHA256.HashData(Encoding.UTF8.GetBytes(normalized));
             return Convert.ToHexString(hashBytes);
         }
+
+        private static string HashOtp(string email, string otp)
+        {
+            var normalized = NormalizeEmail(email) + ":" + otp.Trim();
+            return Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(normalized)));
+        }
+
+        private static string GenerateOtp() => RandomNumberGenerator.GetInt32(0, 1_000_000).ToString("D6");
 
         private async Task<string> GenerateUniqueCode(string email)
         {
@@ -195,7 +286,9 @@ namespace QRCodeAttendance.Implementation.Services
                 CreatedDate = invitation.CreatedDate,
                 ExpiryDate = invitation.ExpiryDate,
                 IsUsed = invitation.IsUsed,
-                UsedAt = invitation.UsedAt
+                UsedAt = invitation.UsedAt,
+                IsEmailVerified = invitation.IsEmailVerified,
+                OtpExpiresAt = invitation.OtpExpiresAt
             };
         }
     }

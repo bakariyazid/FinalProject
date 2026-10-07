@@ -421,9 +421,14 @@
                         <div>
                             <div class="timestamp-label" style="font-size: 0.7rem; uppercase; color: var(--text-secondary)">Profile Updated</div>
                             <div class="timestamp-value fw-semibold">
-                                <span class="@(Model.UpdatedDate == default(DateTime) ? "text-warning" : "")">
-                                    @(Model.UpdatedDate == default(DateTime) 
-                                        ? "Never updated" 
+                                @{
+                                    var neverUpdated = Model.UpdatedDate == default(DateTime)
+                                        || Model.UpdatedDate == DateTime.MinValue
+                                        || Model.UpdatedDate == Model.CreatedDate;
+                                }
+                                <span class="@(neverUpdated ? "text-warning" : "")">
+                                    @(neverUpdated
+                                        ? "Never updated"
                                         : Model.UpdatedDate.ToLocalTime().ToString("MMM dd, yyyy – hh:mm tt"))
                                 </span>
                             </div>

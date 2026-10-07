@@ -14,13 +14,13 @@ namespace QRCodeAttendance.Implementation.Services
 {
     public class AttendanceService : IAttendanceService
     {
-          private readonly IAttendanceRepository _attendanceRepository;
-          private readonly IUnitOfWork _unitOfWork; 
-          private readonly ISessionRepository _sessionRepository;
-          private readonly ICurrentUserService _currentUserService;
-          private readonly IStudentRepository _studentRepository;
+        private readonly IAttendanceRepository _attendanceRepository;
+        private readonly IUnitOfWork _unitOfWork;
+        private readonly ISessionRepository _sessionRepository;
+        private readonly ICurrentUserService _currentUserService;
+        private readonly IStudentRepository _studentRepository;
 
-        public AttendanceService(IAttendanceRepository attendanceRepository, IUnitOfWork unitOfWork, 
+        public AttendanceService(IAttendanceRepository attendanceRepository, IUnitOfWork unitOfWork,
         ISessionRepository sessionRepository, ICurrentUserService currentUserService, IStudentRepository studentRepository)
         {
             _attendanceRepository = attendanceRepository;
@@ -74,17 +74,17 @@ namespace QRCodeAttendance.Implementation.Services
             var studentId = student.Id;
 
             var session = await _sessionRepository.Get<Session>(s => s.Id == sessionId);
-            if (session == null) 
-                return new BaseResponse<bool> 
+            if (session == null)
+                return new BaseResponse<bool>
                 {
-                     Status = false, 
-                     Message = "Session not found" 
+                    Status = false,
+                    Message = "Session not found"
                 };
 
             var now = DateTime.UtcNow.ToUniversalTime();
             var scanTime = NormalizeScanTimeUtc(scannedAt);
             var firstScanStart = NormalizeStoredUtc(session.SessionStartTime);
-            var firstScanEnd = firstScanStart.AddMinutes(25);
+            var firstScanEnd = firstScanStart.AddMinutes(30);
             var sessionEndTime = NormalizeStoredUtc(session.SessionEndTime);
             var secondScanStart = sessionEndTime.AddMinutes(-20);
             var secondScanEnd = sessionEndTime.AddMinutes(-10);
@@ -134,7 +134,7 @@ namespace QRCodeAttendance.Implementation.Services
                 return new BaseResponse<bool>
                 {
                     Status = false,
-                    Message = $"No scan is active now. First scan is open for the first 25 minutes. Second scan opens from {secondScanStart.ToLocalTime():hh:mm tt} to {secondScanEnd.ToLocalTime():hh:mm tt}."
+                    Message = $"No scan is active now. First scan is open for the first 30 minutes. Second scan opens from {secondScanStart.ToLocalTime():hh:mm tt} to {secondScanEnd.ToLocalTime():hh:mm tt}."
                 };
             }
 
@@ -163,10 +163,10 @@ namespace QRCodeAttendance.Implementation.Services
                 };
 
             if (!validateAgainstTokenHistory && qrCode != session.QRCodeToken)
-                return new BaseResponse<bool> 
-                { 
-                    Status = false, 
-                    Message = "Invalid or expired QR Code" 
+                return new BaseResponse<bool>
+                {
+                    Status = false,
+                    Message = "Invalid or expired QR Code"
                 };
 
             if (isFirstScanWindow)
@@ -327,7 +327,7 @@ namespace QRCodeAttendance.Implementation.Services
 
         public async Task<IReadOnlyList<AttendanceDto>> GetAttendanceForInstructor(Guid instructorId)
         {
-             var attendances = await _attendanceRepository.GetAttendanceByInstructor(instructorId);
+            var attendances = await _attendanceRepository.GetAttendanceByInstructor(instructorId);
 
             return attendances.Select(a => new AttendanceDto
             {
@@ -365,7 +365,7 @@ namespace QRCodeAttendance.Implementation.Services
                 SecondScanTime = attendance.SecondScanTime
             };
         }
-    
+
 
         public async Task<bool> HasStudentMarkedAttendance(Guid studentId, Guid sessionId)
         {
@@ -374,29 +374,29 @@ namespace QRCodeAttendance.Implementation.Services
         }
 
         public async Task<IReadOnlyList<AttendanceDto>> GetAttendanceByInstructor(Guid instructorId)
+        {
+            var sessions = await _sessionRepository.GetAll(s => s.InstructorId == instructorId);
+            var sessionIds = sessions.Select(s => s.Id).ToList();
+
+            if (!sessionIds.Any()) return new List<AttendanceDto>();
+
+            var attendances = await _attendanceRepository.GetAll(a => sessionIds.Contains(a.SessionId));
+
+            return attendances.Select(a => new AttendanceDto
             {
-                var sessions = await _sessionRepository.GetAll(s => s.InstructorId == instructorId);
-                var sessionIds = sessions.Select(s => s.Id).ToList();
+                Id = a.Id,
+                StudentId = a.StudentId,
+                StudentName = a.Student?.FullName() ?? "Unknown",
+                CourseName = a.ClassSession?.CourseName ?? "Unknown",
+                CourseCode = a.ClassSession?.CourseCode ?? "Unknown",
+                SessionId = a.SessionId,
+                ScanTime = a.ScanTime,
+                Status = a.Status,
+                FirstScanTime = a.FirstScanTime,
+                SecondScanTime = a.SecondScanTime
+            }).ToList();
+        }
 
-                if (!sessionIds.Any()) return new List<AttendanceDto>();
-
-                var attendances = await _attendanceRepository.GetAll(a => sessionIds.Contains(a.SessionId));
-
-                return attendances.Select(a => new AttendanceDto
-                {
-                    Id = a.Id,
-                    StudentId = a.StudentId,
-                    StudentName = a.Student?.FullName() ?? "Unknown", 
-                    CourseName = a.ClassSession?.CourseName ?? "Unknown",
-                    CourseCode = a.ClassSession?.CourseCode ?? "Unknown",
-                    SessionId = a.SessionId,
-                    ScanTime = a.ScanTime,
-                    Status = a.Status,
-                    FirstScanTime = a.FirstScanTime,
-                    SecondScanTime = a.SecondScanTime
-                }).ToList();
-            }
-            
         public async Task<double> GetAttendancePercentage(Guid studentId, string courseName)
         {
             var sessions = await _sessionRepository.GetSessionsByCourseName(courseName);
@@ -417,7 +417,7 @@ namespace QRCodeAttendance.Implementation.Services
             return percentage;
         }
 
-    public async Task<IReadOnlyList<AttendanceDto>> GetAttendanceByCourseName(string courseName)
+        public async Task<IReadOnlyList<AttendanceDto>> GetAttendanceByCourseName(string courseName)
         {
             var sessions = await _sessionRepository.GetSessionsByCourseName(courseName);
 
@@ -448,8 +448,8 @@ namespace QRCodeAttendance.Implementation.Services
 
 
 
-     
-       public async Task<BaseResponse<bool>> DeleteAttendance(Guid id)
+
+        public async Task<BaseResponse<bool>> DeleteAttendance(Guid id)
         {
             var attendance = await _attendanceRepository.Get<Attendance>(a => a.Id == id);
 
@@ -472,7 +472,7 @@ namespace QRCodeAttendance.Implementation.Services
                 Message = "Attendance deleted successfully",
                 Data = true
             };
-        }      
+        }
 
         public async Task<BaseResponse<bool>> UpdateAttendanceStatus(Guid id, AttendanceStatus status)
         {
@@ -492,7 +492,7 @@ namespace QRCodeAttendance.Implementation.Services
 
             _attendanceRepository.Update(attendance);
 
-            await _unitOfWork.SaveChangesAsync(); 
+            await _unitOfWork.SaveChangesAsync();
 
             return new BaseResponse<bool>
             {
@@ -503,7 +503,7 @@ namespace QRCodeAttendance.Implementation.Services
         }
         public async Task<int> GetTotalAttendanceForStudent(Guid studentId)
         {
-               return (await _attendanceRepository.GetAll(studentId)).Count;
+            return (await _attendanceRepository.GetAll(studentId)).Count;
         }
 
         public Task<bool> MarkAttendanceWithStatus(Guid studentId, Guid sessionId, AttendanceStatus status)

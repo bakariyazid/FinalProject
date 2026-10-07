@@ -9,81 +9,147 @@ using QRCodeAttendance.Models.Configuration;
 
 namespace QRCodeAttendance.Implementation.Services
 {
-    public class SmtpEmailService : IEmailService
+  public class SmtpEmailService : IEmailService
+  {
+    private const string LogoContentId = "mitc-logo";
+    private readonly SmtpOptions _options;
+    private readonly IWebHostEnvironment _webHostEnvironment;
+
+    public SmtpEmailService(IOptions<SmtpOptions> options, IWebHostEnvironment webHostEnvironment)
     {
-        private const string LogoContentId = "mitc-logo";
-        private readonly SmtpOptions _options;
-        private readonly IWebHostEnvironment _webHostEnvironment;
+      _options = options.Value;
+      _webHostEnvironment = webHostEnvironment;
+    }
 
-        public SmtpEmailService(IOptions<SmtpOptions> options, IWebHostEnvironment webHostEnvironment)
+    public async Task SendInstructorInvitationCodeAsync(string instructorEmail, string code, DateTime expiryDate)
+    {
+      EnsureSmtpConfigured();
+
+      using var message = new MailMessage
+      {
+        From = new MailAddress(_options.SenderEmail, _options.SenderName),
+        Subject = "Your MITC Instructor Registration Code",
+        SubjectEncoding = Encoding.UTF8
+      };
+      message.To.Add(instructorEmail);
+
+      var logoPath = Path.Combine(_webHostEnvironment.WebRootPath, "images", "mitc-logo.jpg");
+      var hasEmbeddedLogo = File.Exists(logoPath);
+      var logoSource = hasEmbeddedLogo ? $"cid:{LogoContentId}" : _options.LogoUrl;
+
+      message.AlternateViews.Add(AlternateView.CreateAlternateViewFromString(
+          BuildTextContent(code, expiryDate),
+          Encoding.UTF8,
+          "text/plain"));
+
+      var htmlView = AlternateView.CreateAlternateViewFromString(
+          BuildHtmlContent(code, expiryDate, logoSource),
+          Encoding.UTF8,
+          "text/html");
+
+      if (hasEmbeddedLogo)
+      {
+        var embeddedLogo = new LinkedResource(logoPath, MediaTypeNames.Image.Jpeg)
         {
-            _options = options.Value;
-            _webHostEnvironment = webHostEnvironment;
-        }
+          ContentId = LogoContentId,
+          TransferEncoding = TransferEncoding.Base64
+        };
+        htmlView.LinkedResources.Add(embeddedLogo);
+      }
 
-        public async Task SendInstructorInvitationCodeAsync(string instructorEmail, string code, DateTime expiryDate)
+      message.AlternateViews.Add(htmlView);
+
+      using var smtpClient = CreateSmtpClient();
+      await smtpClient.SendMailAsync(message);
+    }
+
+    public async Task SendInstructorEmailVerificationCodeAsync(string instructorEmail, string code, DateTime expiryDate)
+    {
+      EnsureSmtpConfigured();
+
+      // Validate recipient format before opening SMTP connection
+      try
+      {
+        _ = new MailAddress(instructorEmail);
+      }
+      catch
+      {
+        throw new InvalidOperationException("The instructor email address is not valid.");
+      }
+
+      using var message = new MailMessage
+      {
+        From = new MailAddress(_options.SenderEmail, _options.SenderName),
+        Subject = "Confirm your MITC instructor email",
+        SubjectEncoding = Encoding.UTF8
+      };
+      message.To.Add(instructorEmail);
+
+      var logoPath = Path.Combine(_webHostEnvironment.WebRootPath ?? string.Empty, "images", "mitc-logo.jpg");
+      var hasEmbeddedLogo = !string.IsNullOrWhiteSpace(_webHostEnvironment.WebRootPath) && File.Exists(logoPath);
+      var logoSource = hasEmbeddedLogo ? $"cid:{LogoContentId}" : (_options.LogoUrl ?? string.Empty);
+
+      message.AlternateViews.Add(AlternateView.CreateAlternateViewFromString(
+          BuildVerificationTextContent(code, expiryDate),
+          Encoding.UTF8,
+          "text/plain"));
+
+      var htmlView = AlternateView.CreateAlternateViewFromString(
+          BuildVerificationHtmlContent(code, expiryDate, logoSource),
+          Encoding.UTF8,
+          "text/html");
+
+      if (hasEmbeddedLogo)
+      {
+        var embeddedLogo = new LinkedResource(logoPath, MediaTypeNames.Image.Jpeg)
         {
-            if (string.IsNullOrWhiteSpace(_options.Host))
-            {
-                throw new InvalidOperationException("SMTP host is not configured.");
-            }
+          ContentId = LogoContentId,
+          TransferEncoding = TransferEncoding.Base64
+        };
+        htmlView.LinkedResources.Add(embeddedLogo);
+      }
 
-            if (string.IsNullOrWhiteSpace(_options.SenderEmail))
-            {
-                throw new InvalidOperationException("SMTP sender email is not configured.");
-            }
+      message.AlternateViews.Add(htmlView);
 
-            using var message = new MailMessage
-            {
-                From = new MailAddress(_options.SenderEmail, _options.SenderName),
-                Subject = "Your MITC Instructor Registration Code",
-                SubjectEncoding = Encoding.UTF8
-            };
-            message.To.Add(instructorEmail);
+      using var smtpClient = CreateSmtpClient();
+      await smtpClient.SendMailAsync(message);
+    }
 
-            var logoPath = Path.Combine(_webHostEnvironment.WebRootPath, "images", "mitc-logo.jpg");
-            var hasEmbeddedLogo = File.Exists(logoPath);
-            var logoSource = hasEmbeddedLogo ? $"cid:{LogoContentId}" : _options.LogoUrl;
+    private void EnsureSmtpConfigured()
+    {
+      if (string.IsNullOrWhiteSpace(_options.Host))
+        throw new InvalidOperationException("SMTP host is not configured. Set Smtp:Host in appsettings.");
+      if (_options.Port <= 0)
+        throw new InvalidOperationException("SMTP port is not configured. Use 587 for Gmail.");
+      if (string.IsNullOrWhiteSpace(_options.SenderEmail))
+        throw new InvalidOperationException("SMTP sender email is not configured. Set Smtp:SenderEmail in appsettings.");
+      if (string.IsNullOrWhiteSpace(_options.Username) || string.IsNullOrWhiteSpace(_options.Password))
+        throw new InvalidOperationException("SMTP username/password are not configured. For Gmail, use your full email and an App Password (not your normal password).");
+    }
 
-            message.AlternateViews.Add(AlternateView.CreateAlternateViewFromString(
-                BuildTextContent(code, expiryDate),
-                Encoding.UTF8,
-                "text/plain"));
+    private SmtpClient CreateSmtpClient()
+    {
+      return new SmtpClient(_options.Host, _options.Port)
+      {
+        EnableSsl = _options.EnableSsl,
+        UseDefaultCredentials = false,
+        Credentials = new NetworkCredential(_options.Username, _options.Password),
+        DeliveryMethod = SmtpDeliveryMethod.Network,
+        Timeout = 30000
+      };
+    }
 
-            var htmlView = AlternateView.CreateAlternateViewFromString(
-                BuildHtmlContent(code, expiryDate, logoSource),
-                Encoding.UTF8,
-                "text/html");
+    internal static string BuildVerificationHtmlContent(string code, DateTime expiryDate, string logoSource) => $@"<!doctype html><html><body style=""font-family:Arial,sans-serif;color:#132f3f""><h2>Confirm your email address</h2><p>An MITC administrator is preparing an instructor registration invitation for this email address.</p><p>Share this code with the administrator only if you requested this invitation:</p><p style=""font-size:28px;font-weight:bold;letter-spacing:6px;color:#0f766e"">{code}</p><p>This code expires at {expiryDate.ToLocalTime():h:mm tt} and can be used once.</p><p>If you did not expect this, safely ignore this email.</p></body></html>";
 
-            if (hasEmbeddedLogo)
-            {
-                var embeddedLogo = new LinkedResource(logoPath, MediaTypeNames.Image.Jpeg)
-                {
-                    ContentId = LogoContentId,
-                    TransferEncoding = TransferEncoding.Base64
-                };
-                htmlView.LinkedResources.Add(embeddedLogo);
-            }
+    internal static string BuildVerificationTextContent(string code, DateTime expiryDate) => $"MITC email verification code: {code}. Share it with the administrator only if you requested an instructor invitation. It expires at {expiryDate.ToLocalTime():h:mm tt}.";
 
-            message.AlternateViews.Add(htmlView);
+    internal static string BuildHtmlContent(string code, DateTime expiryDate, string logoSource)
+    {
+      var logo = string.IsNullOrWhiteSpace(logoSource)
+          ? string.Empty
+          : $@"<img src=""{logoSource}"" alt=""MITC logo"" width=""150"" style=""display:block;margin:0 auto;max-width:150px;height:auto;border:0;"" />";
 
-            using var smtpClient = new SmtpClient(_options.Host, _options.Port)
-            {
-                EnableSsl = _options.EnableSsl,
-                UseDefaultCredentials = false,
-                Credentials = new NetworkCredential(_options.Username, _options.Password)
-            };
-
-            await smtpClient.SendMailAsync(message);
-        }
-
-        internal static string BuildHtmlContent(string code, DateTime expiryDate, string logoSource)
-        {
-            var logo = string.IsNullOrWhiteSpace(logoSource)
-                ? string.Empty
-                : $@"<img src=""{logoSource}"" alt=""MITC logo"" width=""150"" style=""display:block;margin:0 auto;max-width:150px;height:auto;border:0;"" />";
-
-            return $@"
+      return $@"
 <!doctype html>
 <html lang=""en"">
 <head>
@@ -148,11 +214,11 @@ namespace QRCodeAttendance.Implementation.Services
   </table>
 </body>
 </html>";
-        }
-
-        internal static string BuildTextContent(string code, DateTime expiryDate)
-        {
-            return $"Welcome to MITC QRCode Attendance System. Your instructor registration code is {code}. Please use it as soon as possible. It is linked to this email address only and expires after 24 hours.";
-        }
     }
+
+    internal static string BuildTextContent(string code, DateTime expiryDate)
+    {
+      return $"Welcome to MITC QRCode Attendance System. Your instructor registration code is {code}. Please use it as soon as possible. It is linked to this email address only and expires after 24 hours.";
+    }
+  }
 }

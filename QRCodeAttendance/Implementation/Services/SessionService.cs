@@ -17,7 +17,7 @@ namespace QRCodeAttendance.Implementation.Services
         private readonly IInstructorRepository _instructorRepository;
         private readonly IStudentRepository _studentRepository;
         private readonly ILogger<SessionService> _logger;
-        public SessionService(ISessionRepository sessionRepository, IUnitOfWork unitOfWork ,
+        public SessionService(ISessionRepository sessionRepository, IUnitOfWork unitOfWork,
          IAttendanceRepository attendanceRepository, ICurrentUserService currentUserService,
           IInstructorRepository instructorRepository, IStudentRepository studentRepository, ILogger<SessionService> logger)
         {
@@ -29,9 +29,9 @@ namespace QRCodeAttendance.Implementation.Services
             _studentRepository = studentRepository;
             _logger = logger;
         }
-       
 
-    public async Task<BaseResponse<SessionDto>> CreateSessionAsync(Guid instructorId, CreateSessionRequestModel request)
+
+        public async Task<BaseResponse<SessionDto>> CreateSessionAsync(Guid instructorId, CreateSessionRequestModel request)
         {
             _logger.LogInformation("Instructor {instructorId} is creating a session for course {CourseName}", instructorId, request.CourseName);
 
@@ -87,7 +87,7 @@ namespace QRCodeAttendance.Implementation.Services
                     QRCodeToken = string.Empty,
                     QRCodeExpiry = session.QRCodeExpiry,
                     CreatedDate = session.CreatedDate,
-                    UpdatedDate = session.UpdatedDate 
+                    UpdatedDate = session.UpdatedDate
                 };
 
                 return new BaseResponse<SessionDto>
@@ -106,105 +106,105 @@ namespace QRCodeAttendance.Implementation.Services
         }
 
         public async Task<BaseResponse<SessionDto>> GenerateSessionQrCode(Guid sessionId)
+        {
+            var session = await _sessionRepository.Get<Session>(s => s.Id == sessionId);
+
+            if (session == null)
             {
-                var session = await _sessionRepository.Get<Session>(s => s.Id == sessionId);
-
-                if (session == null)
+                return new BaseResponse<SessionDto>
                 {
-                    return new BaseResponse<SessionDto>
-                    {
-                        Status = false,
-                        Message = "Session not found"
-                    };
-                }
+                    Status = false,
+                    Message = "Session not found"
+                };
+            }
 
-                var now = DateTime.UtcNow;
-                var sessionStartTime = NormalizeStoredUtc(session.SessionStartTime);
-                var sessionEndTime = NormalizeStoredUtc(session.SessionEndTime);
-                var firstScanEnd = sessionStartTime.AddMinutes(25);
-                var secondScanStart = sessionEndTime.AddMinutes(-20);
-                var hardCutoff = sessionEndTime.AddMinutes(-10);
-                var isFirstScanWindow = now >= sessionStartTime && now <= firstScanEnd;
-                var isSecondScanWindow = now >= secondScanStart && now < hardCutoff;
+            var now = DateTime.UtcNow;
+            var sessionStartTime = NormalizeStoredUtc(session.SessionStartTime);
+            var sessionEndTime = NormalizeStoredUtc(session.SessionEndTime);
+            var firstScanEnd = sessionStartTime.AddMinutes(30);
+            var secondScanStart = sessionEndTime.AddMinutes(-20);
+            var hardCutoff = sessionEndTime.AddMinutes(-10);
+            var isFirstScanWindow = now >= sessionStartTime && now <= firstScanEnd;
+            var isSecondScanWindow = now >= secondScanStart && now < hardCutoff;
 
-                if (now < sessionStartTime)
+            if (now < sessionStartTime)
+            {
+                return new BaseResponse<SessionDto>
                 {
-                    return new BaseResponse<SessionDto>
-                    {
-                        Status = false,
-                        Message = "Too early to generate QR code. Wait until the class start time."
-                    };
-                }
+                    Status = false,
+                    Message = "Too early to generate QR code. Wait until the class start time."
+                };
+            }
 
-                if (now >= hardCutoff)
-                {
-                    await FinalizeSessionAttendanceAsync(session, now);
+            if (now >= hardCutoff)
+            {
+                await FinalizeSessionAttendanceAsync(session, now);
 
-                    session.IsActive = false;
-                    session.QRCodeToken = null;
-                    session.QRCodeExpiry = now;
-                    session.UpdatedDate = now;
-
-                    _sessionRepository.Update(session);
-                    await _unitOfWork.SaveChangesAsync();
-
-                    return new BaseResponse<SessionDto>
-                    {
-                        Status = false,
-                        Message = "Attendance has closed. QR Code has expired.",
-                        Data = MapSessionToDto(session)
-                    };
-                }
-
-                if (!isFirstScanWindow && !isSecondScanWindow)
-                {
-                    session.IsActive = false;
-                    session.QRCodeToken = null;
-                    session.QRCodeExpiry = isFirstScanWindow ? firstScanEnd : secondScanStart;
-                    session.UpdatedDate = now;
-
-                    _sessionRepository.Update(session);
-                    await _unitOfWork.SaveChangesAsync();
-
-                    return new BaseResponse<SessionDto>
-                    {
-                        Status = false,
-                        Message = $"Please wait for the second scan time. The second scan opens at {secondScanStart.ToLocalTime():hh:mm tt}.",
-                        Data = MapSessionToDto(session)
-                    };
-                }
-
-                if (!string.IsNullOrWhiteSpace(session.QRCodeToken) && now < session.QRCodeExpiry)
-                {
-                    await EnsureQrTokenHistoryAsync(session, now);
-                    await _unitOfWork.SaveChangesAsync();
-
-                    return new BaseResponse<SessionDto>
-                    {
-                        Status = true,
-                        Message = "Current QR Code is still valid",
-                        Data = MapSessionToDto(session)
-                    };
-                }
-
-                var standardExpiry = now.AddMinutes(5);
-                var activeWindowEnd = isFirstScanWindow ? firstScanEnd : hardCutoff;
-                session.QRCodeExpiry = standardExpiry > activeWindowEnd ? activeWindowEnd : standardExpiry;
-                session.QRCodeToken = Guid.NewGuid().ToString("N");
-                session.IsActive = true;
+                session.IsActive = false;
+                session.QRCodeToken = null;
+                session.QRCodeExpiry = now;
                 session.UpdatedDate = now;
 
                 _sessionRepository.Update(session);
-                await AddQrTokenHistoryAsync(session, now);
+                await _unitOfWork.SaveChangesAsync();
+
+                return new BaseResponse<SessionDto>
+                {
+                    Status = false,
+                    Message = "Attendance has closed. QR Code has expired.",
+                    Data = MapSessionToDto(session)
+                };
+            }
+
+            if (!isFirstScanWindow && !isSecondScanWindow)
+            {
+                session.IsActive = false;
+                session.QRCodeToken = null;
+                session.QRCodeExpiry = isFirstScanWindow ? firstScanEnd : secondScanStart;
+                session.UpdatedDate = now;
+
+                _sessionRepository.Update(session);
+                await _unitOfWork.SaveChangesAsync();
+
+                return new BaseResponse<SessionDto>
+                {
+                    Status = false,
+                    Message = $"Please wait for the second scan time. The second scan opens at {secondScanStart.ToLocalTime():hh:mm tt}.",
+                    Data = MapSessionToDto(session)
+                };
+            }
+
+            if (!string.IsNullOrWhiteSpace(session.QRCodeToken) && now < session.QRCodeExpiry)
+            {
+                await EnsureQrTokenHistoryAsync(session, now);
                 await _unitOfWork.SaveChangesAsync();
 
                 return new BaseResponse<SessionDto>
                 {
                     Status = true,
-                    Message = "QR Code rotated successfully",
+                    Message = "Current QR Code is still valid",
                     Data = MapSessionToDto(session)
                 };
             }
+
+            var standardExpiry = now.AddMinutes(5);
+            var activeWindowEnd = isFirstScanWindow ? firstScanEnd : hardCutoff;
+            session.QRCodeExpiry = standardExpiry > activeWindowEnd ? activeWindowEnd : standardExpiry;
+            session.QRCodeToken = Guid.NewGuid().ToString("N");
+            session.IsActive = true;
+            session.UpdatedDate = now;
+
+            _sessionRepository.Update(session);
+            await AddQrTokenHistoryAsync(session, now);
+            await _unitOfWork.SaveChangesAsync();
+
+            return new BaseResponse<SessionDto>
+            {
+                Status = true,
+                Message = "QR Code rotated successfully",
+                Data = MapSessionToDto(session)
+            };
+        }
 
         public async Task<int> RotateDueQrCodesAsync()
         {
@@ -217,7 +217,7 @@ namespace QRCodeAttendance.Implementation.Services
                 var sessionStartTime = NormalizeStoredUtc(session.SessionStartTime);
                 var sessionEndTime = NormalizeStoredUtc(session.SessionEndTime);
                 var hardCutoff = sessionEndTime.AddMinutes(-10);
-                var firstScanEnd = sessionStartTime.AddMinutes(25);
+                var firstScanEnd = sessionStartTime.AddMinutes(30);
                 var secondScanStart = sessionEndTime.AddMinutes(-20);
                 var isFirstScanWindow = now >= sessionStartTime && now <= firstScanEnd;
                 var isSecondScanWindow = now >= secondScanStart && now < hardCutoff;
@@ -468,51 +468,51 @@ namespace QRCodeAttendance.Implementation.Services
         }
 
         public async Task<BaseResponse<SessionDto>> UpdateSession(Guid sessionId, UpdateSessionRequestModel request)
+        {
+
+            var session = await _sessionRepository.Get<Session>(s => s.Id == sessionId);
+
+            if (session == null)
             {
-                 
-                var session = await _sessionRepository.Get<Session>(s => s.Id == sessionId);
-
-                if (session == null)
-                {
-                    return new BaseResponse<SessionDto>
-                    {
-                        Status = false,
-                        Message = "Session not found"
-                    };
-                }
-                
-                session.CourseName = request.CourseName;
-                session.CourseCode = request.CourseCode;
-                session.Level = request.Level;
-                session.Department = request.Department;
-                session.SessionStartTime = request.SessionStartTime.ToUniversalTime();
-                session.SessionEndTime = request.SessionEndTime.ToUniversalTime();
-                session.UpdatedDate = DateTime.UtcNow.ToUniversalTime();
-
-                _sessionRepository.Update(session);
-                await _unitOfWork.SaveChangesAsync();
-
-                var sessionDto = new SessionDto
-                {
-                    Id = session.Id,
-                    CourseName = session.CourseName,
-                    CourseCode = session.CourseCode,
-                    Level = session.Level,
-                    Department = session.Department,
-                    SessionStartTime = session.SessionStartTime,
-                    SessionEndTime = session.SessionEndTime,
-                    IsActive = session.IsActive,
-                    CreatedDate = session.CreatedDate,
-                    UpdatedDate = session.UpdatedDate
-                };
-
                 return new BaseResponse<SessionDto>
                 {
-                    Status = true,
-                    Message = "Session updated successfully",
-                    Data = sessionDto
+                    Status = false,
+                    Message = "Session not found"
                 };
             }
+
+            session.CourseName = request.CourseName;
+            session.CourseCode = request.CourseCode;
+            session.Level = request.Level;
+            session.Department = request.Department;
+            session.SessionStartTime = request.SessionStartTime.ToUniversalTime();
+            session.SessionEndTime = request.SessionEndTime.ToUniversalTime();
+            session.UpdatedDate = DateTime.UtcNow.ToUniversalTime();
+
+            _sessionRepository.Update(session);
+            await _unitOfWork.SaveChangesAsync();
+
+            var sessionDto = new SessionDto
+            {
+                Id = session.Id,
+                CourseName = session.CourseName,
+                CourseCode = session.CourseCode,
+                Level = session.Level,
+                Department = session.Department,
+                SessionStartTime = session.SessionStartTime,
+                SessionEndTime = session.SessionEndTime,
+                IsActive = session.IsActive,
+                CreatedDate = session.CreatedDate,
+                UpdatedDate = session.UpdatedDate
+            };
+
+            return new BaseResponse<SessionDto>
+            {
+                Status = true,
+                Message = "Session updated successfully",
+                Data = sessionDto
+            };
+        }
 
         public async Task<BaseResponse<bool>> DeleteSession(Guid sessionId)
         {
@@ -539,7 +539,7 @@ namespace QRCodeAttendance.Implementation.Services
         }
 
 
-      public async Task<BaseResponse<IReadOnlyList<SessionDto>>> GetSessionsByInstructor(Guid instructorId)
+        public async Task<BaseResponse<IReadOnlyList<SessionDto>>> GetSessionsByInstructor(Guid instructorId)
         {
             var response = new BaseResponse<IReadOnlyList<SessionDto>>();
 
@@ -547,7 +547,7 @@ namespace QRCodeAttendance.Implementation.Services
 
             if (sessions == null || !sessions.Any())
             {
-                response.Status = true; 
+                response.Status = true;
                 response.Message = "No sessions found.";
                 response.Data = new List<SessionDto>().AsReadOnly();
                 return response;
@@ -558,7 +558,7 @@ namespace QRCodeAttendance.Implementation.Services
                 Id = s.Id,
                 CourseName = s.CourseName,
                 CourseCode = s.CourseCode,
-                Level = s.Level,    
+                Level = s.Level,
                 Department = s.Department,
                 SessionStartTime = s.SessionStartTime,
                 SessionEndTime = s.SessionEndTime,
@@ -569,7 +569,7 @@ namespace QRCodeAttendance.Implementation.Services
                 CreatedDate = s.CreatedDate,
                 UpdatedDate = s.UpdatedDate
             })
-            .OrderByDescending(s => s.SessionStartTime) 
+            .OrderByDescending(s => s.SessionStartTime)
             .ToList();
 
             response.Status = true;
@@ -578,48 +578,48 @@ namespace QRCodeAttendance.Implementation.Services
 
             return response;
         }
-       public async Task<BaseResponse<IReadOnlyList<AttendanceDto>>> GetSessionAttendance(Guid sessionId)
+        public async Task<BaseResponse<IReadOnlyList<AttendanceDto>>> GetSessionAttendance(Guid sessionId)
+        {
+            var response = new BaseResponse<IReadOnlyList<AttendanceDto>>();
+
+            try
             {
-                var response = new BaseResponse<IReadOnlyList<AttendanceDto>>();
+                var attendances = await _attendanceRepository.GetBySession(sessionId);
 
-                try
-                {
-                    var attendances = await _attendanceRepository.GetBySession(sessionId);
-
-                    if (attendances == null || !attendances.Any())
-                    {
-                        response.Status = false;
-                        response.Message = "No attendance records found.";
-                        return response;
-                    }
-
-                    var attendanceDtos = attendances.Select(a => new AttendanceDto
-                    {
-                        Id = a.Id,
-                        StudentId = a.StudentId,
-                        SessionId = a.SessionId,
-                        StudentName = a.Student?.FullName() ?? a.StudentName, 
-                        CourseName = a.ClassSession?.CourseName ?? a.CourseName,
-                        CourseCode = a.ClassSession?.CourseCode ?? a.CourseCode,
-                        Status = a.Status, 
-                        ScanTime = a.ScanTime,
-                        FirstScanTime = a.FirstScanTime,
-                        SecondScanTime = a.SecondScanTime,
-                        CreatedDate = a.CreatedDate
-                    }).ToList();
-
-                    response.Status = true;
-                    response.Data = attendanceDtos;
-                    return response;
-                }
-                catch (Exception ex)
+                if (attendances == null || !attendances.Any())
                 {
                     response.Status = false;
-                    response.Message = $"Error: {ex.Message}";
+                    response.Message = "No attendance records found.";
                     return response;
                 }
-            }
 
-       
+                var attendanceDtos = attendances.Select(a => new AttendanceDto
+                {
+                    Id = a.Id,
+                    StudentId = a.StudentId,
+                    SessionId = a.SessionId,
+                    StudentName = a.Student?.FullName() ?? a.StudentName,
+                    CourseName = a.ClassSession?.CourseName ?? a.CourseName,
+                    CourseCode = a.ClassSession?.CourseCode ?? a.CourseCode,
+                    Status = a.Status,
+                    ScanTime = a.ScanTime,
+                    FirstScanTime = a.FirstScanTime,
+                    SecondScanTime = a.SecondScanTime,
+                    CreatedDate = a.CreatedDate
+                }).ToList();
+
+                response.Status = true;
+                response.Data = attendanceDtos;
+                return response;
+            }
+            catch (Exception ex)
+            {
+                response.Status = false;
+                response.Message = $"Error: {ex.Message}";
+                return response;
+            }
+        }
+
+
     }
 }

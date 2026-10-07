@@ -22,8 +22,7 @@
 
     .admin-dashboard {
         width: min(1180px, 100%);
-        margin: 0 auto;
-    }
+        margin: 0 auto;  }
 
     .admin-hero {
         display: grid;
@@ -284,9 +283,10 @@
         <div>
             <p class="admin-kicker">Admin Control</p>
             <h1 class="admin-title">Instructor Invitations</h1>
-            <p class="admin-subtitle">Send secure instructor registration codes by email. Codes are hidden from admins, tied to the instructor email, and expire after 24 hours.</p>
+            <p class="admin-subtitle">Verify an instructor's inbox before sending their registration code. Verification codes expire after 10 minutes; registration codes expire after 24 hours.</p>
+            </div>
+            <a asp-controller="Admin" asp-action="Profile" class="admin-logout text-decoration-none d-inline-flex align-items-center justify-content-center">My Profile</a>
         </div>
-    </div>
 
     @if (TempData["Alert"] != null)
     {
@@ -314,12 +314,12 @@
     <div class="admin-grid">
         <section class="admin-panel">
             <div class="admin-panel-header">
-                <h2>Send Instructor Code</h2>
-                <p>Enter the instructor email address.</p>
+                <h2>Step 1: Send Email Verification</h2>
+                <p>Enter the instructor email address. A registration code is created only after the inbox is verified.</p>
             </div>
 
             <div class="admin-panel-body">
-                <form asp-controller="Admin" asp-action="GenerateInstructorCode" method="post" class="row g-3">
+                <form asp-controller="Admin" asp-action="RequestInstructorEmailVerification" method="post" class="row g-3">
                     @Html.AntiForgeryToken()
                     <div class="col-md-9">
                         <label asp-for="Form.InstructorEmail" class="form-label fw-bold">Instructor email</label>
@@ -327,12 +327,24 @@
                         <span asp-validation-for="Form.InstructorEmail" class="text-danger small"></span>
                     </div>
                     <div class="col-md-3 d-flex align-items-end">
-                        <button type="submit" class="btn admin-primary-btn w-100">Send Code</button>
+                        <button type="submit" class="btn admin-primary-btn w-100">Send Verification</button>
                     </div>
                 </form>
             </div>
         </section>
     </div>
+
+    <section class="admin-panel admin-recent">
+        <div class="admin-panel-header"><h2>Step 2: Confirm Instructor Inbox</h2><p>Enter the six-digit code received by the instructor. Their registration code is emailed only after a successful match.</p></div>
+        <div class="admin-panel-body">
+            <form asp-controller="Admin" asp-action="VerifyInstructorEmail" method="post" class="row g-3">
+                @Html.AntiForgeryToken()
+                <div class="col-md-5"><label asp-for="VerificationForm.InstructorEmail" class="form-label fw-bold">Instructor email</label><input asp-for="VerificationForm.InstructorEmail" type="email" class="form-control admin-control" /><span asp-validation-for="VerificationForm.InstructorEmail" class="text-danger small"></span></div>
+                <div class="col-md-4"><label asp-for="VerificationForm.VerificationCode" class="form-label fw-bold">Verification code</label><input asp-for="VerificationForm.VerificationCode" inputmode="numeric" maxlength="6" class="form-control admin-control" placeholder="123456" /><span asp-validation-for="VerificationForm.VerificationCode" class="text-danger small"></span></div>
+                <div class="col-md-3 d-flex align-items-end"><button type="submit" class="btn admin-primary-btn w-100">Verify &amp; Send</button></div>
+            </form>
+        </div>
+    </section>
 
     <section class="admin-panel admin-recent">
         <div class="admin-panel-header">

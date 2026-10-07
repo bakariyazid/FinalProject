@@ -65,7 +65,7 @@
           }
         }
       },
-      "Microsoft.AspNetCore.Authentication.JwtBearer/8.0.29": {
+      "Microsoft.AspNetCore.Authentication.JwtBearer/8.0.31": {
         "type": "package",
         "dependencies": {
           "Microsoft.IdentityModel.Protocols.OpenIdConnect": "7.7.3"
@@ -1329,10 +1329,10 @@
         "logo.png"
       ]
     },
-    "Microsoft.AspNetCore.Authentication.JwtBearer/8.0.29": {
-      "sha512": "U9mJXthGFk2uZb8ECOKEuJXyIGxub1l5zx82dZ3q3t+8oRZsinzyDRdomL13tb+/EIT6/3HAZ6pbWQwf7enrFA==",
+    "Microsoft.AspNetCore.Authentication.JwtBearer/8.0.31": {
+      "sha512": "ql5DM/d+K4oQowi7RM7wE5ii5yrpjYI7K4ZPSj/ctVXRAgqJc+CR+zkDAuPfHaBUNb73FBVRUpIkznYw903Qew==",
       "type": "package",
-      "path": "microsoft.aspnetcore.authentication.jwtbearer/8.0.29",
+      "path": "microsoft.aspnetcore.authentication.jwtbearer/8.0.31",
       "files": [
         ".nupkg.metadata",
         ".signature.p7s",
@@ -1340,7 +1340,7 @@
         "THIRD-PARTY-NOTICES.TXT",
         "lib/net8.0/Microsoft.AspNetCore.Authentication.JwtBearer.dll",
         "lib/net8.0/Microsoft.AspNetCore.Authentication.JwtBearer.xml",
-        "microsoft.aspnetcore.authentication.jwtbearer.8.0.29.nupkg.sha512",
+        "microsoft.aspnetcore.authentication.jwtbearer.8.0.31.nupkg.sha512",
         "microsoft.aspnetcore.authentication.jwtbearer.nuspec"
       ]
     },
@@ -3191,32 +3191,24 @@
     ]
   },
   "packageFolders": {
-    "C:\\Users\\YAZID BAKARE\\.nuget\\packages\\": {},
-    "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages": {}
+    "C:\\Users\\BAKARI YAZID AKANNI\\.nuget\\packages\\": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "E:\\Project folder\\FinalProject\\QRCodeAttendance\\QRCodeAttendance.csproj",
+      "projectUniqueName": "D:\\Project folder\\FinalProject\\QRCodeAttendance\\QRCodeAttendance.csproj",
       "projectName": "QRCodeAttendance",
-      "projectPath": "E:\\Project folder\\FinalProject\\QRCodeAttendance\\QRCodeAttendance.csproj",
-      "packagesPath": "C:\\Users\\YAZID BAKARE\\.nuget\\packages\\",
-      "outputPath": "E:\\Project folder\\FinalProject\\QRCodeAttendance\\obj\\",
+      "projectPath": "D:\\Project folder\\FinalProject\\QRCodeAttendance\\QRCodeAttendance.csproj",
+      "packagesPath": "C:\\Users\\BAKARI YAZID AKANNI\\.nuget\\packages\\",
+      "outputPath": "D:\\Project folder\\FinalProject\\QRCodeAttendance\\obj\\",
       "projectStyle": "PackageReference",
-      "fallbackFolders": [
-        "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
-      ],
       "configFilePaths": [
-        "C:\\Users\\YAZID BAKARE\\AppData\\Roaming\\NuGet\\NuGet.Config",
-        "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
-        "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
+        "C:\\Users\\BAKARI YAZID AKANNI\\AppData\\Roaming\\NuGet\\NuGet.Config"
       ],
       "originalTargetFrameworks": [
         "net8.0"
       ],
       "sources": {
-        "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
-        "C:\\Program Files\\dotnet\\library-packs": {},
         "https://api.nuget.org/v3/index.json": {}
       },
       "frameworks": {
@@ -3235,7 +3227,7 @@
         "auditLevel": "low",
         "auditMode": "direct"
       },
-      "SdkAnalysisLevel": "10.0.200"
+      "SdkAnalysisLevel": "9.0.200"
     },
     "frameworks": {
       "net8.0": {
@@ -3309,6 +3301,24 @@
         ],
         "assetTargetFallback": true,
         "warn": true,
+        "downloadDependencies": [
+          {
+            "name": "Microsoft.AspNetCore.App.Ref",
+            "version": "[8.0.14, 8.0.14]"
+          },
+          {
+            "name": "Microsoft.NETCore.App.Host.win-x64",
+            "version": "[8.0.14, 8.0.14]"
+          },
+          {
+            "name": "Microsoft.NETCore.App.Ref",
+            "version": "[8.0.14, 8.0.14]"
+          },
+          {
+            "name": "Microsoft.WindowsDesktop.App.Ref",
+            "version": "[8.0.14, 8.0.14]"
+          }
+        ],
         "frameworkReferences": {
           "Microsoft.AspNetCore.App": {
             "privateAssets": "none"
@@ -3317,7 +3327,7 @@
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\10.0.200-preview.0.26103.119/PortableRuntimeIdentifierGraph.json"
+        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.202/PortableRuntimeIdentifierGraph.json"
       }
     }
   }

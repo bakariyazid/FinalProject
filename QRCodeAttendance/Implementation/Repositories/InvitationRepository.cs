@@ -17,10 +17,9 @@ namespace QRCodeAttendance.Implementation.Repositories
             var normalizedEmail = email.Trim().ToLowerInvariant();
             return await _qrCodeDbContext.Invitations
                 .AnyAsync(i =>
-                    i.InstructorEmail == normalizedEmail &&
-                    i.Status == InstructorInvitationStatus.Approved &&
-                    !i.IsUsed &&
-                    i.ExpiryDate > DateTime.UtcNow);
+                    i.InstructorEmail == normalizedEmail && !i.IsUsed &&
+                    ((i.Status == InstructorInvitationStatus.Pending && i.OtpExpiresAt > DateTime.UtcNow) ||
+                     (i.Status == InstructorInvitationStatus.Approved && i.ExpiryDate > DateTime.UtcNow)));
         }
 
         public async Task<bool> InvitationCodeHashExists(string invitationCodeHash)
@@ -37,6 +36,15 @@ namespace QRCodeAttendance.Implementation.Repositories
                     i.InstructorEmail == normalizedEmail &&
                     i.InvitationCodeHash == invitationCodeHash &&
                     i.Status == InstructorInvitationStatus.Approved);
+        }
+
+        public async Task<Invitation?> GetPendingVerificationByEmail(string email)
+        {
+            var normalizedEmail = email.Trim().ToLowerInvariant();
+            return await _qrCodeDbContext.Invitations
+                .OrderByDescending(i => i.CreatedDate)
+                .FirstOrDefaultAsync(i => i.InstructorEmail == normalizedEmail &&
+                    i.Status == InstructorInvitationStatus.Pending && !i.IsUsed);
         }
 
         public async Task<Invitation?> GetById(Guid id)

@@ -161,7 +161,7 @@ namespace QRCodeAttendance.Controllers
             {
                 _logger.LogWarning("Profile update failed for {UserId}: {Message}", userId, response.Message);
                 ViewBag.ErrorMessage = response.Message;
-                return View("Profile", model);
+                return View("EditStdProfile", model);
             }
 
             _logger.LogInformation("Profile updated successfully for {UserId}", userId);

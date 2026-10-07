@@ -44,204 +44,205 @@ namespace QRCodeAttendance.Implementation.Services
         }
 
         public async Task<BaseResponse<bool>> RegisterStudent(CreateStudentRequestModel request)
-                    {
-                        var studentExist = await _userRepository.Any(u => u.Email == request.Email);
-                        if (studentExist)
-                        {
-                            return new BaseResponse<bool>
-                            {
-                                Message = "Student with email already exist",
-                                Status = false
-                            };
-                        }
-
-                        if (request.PasswordHash != request.ConfirmPassword)
-                        {
-                            return new BaseResponse<bool>
-                            {
-                                Message = "Password doesn't match!",
-                                Status = false,
-                            };
-                        }
-
-                        (var valid, var message) = ValidatePassword(request.PasswordHash);
-                        if (!valid)
-                            return new BaseResponse<bool> { Message = message ?? string.Empty, Status = false };
-
-                        var strategy = _unitOfWork.CreateExecutionStrategy();
-
-                        return await strategy.ExecuteAsync(async () =>
-                        {
-                            using var transaction = await _unitOfWork.BeginTransactionAsync();
-
-                            try
-                            {
-                                var user = new User
-                                {
-                                    Email = request.Email,
-                                    PasswordHash = _identityService.GetPasswordHash(request.PasswordHash),
-                                    UserName = request.Email,
-                                    RoleId = (await _roleRepository.GetByName("Student"))?.Id ?? throw new Exception("Student role not found"),
-                                    CreatedDate = DateTime.UtcNow,
-                                    UpdatedDate = DateTime.UtcNow
-                                };
-
-                                var createResult = await _userManager.CreateAsync(user);
-
-                                if (!createResult.Succeeded)
-                                {
-                                    throw new Exception(string.Join(", ", createResult.Errors.Select(e => e.Description)));
-                                }
-                                
-                        var hashedPassword = _identityService.GetPasswordHash(request.PasswordHash);
-                                user.PasswordHash = hashedPassword;
-
-                                var student = new Student
-                                {
-                                    FirstName = request.FirstName,
-                                    LastName = request.LastName,
-                                    Email = request.Email,
-                                    Address = request.Address,
-                                    Gender = request.Gender,
-                                    DateOfBirth = DateTime.SpecifyKind(request.DateOfBirth.Date, DateTimeKind.Utc),
-                                    PhoneNumber = request.PhoneNumber,
-                                    MatricNumber = request.MatricNumber,
-                                    StudentLevel = request.StudentLevel,
-                                    Department = request.Department,
-                                    PasswordHash = hashedPassword,
-                                    UserId = user.Id,
-                                    CreatedDate = DateTime.UtcNow,
-                                    UpdatedDate = DateTime.UtcNow
-                                };
-                                
-                                await _studentRepository.Add(student);
-                                await _unitOfWork.SaveChangesAsync();
-
-                                await transaction.CommitAsync();
-
-                                return new BaseResponse<bool>
-                                {
-                                    Message = "Student created successfully",
-                                    Status = true
-                                };
-                            }
-                            catch (Exception ex)
-                            {
-                                await transaction.RollbackAsync();
-                                _logger.LogError(ex, "Error creating student, rolling back.....");
-
-                                return new BaseResponse<bool>
-                                {
-                                    Message = "An error occurred while creating student: " + ex.Message,
-                                    Status = false
-                                };
-                            }
-                        });
-                    }
-
-        public async Task<BaseResponse<StudentDashboardDto>> GetDashboard(Guid studentId)
+        {
+            var studentExist = await _userRepository.Any(u => u.Email == request.Email);
+            if (studentExist)
             {
-                var response = new BaseResponse<StudentDashboardDto>();
+                return new BaseResponse<bool>
+                {
+                    Message = "Student with email already exist",
+                    Status = false
+                };
+            }
 
-                var now = DateTime.UtcNow; 
+            if (request.PasswordHash != request.ConfirmPassword)
+            {
+                return new BaseResponse<bool>
+                {
+                    Message = "Password doesn't match!",
+                    Status = false,
+                };
+            }
+
+            (var valid, var message) = ValidatePassword(request.PasswordHash);
+            if (!valid)
+                return new BaseResponse<bool> { Message = message ?? string.Empty, Status = false };
+
+            var strategy = _unitOfWork.CreateExecutionStrategy();
+
+            return await strategy.ExecuteAsync(async () =>
+            {
+                using var transaction = await _unitOfWork.BeginTransactionAsync();
 
                 try
                 {
-                    var student = await _studentRepository.Get<Student>(s => s.UserId == studentId);
-                    if (student == null)
+                    var user = new User
                     {
-                        _logger.LogWarning("Dashboard access failed: Student with UserId {StudentId} not found.", studentId);
-                        response.Status = false;
-                        response.Message = "Student record not found.";
-                        return response;
-                    }
-
-                    var attendances = await _attendanceRepository.GetAll(a => a.StudentId == student.Id);
-                    var presentSessionIds = attendances
-                        .Where(a => a.Status == AttendanceStatus.Present)
-                        .Select(a => a.SessionId)
-                        .ToHashSet();
-
-                    var sessions = await _sessionRepository.GetAll(s => 
-                        s.Level == student.StudentLevel && 
-                        s.Department == student.Department);
-
-                    var dashboard = new StudentDashboardDto
-                    {
-                        UserName = $"{student.FirstName} {student.LastName}",
-                        MatricNumber = student.MatricNumber,
-                        Level = student.StudentLevel,
-                        Department = student.Department,
-                        TotalSessionsAttended = presentSessionIds.Count,
-                        
-                        TotalSessionsAvailable = sessions.Count(s => s.SessionEndTime <= now),
-
-                        ActiveSessions = sessions
-                            .Where(s => s.IsActive == true && now >= s.SessionStartTime && now <= s.SessionEndTime)
-                            .Select(s =>
-                            {
-                                var attendance = attendances.FirstOrDefault(a => a.SessionId == s.Id);
-                                return new ActiveSessionDto
-                                {
-                                    Id = s.Id,
-                                    CourseName = s.CourseName,
-                                    CourseCode = s.CourseCode,
-                                    Level = s.Level,
-                                    SessionStartTime = s.SessionStartTime,
-                                    IsActive = s.IsActive,
-                                    Department = s.Department,
-                                    SessionEndTime = s.SessionEndTime,
-                                    InstructorName = s.Instructor != null ? $"{s.Instructor.FirstName} {s.Instructor.LastName}" : "Department Staff",
-                                    AttendanceStatus = attendance?.Status,
-                                    FirstScanTime = attendance?.FirstScanTime,
-                                    SecondScanTime = attendance?.SecondScanTime
-                                };
-                            }).ToList(),
-
-                        MissedSessions = sessions
-                            .Where(s => s.SessionEndTime < now && !presentSessionIds.Contains(s.Id))
-                            .Select(s => new MissedSessionDto
-                            {
-                                CourseName = s.CourseName,
-                                CourseCode = s.CourseCode,
-                                Level = s.Level,
-                                Department = s.Department,
-                                StartTime = s.SessionStartTime,
-                                EndTime = s.SessionEndTime,
-                                InstructorName = s.Instructor != null ? $"{s.Instructor.FirstName} {s.Instructor.LastName}" : "Instructor"
-                            }).ToList(),
-
-                        RecentAttendances = attendances
-                            .OrderByDescending(a => a.ScanTime)
-                            .Take(5)
-                            .Select(a => new AttendanceDto
-                            {
-                                Id = a.Id,
-                                SessionId = a.SessionId,
-                                CourseName = a.CourseName ?? a.ClassSession?.CourseName ?? "Unknown Course",
-                                CourseCode = a.CourseCode ?? a.ClassSession?.CourseCode ?? "N/A",
-                                ScanTime = a.ScanTime,
-                                FirstScanTime = a.FirstScanTime,
-                                SecondScanTime = a.SecondScanTime,
-                                Status = a.Status
-                            }).ToList()
+                        Email = request.Email,
+                        PasswordHash = _identityService.GetPasswordHash(request.PasswordHash),
+                        UserName = request.Email,
+                        RoleId = (await _roleRepository.GetByName("Student"))?.Id ?? throw new Exception("Student role not found"),
+                        CreatedDate = DateTime.UtcNow,
+                        UpdatedDate = DateTime.UtcNow
                     };
 
-                    response.Status = true;
-                    response.Message = "Dashboard retrieved successfully";
-                    response.Data = dashboard;
-                    
-                    _logger.LogInformation("Dashboard successfully generated for Student: {MatricNumber}", student.MatricNumber);
+                    var createResult = await _userManager.CreateAsync(user);
+
+                    if (!createResult.Succeeded)
+                    {
+                        throw new Exception(string.Join(", ", createResult.Errors.Select(e => e.Description)));
+                    }
+
+                    var hashedPassword = _identityService.GetPasswordHash(request.PasswordHash);
+                    user.PasswordHash = hashedPassword;
+
+                    var student = new Student
+                    {
+                        FirstName = request.FirstName,
+                        LastName = request.LastName,
+                        Email = request.Email,
+                        Address = request.Address,
+                        Gender = request.Gender,
+                        DateOfBirth = DateTime.SpecifyKind(request.DateOfBirth.Date, DateTimeKind.Utc),
+                        PhoneNumber = request.PhoneNumber,
+                        MatricNumber = request.MatricNumber,
+                        StudentLevel = request.StudentLevel,
+                        Department = request.Department,
+                        PasswordHash = hashedPassword,
+                        UserId = user.Id,
+                        CreatedDate = DateTime.UtcNow,
+                        // Not updated yet — profile shows "Never updated" until first edit
+                        UpdatedDate = default
+                    };
+
+                    await _studentRepository.Add(student);
+                    await _unitOfWork.SaveChangesAsync();
+
+                    await transaction.CommitAsync();
+
+                    return new BaseResponse<bool>
+                    {
+                        Message = "Student created successfully",
+                        Status = true
+                    };
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "An error occurred while generating the dashboard for StudentId: {StudentId}", studentId);
+                    await transaction.RollbackAsync();
+                    _logger.LogError(ex, "Error creating student, rolling back.....");
+
+                    return new BaseResponse<bool>
+                    {
+                        Message = "An error occurred while creating student: " + ex.Message,
+                        Status = false
+                    };
+                }
+            });
+        }
+
+        public async Task<BaseResponse<StudentDashboardDto>> GetDashboard(Guid studentId)
+        {
+            var response = new BaseResponse<StudentDashboardDto>();
+
+            var now = DateTime.UtcNow;
+
+            try
+            {
+                var student = await _studentRepository.Get<Student>(s => s.UserId == studentId);
+                if (student == null)
+                {
+                    _logger.LogWarning("Dashboard access failed: Student with UserId {StudentId} not found.", studentId);
                     response.Status = false;
-                    response.Message = "An internal error occurred while loading your dashboard.";
+                    response.Message = "Student record not found.";
+                    return response;
                 }
 
-                    return response;
+                var attendances = await _attendanceRepository.GetAll(a => a.StudentId == student.Id);
+                var presentSessionIds = attendances
+                    .Where(a => a.Status == AttendanceStatus.Present)
+                    .Select(a => a.SessionId)
+                    .ToHashSet();
+
+                var sessions = await _sessionRepository.GetAll(s =>
+                    s.Level == student.StudentLevel &&
+                    s.Department == student.Department);
+
+                var dashboard = new StudentDashboardDto
+                {
+                    UserName = $"{student.FirstName} {student.LastName}",
+                    MatricNumber = student.MatricNumber,
+                    Level = student.StudentLevel,
+                    Department = student.Department,
+                    TotalSessionsAttended = presentSessionIds.Count,
+
+                    TotalSessionsAvailable = sessions.Count(s => s.SessionEndTime <= now),
+
+                    ActiveSessions = sessions
+                        .Where(s => s.IsActive == true && now >= s.SessionStartTime && now <= s.SessionEndTime)
+                        .Select(s =>
+                        {
+                            var attendance = attendances.FirstOrDefault(a => a.SessionId == s.Id);
+                            return new ActiveSessionDto
+                            {
+                                Id = s.Id,
+                                CourseName = s.CourseName,
+                                CourseCode = s.CourseCode,
+                                Level = s.Level,
+                                SessionStartTime = s.SessionStartTime,
+                                IsActive = s.IsActive,
+                                Department = s.Department,
+                                SessionEndTime = s.SessionEndTime,
+                                InstructorName = s.Instructor != null ? $"{s.Instructor.FirstName} {s.Instructor.LastName}" : "Department Staff",
+                                AttendanceStatus = attendance?.Status,
+                                FirstScanTime = attendance?.FirstScanTime,
+                                SecondScanTime = attendance?.SecondScanTime
+                            };
+                        }).ToList(),
+
+                    MissedSessions = sessions
+                        .Where(s => s.SessionEndTime < now && !presentSessionIds.Contains(s.Id))
+                        .Select(s => new MissedSessionDto
+                        {
+                            CourseName = s.CourseName,
+                            CourseCode = s.CourseCode,
+                            Level = s.Level,
+                            Department = s.Department,
+                            StartTime = s.SessionStartTime,
+                            EndTime = s.SessionEndTime,
+                            InstructorName = s.Instructor != null ? $"{s.Instructor.FirstName} {s.Instructor.LastName}" : "Instructor"
+                        }).ToList(),
+
+                    RecentAttendances = attendances
+                        .OrderByDescending(a => a.ScanTime)
+                        .Take(5)
+                        .Select(a => new AttendanceDto
+                        {
+                            Id = a.Id,
+                            SessionId = a.SessionId,
+                            CourseName = a.CourseName ?? a.ClassSession?.CourseName ?? "Unknown Course",
+                            CourseCode = a.CourseCode ?? a.ClassSession?.CourseCode ?? "N/A",
+                            ScanTime = a.ScanTime,
+                            FirstScanTime = a.FirstScanTime,
+                            SecondScanTime = a.SecondScanTime,
+                            Status = a.Status
+                        }).ToList()
+                };
+
+                response.Status = true;
+                response.Message = "Dashboard retrieved successfully";
+                response.Data = dashboard;
+
+                _logger.LogInformation("Dashboard successfully generated for Student: {MatricNumber}", student.MatricNumber);
             }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred while generating the dashboard for StudentId: {StudentId}", studentId);
+                response.Status = false;
+                response.Message = "An internal error occurred while loading your dashboard.";
+            }
+
+            return response;
+        }
 
         public async Task<BaseResponse<StudentAttendanceReportDto>> GetAttendanceReport(Guid userId)
         {
@@ -370,90 +371,90 @@ namespace QRCodeAttendance.Implementation.Services
         }
 
         public async Task<BaseResponse<double>> GetMyAttendancePercentage(Guid studentId)
-            {
-                var student = await _studentRepository.Get<Student>(s => s.UserId == studentId);
-                if (student == null) 
-                return new BaseResponse<double> 
-                { 
-                    Status = false, 
+        {
+            var student = await _studentRepository.Get<Student>(s => s.UserId == studentId);
+            if (student == null)
+                return new BaseResponse<double>
+                {
+                    Status = false,
                     Message = "Student not found"
                 };
 
-                var now = DateTime.UtcNow;
+            var now = DateTime.UtcNow;
 
-                int totalSessions = await _sessionRepository.Count<Session>(s => 
-                    s.SessionEndTime <= now && 
-                    s.Level == student.StudentLevel && 
-                    s.Department == student.Department);
+            int totalSessions = await _sessionRepository.Count<Session>(s =>
+                s.SessionEndTime <= now &&
+                s.Level == student.StudentLevel &&
+                s.Department == student.Department);
 
-                if (totalSessions == 0)
+            if (totalSessions == 0)
+            {
+                return new BaseResponse<double> { Status = true, Message = "No sessions yet", Data = 0 };
+            }
+
+            int attendedCount = await _attendanceRepository.Count<Attendance>(a =>
+                a.StudentId == student.Id &&
+                (a.Status == AttendanceStatus.Present || a.Status == AttendanceStatus.Late));
+
+            double percentage = ((double)attendedCount / totalSessions) * 100;
+
+            return new BaseResponse<double>
+            {
+                Status = true,
+                Message = "Attendance percentage calculated",
+                Data = Math.Round(percentage, 2)
+            };
+        }
+
+        public async Task<BaseResponse<StudentDto>> GetStudentProfile(Guid userId)
+        {
+            var student = await _studentRepository.Get<Student>(x => x.UserId == userId);
+
+            if (student == null)
+            {
+                return new BaseResponse<StudentDto>
                 {
-                    return new BaseResponse<double> { Status = true, Message = "No sessions yet", Data = 0 };
-                }
-
-                int attendedCount = await _attendanceRepository.Count<Attendance>(a => 
-                    a.StudentId == student.Id &&
-                    (a.Status == AttendanceStatus.Present || a.Status == AttendanceStatus.Late));
-
-                double percentage = ((double)attendedCount / totalSessions) * 100;
-
-                return new BaseResponse<double>
-                {
-                    Status = true,
-                    Message = "Attendance percentage calculated",
-                    Data = Math.Round(percentage, 2)
+                    Message = "Student not found",
+                    Status = false,
+                    Data = default!
                 };
             }
 
-            public async Task<BaseResponse<StudentDto>> GetStudentProfile(Guid userId)
-                {
-                    var student = await _studentRepository.Get<Student>(x => x.UserId == userId);
+            var studentDto = new StudentDto
+            {
+                StudentId = student.Id,
+                UserId = student.UserId,
+                FullName = student.FullName(),
+                Email = student.Email,
+                FirstName = student.FirstName,
+                LastName = student.LastName,
+                PhoneNumber = student.PhoneNumber,
+                Address = student.Address,
+                Gender = student.Gender,
+                DateOfBirth = student.DateOfBirth,
+                MatricNumber = student.MatricNumber,
+                StudentLevel = student.StudentLevel,
+                Department = student.Department,
+                CreatedDate = student.CreatedDate,
+                UpdatedDate = student.UpdatedDate
+            };
 
-                    if (student == null)
-                    {
-                        return new BaseResponse<StudentDto>
-                        {
-                            Message = "Student not found",
-                            Status = false,
-                            Data = default!
-                        };
-                    }
+            return new BaseResponse<StudentDto>
+            {
+                Data = studentDto,
+                Message = "Student profile retrieved successfully",
+                Status = true
+            };
+        }
 
-                    var studentDto = new StudentDto
-                    {
-                        StudentId = student.Id,
-                        UserId = student.UserId, 
-                        FullName = student.FullName(),
-                        Email = student.Email,
-                        FirstName = student.FirstName,
-                        LastName = student.LastName,
-                        PhoneNumber = student.PhoneNumber,
-                        Address = student.Address,
-                        Gender = student.Gender,
-                        DateOfBirth = student.DateOfBirth,
-                        MatricNumber = student.MatricNumber,
-                        StudentLevel = student.StudentLevel,
-                        Department = student.Department,
-                        CreatedDate = student.CreatedDate, 
-                        UpdatedDate = student.UpdatedDate  
-                    };
 
-                    return new BaseResponse<StudentDto>
-                    {
-                        Data = studentDto,
-                        Message = "Student profile retrieved successfully",
-                        Status = true
-                    };
-                }
 
-    
-
-    public async Task<BaseResponse<bool>> UpdateStudentProfile(Guid userId, UpdateStudentRequestModel request)
+        public async Task<BaseResponse<bool>> UpdateStudentProfile(Guid userId, UpdateStudentRequestModel request)
         {
             try
             {
                 var student = await _studentRepository.Get<Student>(s => s.UserId == userId);
-                
+
                 if (student == null)
                 {
                     _logger.LogWarning("Update failed: Student with UserId {UserId} not found.", userId);
@@ -471,19 +472,33 @@ namespace QRCodeAttendance.Implementation.Services
                 student.DateOfBirth = request.DateOfBirth != default
                     ? DateTime.SpecifyKind(request.DateOfBirth.Date, DateTimeKind.Utc)
                     : student.DateOfBirth;
-                student.UpdatedDate = DateTime.UtcNow.ToUniversalTime();
+                student.UpdatedDate = DateTime.UtcNow;
 
                 _studentRepository.Update(student);
-                
+
+                // Keep login User in sync when email changes
+                if (!string.IsNullOrWhiteSpace(request.Email))
+                {
+                    var user = await _userRepository.Get<User>(u => u.Id == userId);
+                    if (user != null)
+                    {
+                        var email = request.Email.Trim().ToLowerInvariant();
+                        user.Email = email;
+                        user.UserName = email;
+                        user.UpdatedDate = DateTime.UtcNow;
+                        _userRepository.Update(user);
+                    }
+                }
+
                 await _unitOfWork.SaveChangesAsync();
 
                 _logger.LogInformation("Successfully updated profile for Student {UserId}.", userId);
 
-                return new BaseResponse<bool> 
-                { 
-                    Status = true, 
+                return new BaseResponse<bool>
+                {
+                    Status = true,
                     Message = "Profile updated successfully",
-                    Data = true 
+                    Data = true
                 };
             }
             catch (Exception ex)
@@ -499,68 +514,64 @@ namespace QRCodeAttendance.Implementation.Services
             }
         }
 
-        
 
-         private static (bool, string?) ValidatePassword(string password)
+
+        private static (bool, string?) ValidatePassword(string password)
+        {
+            // Minimum length of password
+            int minLength = 8;
+
+            // Maximum length of password
+            int maxLength = 50;
+
+            // Check for null or empty password
+            if (string.IsNullOrEmpty(password))
+            {
+                return (false, "Password cannot be null or empty.");
+            }
+
+            // Check length of password
+            if (password.Length < minLength || password.Length > maxLength)
+            {
+                return (false, $"Password must be between {minLength} and {maxLength} characters long.");
+            }
+
+            // Check for at least one uppercase letter, one lowercase letter, and one digit
+            bool hasUppercase = false;
+            bool hasLowercase = false;
+            bool hasDigit = false;
+
+            foreach (char c in password)
+            {
+                if (char.IsUpper(c))
                 {
-                    // Minimum length of password
-                    int minLength = 8;
-
-                    // Maximum length of password
-                    int maxLength = 50;
-
-                    // Check for null or empty password
-                    if (string.IsNullOrEmpty(password))
-                    {
-                        return (false, "Password cannot be null or empty.");
-                    }
-
-                    // Check length of password
-                    if (password.Length < minLength || password.Length > maxLength)
-                    {
-                        return (false, $"Password must be between {minLength} and {maxLength} characters long.");
-                    }
-
-                    // Check for at least one uppercase letter, one lowercase letter, and one digit
-                    bool hasUppercase = false;
-                    bool hasLowercase = false;
-                    bool hasDigit = false;
-
-                    foreach (char c in password)
-                    {
-                        if (char.IsUpper(c))
-                        {
-                            hasUppercase = true;
-                        }
-                        else if (char.IsLower(c))
-                        {
-                            hasLowercase = true;
-                        }
-                        else if (char.IsDigit(c))
-                        {
-                            hasDigit = true;
-                        }
-                    }
-
-                    if (!hasUppercase || !hasLowercase || !hasDigit)
-                    {
-                        return (false, "Password must contain at least one uppercase letter, one lowercase letter, and one digit.");
-                    }
-
-                    // Check for any characters
-                    string invalidCharacters = @" !""#$%&'()*+,-./:;<=>?@[\\]^_`{|}~";
-                    if (password.IndexOfAny(invalidCharacters.ToCharArray()) == -1)
-                    {
-                        return (false, "Password must contain one or more characters.");
-                    }
-
-                    // Password is valid
-                    return (true, null);
+                    hasUppercase = true;
                 }
+                else if (char.IsLower(c))
+                {
+                    hasLowercase = true;
+                }
+                else if (char.IsDigit(c))
+                {
+                    hasDigit = true;
+                }
+            }
 
+            if (!hasUppercase || !hasLowercase || !hasDigit)
+            {
+                return (false, "Password must contain at least one uppercase letter, one lowercase letter, and one digit.");
+            }
 
+            // Check for any characters
+            string invalidCharacters = @" !""#$%&'()*+,-./:;<=>?@[\\]^_`{|}~";
+            if (password.IndexOfAny(invalidCharacters.ToCharArray()) == -1)
+            {
+                return (false, "Password must contain one or more characters.");
+            }
 
-    
-          
+            // Password is valid
+            return (true, null);
+        }
+
     }
 }

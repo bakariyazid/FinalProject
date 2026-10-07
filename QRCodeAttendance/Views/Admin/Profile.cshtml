@@ -1,0 +1,98 @@
+@model QRCodeAttendance.Models.DTOs.Admin.AdminProfileDto
+@{
+    ViewData["Title"] = "Admin Profile";
+}
+<style>
+    .admin-profile {
+        max-width: 920px;
+        margin: 2rem auto;
+        padding: 1.5rem;
+    }
+
+    .profile-panel {
+        background: #fff;
+        border-radius: 18px;
+        box-shadow: 0 16px 45px rgba(15, 23, 42, .12);
+        overflow: hidden;
+    }
+
+    .profile-hero {
+        padding: 2rem;
+        color: #fff;
+        background: linear-gradient(135deg, #0f766e, #115e59);
+    }
+
+    .profile-avatar {
+        width: 74px;
+        height: 74px;
+        display: grid;
+        place-items: center;
+        border: 3px solid rgba(255, 255, 255, .5);
+        border-radius: 50%;
+        background: rgba(255, 255, 255, .15);
+        font-size: 1.8rem;
+        font-weight: 800;
+    }
+
+    .profile-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 1rem;
+        padding: 1.5rem;
+    }
+
+    .profile-field {
+        padding: 1rem;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        background: #f8fafc;
+    }
+
+    .profile-field span {
+        display: block;
+        color: #64748b;
+        font-size: .75rem;
+        font-weight: 800;
+        letter-spacing: .06em;
+        text-transform: uppercase;
+    }
+
+    .profile-field strong {
+        display: block;
+        margin-top: .35rem;
+        color: #0f172a;
+        overflow-wrap: anywhere;
+    }
+
+    @@media (max-width:640px) {
+        .profile-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+<main class="admin-profile">
+    <section class="profile-panel">
+        <header class="profile-hero d-flex justify-content-between align-items-center gap-3">
+            <div class="d-flex align-items-center gap-3">
+                <div class="profile-avatar">@(string.IsNullOrWhiteSpace(Model.FirstName) ? "A" :
+                                        Model.FirstName.Trim()[0])</div>
+                    <div>
+                        <h1 class="h3 mb-1">@Model.FirstName @Model.LastName</h1>
+                        <p class="mb-0 opacity-75">System Administrator</p>
+                    </div>
+                </div>
+                <a asp-action="EditProfile" class="btn btn-light fw-bold">Edit profile</a>
+            </header>
+            <div class="profile-grid">
+                <div class="profile-field"><span>Email</span><strong>@Model.Email</strong></div>
+                <div class="profile-field"><span>Phone</span><strong>@(string.IsNullOrWhiteSpace(Model.PhoneNumber) ? "Not provided" : Model.PhoneNumber)</strong></div>
+                <div class="profile-field"><span>Gender</span><strong>@Model.Gender</strong></div>
+                <div class="profile-field"><span>Date of birth</span><strong>@(Model.DateOfBirth == default ? "Not provided"            : Model.DateOfBirth.ToString("MMMM dd, yyyy"))</strong></div>
+                <div class="profile-field" style="grid-column:1/-1">
+                    <span>Address</span><strong>@(string.IsNullOrWhiteSpace(Model.Address) ? "Not provided" :
+                                        Model.Address)</strong></div>
+                </div>
+                <div class="px-4 pb-4"><a asp-action="AdminDashboard" class="btn btn-outline-secondary">Back to dashboard</a>
+                </div>
+            </section>
+        </main>

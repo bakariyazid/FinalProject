@@ -4,7 +4,8 @@
     ViewData["Title"] = "Session History & Control";
 }
 
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap"
+      rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
 
@@ -88,7 +89,7 @@
         opacity: 0.55;
     }
 
-    .session-hero > * {
+    .session-hero>* {
         position: relative;
         z-index: 1;
     }
@@ -605,36 +606,44 @@
     }
 
     @{
-        // Capture local time once for the entire list evaluation
-        var now = DateTime.UtcNow.ToLocalTime();
+        // Use UTC for all comparisons so timezone does not break the countdown → QR switch
+        var nowUtc = DateTime.UtcNow;
+
+        DateTime AsUtc(DateTime value) =>
+            value.Kind == DateTimeKind.Utc
+                ? value
+                : DateTime.SpecifyKind(value, DateTimeKind.Utc);
 
         // Sorting: Active sessions first, then by date
-        var sortedSessions = Model.OrderByDescending(s => 
-            now >= s.SessionStartTime.ToLocalTime() &&
-            now <= s.SessionEndTime.ToLocalTime())
+        var sortedSessions = Model.OrderByDescending(s =>
+            nowUtc >= AsUtc(s.SessionStartTime) &&
+            nowUtc <= AsUtc(s.SessionEndTime))
             .ThenByDescending(s => s.SessionStartTime);
     }
 
     @foreach (var session in sortedSessions)
     {
-        // 1. Convert UTC properties to Local Time for calculation
-        var sessionStartLocal = session.SessionStartTime.ToLocalTime();
-        var sessionEndLocal = session.SessionEndTime.ToLocalTime();
+        var sessionStartUtc = AsUtc(session.SessionStartTime);
+        var sessionEndUtc = AsUtc(session.SessionEndTime);
 
-        // 2. Define business logic thresholds
-        var qrExpirationTime = sessionEndLocal.AddMinutes(-10);
-        var readyThreshold = sessionStartLocal;
+        // Local display only
+        var sessionStartLocal = sessionStartUtc.ToLocalTime();
+        var sessionEndLocal = sessionEndUtc.ToLocalTime();
 
-        // 3. Evaluate state
-        bool isExpired = now > qrExpirationTime; 
-        bool isTooEarly = now < readyThreshold;
+        // Business thresholds in UTC
+        var qrExpirationUtc = sessionEndUtc.AddMinutes(-10);
+        var readyThresholdUtc = sessionStartUtc;
+
+        bool isExpired = nowUtc > qrExpirationUtc;
+        bool isTooEarly = nowUtc < readyThresholdUtc;
         bool isGenerated = !string.IsNullOrWhiteSpace(session.QRCodeToken);
-        bool isWithinActiveWindow = now >= readyThreshold && now <= qrExpirationTime;
+        bool isWithinActiveWindow = nowUtc >= readyThresholdUtc && nowUtc <= qrExpirationUtc;
 
-        string levelTheme = session.Level.ToString() switch {
+        string levelTheme = session.Level.ToString() switch
+        {
             "HundredLevel" => "theme-100",
             "TwoHundredLevel" => "theme-200",
-            _ => "theme-100" 
+            _ => "theme-100"
         };
 
         <div class="session-row @(isWithinActiveWindow ? "is-active" : "") @levelTheme">
@@ -661,15 +670,16 @@
                         <div class="history-item">
                             <b>Last Updated:</b>
                             @if (session.UpdatedDate != DateTime.MinValue && session.UpdatedDate != session.CreatedDate)
-                                {
-                                    <span>@session.UpdatedDate.ToLocalTime().ToString("MMM dd, yyyy – hh:mm tt")</span>
-                                }
+                            {
+                                <span>@session.UpdatedDate.ToLocalTime().ToString("MMM dd, yyyy – hh:mm tt")</span>
+                            }
                             else
                             {
                                 <span class="history-label-never">Never Updated</span>
                             }
                         </div>
                     </div>
+
 
 
                 </div>
@@ -681,8 +691,8 @@
                         <i class="fa-solid fa-pen-to-square"></i>
                     </a>
                     <a asp-action="Delete" asp-route-id="@session.Id" class="icon-btn delete"
-                           onclick="return confirm('Are you sure you want to delete this session? This cannot be undone.')"
-                           title="Delete Session">
+                       onclick="return confirm('Are you sure you want to delete this session? This cannot be undone.')"
+                       title="Delete Session">
                         <i class="fa-solid fa-trash-can"></i>
                     </a>
                 </div>
@@ -696,7 +706,7 @@
                 else if (isTooEarly)
                 {
                     <div class="countdown-box js-session-countdown" data-session-id="@session.Id"
-                         data-ready-at="@(new DateTimeOffset(readyThreshold).ToUnixTimeMilliseconds())">
+                         data-ready-at="@(new DateTimeOffset(DateTime.SpecifyKind(session.SessionStartTime, session.SessionStartTime.Kind == DateTimeKind.Unspecified ? DateTimeKind.Utc : session.SessionStartTime.Kind).ToUniversalTime()).ToUnixTimeMilliseconds())">
                         <span class="timer-main">
                             <i class="fas fa-hourglass-start"></i> Starts in <span class="timer-display">--:--</span>
                         </span>
@@ -732,33 +742,57 @@
 @section Scripts {
     <script>
         function updateDashboardTimers() {
-            const now = new Date().getTime();
-            document.querySelectorAll('.js-session-countdown').forEach(container => {
-                const readyAt = parseInt(container.getAttribute('data-ready-at'));
-                const sessionId = container.getAttribute('data-session-id');
+                const now = new Date().getTime();
+              document.querySelectorAll('.js-session-countdown').forEach(container => {
+                 const readyAt = parseInt(container.getAttribute('data-ready-at'), 10);
+                  const sessionId = container.getAttribute('data-session-id');
+
+                    if (!readyAt || Number.isNaN(readyAt)) {
+                        return;
+                    }
+
                 const timeLeft = readyAt - now;
 
                 if (timeLeft <= 0) {
-                    const parent = document.getElementById(`action-container-${sessionId}`);
-                    if (parent && !parent.querySelector('.btn-qr-launch')) {
-                        // Using a simple template for the button refresh
-                        parent.innerHTML = `
-                            <a href="/Session/GenerateQRCode?id=${sessionId}" class="btn btn-qr-launch animate__animated animate__fadeIn">
-                                <i class="fas fa-play me-2"></i> Generate QRCode
-                            </a>
-                        `;
+                    // Session start time reached: replace countdown with Generate QR button
+                    // without removing Edit/Delete controls.
+                     const launchHtml = `
+                        <a href="/Session/GenerateQRCode?id=${sessionId}" class="btn btn-qr-launch animate__animated animate__fadeIn">
+                            <i class="fas fa-play me-2"></i> Generate QRCode
+                        </a>
+                    `;
+
+                    if (container.parentElement) {
+                        container.outerHTML = launchHtml;
+              } else {
+                            const parent = document.getElementById(`action-container-${sessionId}`);
+                            if (parent && !parent.querySelector('.btn-qr-launch')) {
+                                const controls = parent.querySelector('.row-controls');
+                                parent.innerHTML = '';
+                                if (controls) {
+                                    parent.appendChild(controls);
+                                }
+                                parent.insertAdjacentHTML('beforeend', launchHtml);
+                            }
+                        }
+                        return;
                     }
-                } else {
-                    const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
-                    const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
+
+                    const totalSeconds = Math.floor(timeLeft / 1000);
+                    const hours = Math.floor(totalSeconds / 3600);
+                    const minutes = Math.floor((totalSeconds % 3600) / 60);
+                    const seconds = totalSeconds % 60;
                     const display = container.querySelector('.timer-display');
                     if (display) {
-                        display.innerText = `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+                        if (hours > 0) {
+                            display.innerText = `${hours}:${minutes < 10 ? '0' : ''}${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+                        } else {
+                            display.innerText = `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+                        }
                     }
-                }
-            });
-        }
-        setInterval(updateDashboardTimers, 1000);
-        updateDashboardTimers();
+                });
+            }
+            setInterval(updateDashboardTimers, 1000);
+            updateDashboardTimers();
     </script>
 }
