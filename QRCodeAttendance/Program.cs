@@ -154,6 +154,7 @@ using (var scope = app.Services.CreateScope())
         dbContext.Database.ExecuteSqlRaw(
         "ALTER TABLE IF EXISTS \"Invitations\" ADD COLUMN IF NOT EXISTS \"OtpFailedAttempts\" integer NOT NULL DEFAULT 0;"
     );
+    
 }
 
 
