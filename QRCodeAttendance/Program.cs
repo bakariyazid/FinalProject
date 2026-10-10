@@ -30,6 +30,7 @@ builder.Services.Scan(scan => scan
         .WithScopedLifetime());
 
 
+
 builder.Services.Configure<BrevoOptions>(builder.Configuration.GetSection("Brevo"));
 builder.Services.AddHttpClient<IEmailService, BrevoEmailService>();
 
@@ -130,5 +131,23 @@ using (var scope = app.Services.CreateScope())
     var dbContext = scope.ServiceProvider.GetRequiredService<QRCodeDbContext>();
     dbContext.Database.Migrate();
 }
+
+//using (var scope = app.Services.CreateScope())
+//{
+    //var dbContext = scope.ServiceProvider.GetRequiredService<QRCodeDbContext>();
+    //dbContext.Database.ExecuteSqlRaw(
+        //"ALTER TABLE \"Invitations\" ADD COLUMN IF NOT EXISTS \"IsEmailVerified\" boolean NOT NULL DEFAULT false;"
+  //  );
+//}
+using (var scope = app.Services.CreateScope())
+{
+    var dbContext = scope.ServiceProvider.GetRequiredService<QRCodeDbContext>();
+    dbContext.Database.Migrate();
+
+    dbContext.Database.ExecuteSqlRaw(
+     "ALTER TABLE IF EXISTS \"Invitations\" ADD COLUMN IF NOT EXISTS \"IsEmailVerified\" boolean NOT NULL DEFAULT false;"
+ );
+}
+
 
 app.Run();
