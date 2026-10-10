@@ -147,6 +147,9 @@ using (var scope = app.Services.CreateScope())
     dbContext.Database.ExecuteSqlRaw(
      "ALTER TABLE IF EXISTS \"Invitations\" ADD COLUMN IF NOT EXISTS \"IsEmailVerified\" boolean NOT NULL DEFAULT false;"
  );
+    dbContext.Database.ExecuteSqlRaw(
+           "ALTER TABLE IF EXISTS \"Invitations\" ADD COLUMN IF NOT EXISTS \"OtpExpiresAt\" timestamp with time zone NULL;"
+       );
 }
 
 
